@@ -16,7 +16,7 @@
       </template>
       <menu-content :nav-data="menu" />
       <template #operations>
-        <span :class="versionCls"> {{ !collapsed ? 'TDesign Starter' : '' }} {{ pgk.version }} </span>
+        <span :class="versionCls"> {{ envMode }}.{{ pgk.version }} </span>
       </template>
     </t-menu>
     <div :class="`${prefix}-side-nav-placeholder${collapsed ? '-hidden' : ''}`"></div>
@@ -38,6 +38,8 @@ import type { MenuRoute, ModeType } from '@/types/interface';
 
 import pgk from '../../../package.json';
 import MenuContent from './MenuContent.vue';
+
+const envMode = import.meta.env.MODE
 
 const { menu, showLogo, isFixed, layout, theme, isCompact } = defineProps({
   menu: {

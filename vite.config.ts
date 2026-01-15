@@ -36,6 +36,7 @@ export default ({ mode }: ConfigEnv): UserConfig => {
       vue(),
       vueJsx(),
       viteMockServe({
+        watchFiles: true,
         mockPath: 'mock',
         enable: true,
       }),

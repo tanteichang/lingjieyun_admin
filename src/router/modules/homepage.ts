@@ -1,4 +1,4 @@
-import { DashboardIcon } from 'tdesign-icons-vue-next';
+import { DashboardIcon, AssignmentIcon } from 'tdesign-icons-vue-next';
 import { shallowRef } from 'vue';
 
 import Layout from '@/layouts/index.vue';
@@ -11,7 +11,7 @@ export default [
     name: 'dashboard',
     meta: {
       title: {
-        zh_CN: '仪表盘',
+        zh_CN: '工作台',
         en_US: 'Dashboard',
       },
       icon: shallowRef(DashboardIcon),
@@ -52,7 +52,7 @@ export default [
         zh_CN: '项目管理',
         en_US: 'Project',
       },
-      icon: shallowRef(DashboardIcon),
+      icon: shallowRef(AssignmentIcon),
       orderNo: 1,
     },
     children: [

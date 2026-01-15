@@ -18,13 +18,15 @@
       <register v-else @register-success="switchType('login')" />
       <tdesign-setting />
     </div>
-
-    <footer class="copyright">Copyright @ 2021-2025 Tencent. All Rights Reserved</footer>
+    <div class="copyright">
+      <l-footer />
+    </div>
   </div>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
 
+import LFooter from '@/layouts/components/Footer.vue';
 import TdesignSetting from '@/layouts/setting.vue';
 import { t } from '@/locales';
 
