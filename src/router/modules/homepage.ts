@@ -1,5 +1,5 @@
-import { DashboardIcon, AssignmentIcon } from 'tdesign-icons-vue-next';
-import { shallowRef } from 'vue';
+import { AssignmentIcon, DashboardIcon } from 'tdesign-icons-vue-next';
+import { h, shallowRef } from 'vue';
 
 import Layout from '@/layouts/index.vue';
 
@@ -65,6 +65,30 @@ export default [
             zh_CN: '项目列表',
             en_US: 'Project List',
           },
+        },
+      },
+      {
+        path: 'detail',
+        name: 'ProjectDetail',
+        component: () => import('@/pages/project/projectList/detail/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '项目详情',
+            en_US: 'Project Detail',
+          },
+          hidden: true,
+        },
+      },
+      {
+        path: 'publish',
+        name: 'ProjectPublish',
+        component: () => import('@/pages/project/projectList/publish.vue'),
+        meta: {
+          title: {
+            zh_CN: '发布任务',
+            en_US: 'Publish Task',
+          },
+          hidden: true,
         },
       },
       {

@@ -1,10 +1,17 @@
-export interface ProjectQuery {
+import type { Query } from './common';
+
+export interface ProjectQuery extends Query {
   name?: string;
   type?: string;
   status?: string;
   company?: string;
-  page?: number;
-  pageSize?: number;
+}
+
+export interface TaskQuery extends Query {
+  name?: string;
+  type?: string;
+  recruitType?: string;
+  status?: string;
 }
 
 export type ProjectStatus = 'processing' | 'paused' | 'completed' | 'terminated';

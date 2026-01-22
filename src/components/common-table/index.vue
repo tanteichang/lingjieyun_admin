@@ -1,311 +1,161 @@
 <template>
   <div class="list-common-table">
-    <t-form :data="formData" :label-width="80" colon @reset="onReset" @submit="onSubmit">
+    <t-form :data="form" layout="inline" :label-width="80" colon @submit="handleSubmit" @reset="handleReset">
       <t-row>
         <t-col :span="10">
           <t-row :gutter="[24, 24]">
-            <t-col :span="4">
-              <t-form-item :label="t('components.commonTable.contractName')" name="name">
+            <t-col v-for="item in formConfig.formItem" :key="item.name" :span="item.span || 4">
+              <t-form-item :label="item.label" :name="item.name">
                 <t-input
-                  v-model="formData.name"
-                  class="form-item-content"
+                  v-if="item.type === 'input'"
+                  v-model="form[item.name]"
                   type="search"
-                  :placeholder="t('components.commonTable.contractNamePlaceholder')"
-                  :style="{ minWidth: '134px' }"
+                  :placeholder="item.placeholder"
+                  class="form-item-content"
                 />
-              </t-form-item>
-            </t-col>
-            <t-col :span="4">
-              <t-form-item :label="t('components.commonTable.contractStatus')" name="status">
                 <t-select
-                  v-model="formData.status"
-                  class="form-item-content"
-                  :options="CONTRACT_STATUS_OPTIONS"
-                  :placeholder="t('components.commonTable.contractStatusPlaceholder')"
+                  v-else-if="item.type === 'select'"
+                  v-model="form[item.name]"
+                  :placeholder="item.placeholder"
+                  :options="item.options"
                   clearable
-                />
-              </t-form-item>
-            </t-col>
-            <t-col :span="4">
-              <t-form-item :label="t('components.commonTable.contractNum')" name="no">
-                <t-input
-                  v-model="formData.no"
                   class="form-item-content"
-                  :placeholder="t('components.commonTable.contractNumPlaceholder')"
-                  :style="{ minWidth: '134px' }"
-                />
-              </t-form-item>
-            </t-col>
-            <t-col :span="4">
-              <t-form-item :label="t('components.commonTable.contractType')" name="type">
-                <t-select
-                  v-model="formData.type"
-                  style="display: inline-block"
-                  class="form-item-content"
-                  :options="CONTRACT_TYPE_OPTIONS"
-                  :placeholder="t('components.commonTable.contractTypePlaceholder')"
-                  clearable
                 />
               </t-form-item>
             </t-col>
           </t-row>
         </t-col>
-
         <t-col :span="2" class="operation-container">
-          <t-button theme="primary" type="submit" :style="{ marginLeft: 'var(--td-comp-margin-s)' }">
-            {{ t('components.commonTable.query') }}
-          </t-button>
-          <t-button type="reset" variant="base" theme="default"> {{ t('components.commonTable.reset') }} </t-button>
+          <t-space size="small">
+            <t-button theme="primary" type="submit">查询</t-button>
+            <t-button variant="base" theme="default" type="reset">重置</t-button>
+          </t-space>
         </t-col>
       </t-row>
     </t-form>
 
+    <div class="project-toolbar">
+      <slot name="toolbar"></slot>
+    </div>
+
     <div class="table-container">
       <t-table
         :data="data"
-        :columns="COLUMNS"
+        :columns="tableConfig.tableItem"
         :row-key="rowKey"
-        :vertical-align="verticalAlign"
-        :hover="hover"
+        vertical-align="middle"
+        :hover="true"
+        :loading="loading"
         :pagination="pagination"
-        :loading="dataLoading"
         :header-affixed-top="headerAffixedTop"
-        @page-change="rehandlePageChange"
-        @change="rehandleChange"
-      >
-        <template #status="{ row }">
-          <t-tag v-if="row.status === CONTRACT_STATUS.FAIL" theme="danger" variant="light">
-            {{ t('components.commonTable.contractStatusEnum.fail') }}
-          </t-tag>
-          <t-tag v-if="row.status === CONTRACT_STATUS.AUDIT_PENDING" theme="warning" variant="light">
-            {{ t('components.commonTable.contractStatusEnum.audit') }}
-          </t-tag>
-          <t-tag v-if="row.status === CONTRACT_STATUS.EXEC_PENDING" theme="warning" variant="light">
-            {{ t('components.commonTable.contractStatusEnum.pending') }}
-          </t-tag>
-          <t-tag v-if="row.status === CONTRACT_STATUS.EXECUTING" theme="success" variant="light">
-            {{ t('components.commonTable.contractStatusEnum.executing') }}
-          </t-tag>
-          <t-tag v-if="row.status === CONTRACT_STATUS.FINISH" theme="success" variant="light">
-            {{ t('components.commonTable.contractStatusEnum.finish') }}
-          </t-tag>
-        </template>
-        <template #contractType="{ row }">
-          <p v-if="row.contractType === CONTRACT_TYPES.MAIN">{{ t('pages.listBase.contractStatusEnum.fail') }}</p>
-          <p v-if="row.contractType === CONTRACT_TYPES.SUB">{{ t('pages.listBase.contractStatusEnum.audit') }}</p>
-          <p v-if="row.contractType === CONTRACT_TYPES.SUPPLEMENT">
-            {{ t('pages.listBase.contractStatusEnum.pending') }}
-          </p>
-        </template>
-        <template #paymentType="{ row }">
-          <div v-if="row.paymentType === CONTRACT_PAYMENT_TYPES.PAYMENT" class="payment-col">
-            {{ t('pages.listBase.pay') }}<trend class="dashboard-item-trend" type="up" />
-          </div>
-          <div v-if="row.paymentType === CONTRACT_PAYMENT_TYPES.RECEIPT" class="payment-col">
-            {{ t('pages.listBase.receive') }}<trend class="dashboard-item-trend" type="down" />
-          </div>
-        </template>
-        <template #op="slotProps">
-          <t-space>
-            <t-link theme="primary" @click="handleClickDetail()"> {{ t('pages.listBase.detail') }}</t-link>
-            <t-link theme="danger" @click="handleClickDelete(slotProps)"> {{ t('pages.listBase.delete') }}</t-link>
-          </t-space>
+        table-layout="fixed"
+        @page-change="(pageInfo) => $emit('page-change', pageInfo)">
+        <template v-for="slot in columnSlots" :key="slot.colKey" #[slot.colKey]="{ row }">
+          <slot :name="slot.colKey" :record="row" />
         </template>
       </t-table>
-      <t-dialog
-        v-model:visible="confirmVisible"
-        header="确认删除当前所选合同？"
-        :body="confirmBody"
-        :on-cancel="onCancel"
-        @confirm="onConfirmDelete"
-      />
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import type { PageInfo, PrimaryTableCol, TableRowData } from 'tdesign-vue-next';
-import { MessagePlugin } from 'tdesign-vue-next';
-import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import type { DropdownOption, PaginationProps } from 'tdesign-vue-next';
+import { computed, reactive, toRefs, useSlots } from 'vue';
 
-import { getList } from '@/api/list';
-import Trend from '@/components/trend/index.vue';
-import { prefix } from '@/config/global';
-import { CONTRACT_PAYMENT_TYPES, CONTRACT_STATUS, CONTRACT_TYPES } from '@/constants';
-import { t } from '@/locales';
-import { useSettingStore } from '@/store';
+import type { ProjectItem } from '@/api/model/projectModel';
 
-interface FormData {
-  name: string;
-  no: string;
-  status?: number;
-  type: string;
+export interface FormConfig<NameType extends string> {
+  /** 表单配置 */
+  formItem: Array<{
+    /** 表单项标签 */
+    label: string;
+    /** 表单项名称 */
+    name: NameType;
+    /** 表单项宽度 */
+    span?: number;
+    /** 表单项类型 */
+    type: 'input' | 'select';
+    /** 表单项占位符 */
+    placeholder?: string;
+    /** select 表单项选项 */
+    options?: DropdownOption[];
+  }>;
+  /** 表单数据 */
+  formData: Partial<Record<NameType, string | number>>;
 }
 
-const store = useSettingStore();
-const router = useRouter();
+export interface TableConfig {
+  /** 表格配置 */
+  tableItem: Array<{
+    /** 表格项标签 */
+    title: string;
+    /** 表格项名称 */
+    colKey: string;
+    /** 表格项宽度 */
+    width?: number;
+    /** 表格项最小宽度 */
+    minWidth?: number;
+    /** 表格项是否超出部分省略号显示 */
+    ellipsis?: boolean;
+    /** 表格项对齐方式 */
+    align?: 'left' | 'center' | 'right';
+    /** 表格项是否固定在左侧 */
+    fixed?: 'left' | 'right';
+  }>;
+}
 
-const CONTRACT_STATUS_OPTIONS = [
-  { value: CONTRACT_STATUS.FAIL, label: t('components.commonTable.contractStatusEnum.fail') },
-  { value: CONTRACT_STATUS.AUDIT_PENDING, label: t('components.commonTable.contractStatusEnum.audit') },
-  { value: CONTRACT_STATUS.EXEC_PENDING, label: t('components.commonTable.contractStatusEnum.pending') },
-  { value: CONTRACT_STATUS.EXECUTING, label: t('components.commonTable.contractStatusEnum.executing') },
-  { value: CONTRACT_STATUS.FINISH, label: t('components.commonTable.contractStatusEnum.finish') },
-];
+export interface ProjectRow extends ProjectItem {
+  index: number;
+}
 
-const CONTRACT_TYPE_OPTIONS = [
-  { value: CONTRACT_TYPES.MAIN, label: t('components.commonTable.contractTypeEnum.main') },
-  { value: CONTRACT_TYPES.SUB, label: t('components.commonTable.contractTypeEnum.sub') },
-  { value: CONTRACT_TYPES.SUPPLEMENT, label: t('components.commonTable.contractTypeEnum.supplement') },
-];
-const COLUMNS: PrimaryTableCol[] = [
-  {
-    title: t('components.commonTable.contractName'),
-    fixed: 'left',
-    width: 280,
-    ellipsis: true,
-    align: 'left',
-    colKey: 'name',
-  },
-  { title: t('components.commonTable.contractStatus'), colKey: 'status', width: 160 },
-  {
-    title: t('components.commonTable.contractNum'),
-    width: 160,
-    ellipsis: true,
-    colKey: 'no',
-  },
-  {
-    title: t('components.commonTable.contractType'),
-    width: 160,
-    ellipsis: true,
-    colKey: 'contractType',
-  },
-  {
-    title: t('components.commonTable.contractPayType'),
-    width: 160,
-    ellipsis: true,
-    colKey: 'paymentType',
-  },
-  {
-    title: t('components.commonTable.contractAmount'),
-    width: 160,
-    ellipsis: true,
-    colKey: 'amount',
-  },
-  {
-    align: 'left',
-    fixed: 'right',
-    width: 160,
-    colKey: 'op',
-    title: t('components.commonTable.operation'),
-  },
-];
+const props = defineProps<{
+  data: ProjectRow[];
+  loading: boolean;
+  pagination: PaginationProps;
+  headerAffixedTop?: any;
+  dropdownOptions: DropdownOption[];
+  formConfig: FormConfig<string>;
+  tableConfig: TableConfig;
+}>();
 
-const searchForm = {
-  name: '',
-  no: '',
-  type: '',
-};
+const emit = defineEmits(['search', 'reset', 'page-change', 'more', 'create']);
 
-const formData = ref<FormData>({ ...searchForm });
-const rowKey = 'index';
-const verticalAlign = 'top' as const;
-const hover = true;
+const form = reactive(props.formConfig.formData);
 
-const pagination = ref({
-  defaultPageSize: 20,
-  total: 100,
-  defaultCurrent: 1,
-});
-const confirmVisible = ref(false);
+const { data, loading, pagination, headerAffixedTop } = toRefs(props);
 
-const data = ref([]);
-
-const dataLoading = ref(false);
-const fetchData = async () => {
-  dataLoading.value = true;
-  try {
-    const { list } = await getList();
-    data.value = list;
-    pagination.value = {
-      ...pagination.value,
-      total: list.length,
-    };
-  } catch (e) {
-    console.log(e);
-  } finally {
-    dataLoading.value = false;
+const slots = useSlots();
+const curSlotName: string[] = ['toolbar'];
+const columnSlots = computed(() => {
+  if (slots) {
+    return Object.keys(slots)
+      .filter((key) => !curSlotName.includes(key))
+      .map((t) => {
+        return { colKey: t, slot: slots[t] };
+      });
+  } else {
+    return [];
   }
-};
-
-const deleteIdx = ref(-1);
-const confirmBody = computed(() => {
-  if (deleteIdx.value > -1) {
-    const { name } = data.value[deleteIdx.value];
-    return `删除后，${name}的所有合同信息将被清空，且无法恢复`;
-  }
-  return '';
 });
 
-const resetIdx = () => {
-  deleteIdx.value = -1;
+const rowKey = 'id';
+
+const handleSubmit = () => {
+  console.log('form', form);
+  emit('search', form);
 };
 
-const onConfirmDelete = () => {
-  // 真实业务请发起请求
-  data.value.splice(deleteIdx.value, 1);
-  pagination.value.total = data.value.length;
-  confirmVisible.value = false;
-  MessagePlugin.success('删除成功');
-  resetIdx();
+const handleReset = () => {
+  emit('reset');
 };
-
-const onCancel = () => {
-  resetIdx();
-};
-
-onMounted(() => {
-  fetchData();
-});
-
-const handleClickDelete = (slot: { row: { rowIndex: number } }) => {
-  deleteIdx.value = slot.row.rowIndex;
-  confirmVisible.value = true;
-};
-const onReset = (val: unknown) => {
-  console.log(val);
-};
-
-const handleClickDetail = () => {
-  router.push('/detail/base');
-};
-const onSubmit = (val: unknown) => {
-  console.log(val);
-  console.log(formData.value);
-};
-const rehandlePageChange = (pageInfo: PageInfo, newDataSource: TableRowData[]) => {
-  console.log('分页变化', pageInfo, newDataSource);
-};
-const rehandleChange = (changeParams: unknown, triggerAndData: unknown) => {
-  console.log('统一Change', changeParams, triggerAndData);
-};
-
-const headerAffixedTop = computed(
-  () =>
-    ({
-      offsetTop: store.isUseTabsRouter ? 48 : 0,
-      container: `.${prefix}-layout`,
-    }) as any, // TO BE FIXED
-);
 </script>
 <style lang="less" scoped>
 .list-common-table {
-  background-color: var(--td-bg-color-container);
-  padding: var(--td-comp-paddingTB-xxl) var(--td-comp-paddingLR-xxl);
-  border-radius: var(--td-radius-medium);
-
   .table-container {
     margin-top: var(--td-comp-margin-xxl);
+  }
+
+  .project-toolbar {
+    margin: var(--td-comp-margin-xxl) 0 var(--td-comp-margin-l);
   }
 }
 
@@ -317,22 +167,6 @@ const headerAffixedTop = computed(
   display: flex;
   justify-content: flex-end;
   align-items: center;
-
-  .expand {
-    .t-button__text {
-      display: flex;
-      align-items: center;
-    }
-  }
-}
-
-.payment-col {
-  display: flex;
-
-  .trend-container {
-    display: flex;
-    align-items: center;
-    margin-left: var(--td-comp-margin-s);
-  }
+  margin-top: 4px;
 }
 </style>
