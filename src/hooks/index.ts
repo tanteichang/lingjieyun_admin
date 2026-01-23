@@ -59,3 +59,5 @@ export const useCounter = (duration = 60): [Ref<number>, () => void] => {
     },
   ];
 };
+
+export * from './useCommonTable';

@@ -3,7 +3,7 @@ import type { Query } from './common';
 export interface ProjectQuery extends Query {
   name?: string;
   type?: string;
-  status?: string;
+  status?: ProjectStatus;
   company?: string;
 }
 
@@ -14,12 +14,17 @@ export interface TaskQuery extends Query {
   status?: string;
 }
 
+export interface LogQuery extends Query {
+  dateRange?: string[];
+}
+
 export type ProjectStatus = 'processing' | 'paused' | 'completed' | 'terminated';
 
 export interface ProjectItem {
   id: number;
   code: string;
   name: string;
+  type: string;
   projectType: string;
   invoiceType: string;
   company: string;

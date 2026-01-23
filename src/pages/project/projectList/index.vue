@@ -41,8 +41,8 @@
       </template>
     </common-table>
     <t-dialog
-      theme="warning"
       v-model:visible="moreActionDialogVisible"
+      theme="warning"
       @cancel="handleDialogCancel"
       @confirm="() => handleDialogConfirm(moreActionType)"
     >
@@ -55,16 +55,17 @@
   </t-card>
 </template>
 <script setup lang="ts">
-import type { DropdownOption, PageInfo, PaginationProps } from 'tdesign-vue-next';
+import type { DropdownOption } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-import type { ProjectQuery, ProjectStatus } from '@/api/model/projectModel';
+import type { ProjectItem, ProjectQuery, ProjectStatus } from '@/api/model/projectModel';
 import { getProjectList } from '@/api/project';
-import type { FormConfig, ProjectRow, TableConfig } from '@/components/common-table/index.vue';
+import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
+import { useCommonTable } from '@/hooks/useCommonTable';
 import { useSettingStore } from '@/store';
 
 defineOptions({
@@ -74,14 +75,11 @@ defineOptions({
 const store = useSettingStore();
 const router = useRouter();
 
-const query = reactive<ProjectQuery>({
-  name: '',
-  type: '',
-  status: '',
-  company: '',
-  page: 1,
-  limit: 20,
-});
+type ProjectRow = ProjectItem;
+
+const moreActionDialogVisible = ref(false);
+const moreActionType = ref('');
+const moreActionRecord = ref<ProjectRow>({} as ProjectRow);
 
 const dropdownOptions: DropdownOption[] = [
   { content: '发布任务', value: 'publish', onClick: () => moreActionClick('publish') },
@@ -105,28 +103,22 @@ const getDropdownOption = (status: ProjectStatus) => {
   }
 };
 
-const moreActionDialogVisible = ref(false);
-const moreActionType = ref('');
-const moreActionRecord = ref<ProjectRow>({} as ProjectRow);
-const tableData = ref<ProjectRow[]>([]);
-const dataLoading = ref(false);
-const pagination = reactive<PaginationProps>({
-  current: 1,
-  pageSize: 20,
-  total: 0,
-  pageSizeOptions: [20, 50, 100],
-  showJumper: false,
-  showPageSize: true,
-  totalContent: true,
-});
-
 const moreActionClick = (type: string) => {
   console.log(type);
   moreActionType.value = type;
   moreActionDialogVisible.value = true;
 };
 
-const formConfig: FormConfig<keyof ProjectQuery> = {
+const defaultQuery: ProjectQuery = {
+  name: '',
+  type: '',
+  status: 'processing',
+  company: '',
+  page: 1,
+  limit: 20,
+};
+
+const formConfig: FormConfig<ProjectRow, keyof ProjectRow> = {
   formItem: [
     { label: '项目名称', name: 'name', type: 'input', placeholder: '请输入项目名称' },
     {
@@ -135,9 +127,9 @@ const formConfig: FormConfig<keyof ProjectQuery> = {
       type: 'select',
       placeholder: '请选择项目类型',
       options: [
-        { label: '资讯服务费', value: 12 },
-        { label: '移动端项目', value: 23 },
-        { label: '企业服务', value: 43 },
+        { label: '资讯服务费', value: '12' },
+        { label: '移动端项目', value: '23' },
+        { label: '企业服务', value: '43' },
       ],
     },
     {
@@ -154,16 +146,9 @@ const formConfig: FormConfig<keyof ProjectQuery> = {
     },
     { label: '所属企业', name: 'company', type: 'input', placeholder: '请输入所属企业' },
   ],
-  formData: {
-    name: '这个项目',
-    type: 12,
-    status: 'processing',
-    company: '公司 1',
-    page: 1,
-    limit: 20,
-  },
+  formData: defaultQuery,
 };
-const tableConfig: TableConfig = {
+const tableConfig: TableConfig<ProjectRow> = {
   tableItem: [
     { title: '#', colKey: 'index', width: 80, align: 'center', fixed: 'left' },
     { title: '项目编号', colKey: 'code', width: 120, align: 'center' },
@@ -197,50 +182,26 @@ const headerAffixedTop = computed(
     }) as any,
 );
 
-const fetchData = async () => {
-  dataLoading.value = true;
-  try {
-    const { list, total } = await getProjectList({
-      ...query,
-      page: pagination.current,
-      limit: pagination.pageSize,
-    });
-    const start = ((pagination.current || 1) - 1) * (pagination.pageSize || 20);
-    tableData.value = list.map((item, idx) => ({
-      ...item,
-      index: start + idx + 1,
-    }));
-    pagination.total = total;
-  } catch (error) {
-    console.error('获取项目列表失败', error);
-  } finally {
-    dataLoading.value = false;
-  }
-};
+const tableHook = useCommonTable<ProjectQuery, ProjectRow>({
+  fetcher: async (params) => {
+    const { list, total } = await getProjectList(params);
+    return {
+      list,
+      total,
+    };
+  },
+  defaultQuery,
+  debounceWait: 400,
+});
 
-const handleSearch = (payload: Partial<Record<string, string | number>>) => {
-  query.name = (payload.name as string) || '';
-  query.type = (payload.type as string) || '';
-  query.status = (payload.status as ProjectStatus) || '';
-  query.company = (payload.company as string) || '';
-  pagination.current = 1;
-  fetchData();
-};
-
-const handleReset = () => {
-  query.name = '';
-  query.type = '';
-  query.status = '' as ProjectStatus;
-  query.company = '';
-  pagination.current = 1;
-  fetchData();
-};
-
-const handlePageChange = (pageInfo: PageInfo) => {
-  pagination.current = pageInfo.current;
-  pagination.pageSize = pageInfo.pageSize;
-  fetchData();
-};
+const {
+  data: tableData,
+  loading: dataLoading,
+  pagination,
+  search: handleSearch,
+  reset: handleReset,
+  handlePageChange,
+} = tableHook;
 
 const handleView = (row: ProjectRow) => {
   router.push({ name: 'ProjectDetail', query: { id: row.id } });
@@ -267,10 +228,6 @@ const handleDialogCancel = () => {
 const handleDialogConfirm = (type: string) => {
   console.log(type);
 };
-
-onMounted(() => {
-  fetchData();
-});
 </script>
 <style lang="less" scoped>
 .project-list-card {
@@ -280,6 +237,7 @@ onMounted(() => {
     padding: 0;
   }
 }
+
 .text-warning {
   font-weight: bold;
 }

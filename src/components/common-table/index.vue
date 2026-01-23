@@ -21,11 +21,26 @@
                   clearable
                   class="form-item-content"
                 />
+                <t-date-picker
+                  v-else-if="item.type === 'date'"
+                  v-model="form[item.name]"
+                  type="date"
+                  :placeholder="item.placeholder"
+                  class="form-item-content"
+                />
+                <t-date-range-picker
+                  v-else-if="item.type === 'date-range'"
+                  v-model="form[item.name]"
+                  enable-time-picker
+                  type="daterange"
+                  :placeholder="item.placeholder"
+                  class="form-item-content"
+                />
               </t-form-item>
             </t-col>
           </t-row>
         </t-col>
-        <t-col :span="2" class="operation-container">
+        <t-col :span="2">
           <t-space size="small">
             <t-button theme="primary" type="submit">查询</t-button>
             <t-button variant="base" theme="default" type="reset">重置</t-button>
@@ -49,7 +64,8 @@
         :pagination="pagination"
         :header-affixed-top="headerAffixedTop"
         table-layout="fixed"
-        @page-change="(pageInfo) => $emit('page-change', pageInfo)">
+        @page-change="(pageInfo) => $emit('page-change', pageInfo)"
+      >
         <template v-for="slot in columnSlots" :key="slot.colKey" #[slot.colKey]="{ row }">
           <slot :name="slot.colKey" :record="row" />
         </template>
@@ -57,39 +73,46 @@
     </div>
   </div>
 </template>
-<script setup lang="ts">
+<script
+  setup
+  lang="ts"
+  generic="
+    RowType extends Record<string, any> = Record<string, any>,
+    NameType extends Extract<keyof RowType, string> = Extract<keyof RowType, string>
+  "
+>
 import type { DropdownOption, PaginationProps } from 'tdesign-vue-next';
-import { computed, reactive, toRefs, useSlots } from 'vue';
+import { computed, onMounted, reactive, toRefs, useSlots, watch, withDefaults } from 'vue';
 
-import type { ProjectItem } from '@/api/model/projectModel';
+export type RowKey<Row> = Extract<keyof Row, string>;
 
-export interface FormConfig<NameType extends string> {
+export interface FormConfig<Row, FieldKey extends RowKey<Row>> {
   /** 表单配置 */
   formItem: Array<{
     /** 表单项标签 */
     label: string;
     /** 表单项名称 */
-    name: NameType;
+    name: FieldKey;
     /** 表单项宽度 */
     span?: number;
     /** 表单项类型 */
-    type: 'input' | 'select';
+    type: 'input' | 'select' | 'date' | 'date-range';
     /** 表单项占位符 */
     placeholder?: string;
     /** select 表单项选项 */
     options?: DropdownOption[];
   }>;
   /** 表单数据 */
-  formData: Partial<Record<NameType, string | number>>;
+  formData: Partial<Pick<Row, FieldKey>>;
 }
 
-export interface TableConfig {
+export interface TableConfig<Row> {
   /** 表格配置 */
   tableItem: Array<{
     /** 表格项标签 */
     title: string;
     /** 表格项名称 */
-    colKey: string;
+    colKey: RowKey<Row> | string;
     /** 表格项宽度 */
     width?: number;
     /** 表格项最小宽度 */
@@ -103,23 +126,49 @@ export interface TableConfig {
   }>;
 }
 
-export interface ProjectRow extends ProjectItem {
-  index: number;
-}
-
-const props = defineProps<{
-  data: ProjectRow[];
-  loading: boolean;
-  pagination: PaginationProps;
-  headerAffixedTop?: any;
-  dropdownOptions: DropdownOption[];
-  formConfig: FormConfig<string>;
-  tableConfig: TableConfig;
-}>();
+const props = withDefaults(
+  defineProps<{
+    data?: RowType[];
+    loading?: boolean;
+    pagination?: PaginationProps;
+    headerAffixedTop?: any;
+    dropdownOptions?: DropdownOption[];
+    formConfig: FormConfig<RowType, NameType>;
+    tableConfig: TableConfig<RowType>;
+    /** 是否在挂载时自动触发查询 */
+    autoSearch?: boolean;
+  }>(),
+  {
+    data: () => [],
+    loading: false,
+    pagination: () =>
+      ({
+        current: 1,
+        pageSize: 20,
+        total: 0,
+        pageSizeOptions: [20, 50, 100],
+        showJumper: false,
+        showPageSize: true,
+        totalContent: true,
+      }) as PaginationProps,
+    dropdownOptions: () => [],
+    autoSearch: true,
+  },
+);
 
 const emit = defineEmits(['search', 'reset', 'page-change', 'more', 'create']);
 
-const form = reactive(props.formConfig.formData);
+const createInitialForm = () =>
+  JSON.parse(JSON.stringify(props.formConfig.formData || {})) as Partial<Pick<RowType, NameType>>;
+const form = reactive<Partial<Pick<RowType, NameType>>>(createInitialForm());
+
+watch(
+  () => props.formConfig.formData,
+  () => {
+    Object.assign(form, createInitialForm());
+  },
+  { deep: true },
+);
 
 const { data, loading, pagination, headerAffixedTop } = toRefs(props);
 
@@ -140,13 +189,20 @@ const columnSlots = computed(() => {
 const rowKey = 'id';
 
 const handleSubmit = () => {
-  console.log('form', form);
-  emit('search', form);
+  emit('search', { ...form });
 };
 
 const handleReset = () => {
-  emit('reset');
+  Object.assign(form, createInitialForm());
+  emit('reset', { ...form });
 };
+
+onMounted(() => {
+  console.log(props.formConfig);
+  if (props.autoSearch) {
+    handleSubmit();
+  }
+});
 </script>
 <style lang="less" scoped>
 .list-common-table {
@@ -161,12 +217,5 @@ const handleReset = () => {
 
 .form-item-content {
   width: 100%;
-}
-
-.operation-container {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 4px;
 }
 </style>

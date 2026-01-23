@@ -16,7 +16,7 @@
           </div>
           <div class="info-item">
             <span class="info-label">项目状态：</span>
-            <span :class="['status-tag', projectInfo.status]">{{ projectInfo.statusText }}</span>
+            <span class="status-tag" :class="[projectInfo.status]">{{ projectInfo.statusText }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">项目时间：</span>
@@ -56,31 +56,19 @@
     <!-- 内容区域 -->
     <t-card :bordered="false" class="project-detail-content">
       <!-- 标签页 -->
-      <t-tabs theme="card" v-model="currentTab" @change="handleTabChange">
-        <t-tab-panel label="任务列表" value="tasks">
-          <task-list />
+      <t-tabs v-model="currentTab" @change="handleTabChange">
+        <t-tab-panel key="tasks" :label="`任务列表 (${taskTotal || 0})`" value="tasks" :destroy-on-hide="false">
+          <task-list @update:total="updateTaskTotal" />
         </t-tab-panel>
 
-        <t-tab-panel label="项目成员" value="members">
+        <t-tab-panel key="members" :label="`项目成员 (${memberTotal || 0})`" value="members" :destroy-on-hide="false">
           <!-- 成员列表 -->
-          <div class="members-list-section">
-            <t-table :data="memberList" :columns="memberColumns" :row-key="'id'" table-layout="fixed">
-              <template #avatar="{ row }">
-                <t-avatar size="32">{{ row.name.charAt(0) }}</t-avatar>
-              </template>
-            </t-table>
-          </div>
+          <member-list @update:total="updateMemberTotal" />
         </t-tab-panel>
 
-        <t-tab-panel label="操作日志" value="logs">
+        <t-tab-panel key="logs" label="操作日志" value="logs" :destroy-on-hide="false">
           <!-- 日志列表 -->
-          <div class="logs-list-section">
-            <t-table :data="operationLogs" :columns="logColumns" :row-key="'id'" table-layout="fixed">
-              <template #action="{ row }">
-                <span class="log-action">{{ row.action }}</span>
-              </template>
-            </t-table>
-          </div>
+          <log-list />
         </t-tab-panel>
       </t-tabs>
     </t-card>
@@ -91,11 +79,25 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
+import LogList from './logList.vue';
+import MemberList from './memberList.vue';
 import TaskList from './taskList.vue';
 
 // 响应式数据
 const route = useRoute();
 const currentTab = ref('tasks');
+const taskTotal = ref(0);
+const memberTotal = ref(0);
+
+// 更新任务总数
+const updateTaskTotal = (total: number) => {
+  taskTotal.value = total;
+};
+
+// 更新成员总数
+const updateMemberTotal = (total: number) => {
+  memberTotal.value = total;
+};
 
 // 项目基本信息
 const projectInfo = ref({
