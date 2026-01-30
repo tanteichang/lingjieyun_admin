@@ -5,38 +5,78 @@
 <script setup lang="ts">
 import type { SubmitContext } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, ref } from 'vue';
+
+import { getEnterpriseInfo } from '@/api/enterprise';
+import { getCustomerList } from '@/api/customer';
+import type { ProjectCreatePayload } from '@/api/model/projectModel';
+import { createProject } from '@/api/project';
+import { useDictStore } from '@/store/modules/dict';
+
+import { INITIAL_DATA } from './constants';
 
 defineOptions({
   name: 'ProjectPublish',
 });
 
-const router = useRouter();
-
 import GenericForm from '@/components/generic-form/index.vue';
 
-import { COMPANY_OPTIONS, INITIAL_DATA, TYPE_OPTIONS } from './constants';
+const dictStore = useDictStore();
+
+type FormData = ProjectCreatePayload & {
+  time_range: string[];
+};
 
 // 表单数据
-const formData = ref({ ...INITIAL_DATA });
+const formData = ref<FormData>({
+  ...INITIAL_DATA,
+});
 
-// 表单重置处理
-const onReset = () => {
-  MessagePlugin.warning('取消新建');
-  router.back();
-};
+const enterpriseList = ref([]);
+
+// 计算项目类型选项
+const projectTypeOptions = computed(() => {
+  return dictStore.getProjectTypeOptions;
+});
+
+// 计算开票类型选项（返回树结构）
+const invoiceTypeOptions = computed(() => {
+  return dictStore.getInvoiceTypeOptions;
+});
+
+const enterpriseOptions = computed(() => {
+  return enterpriseList.value.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
+});
 
 // 表单提交处理
 const onSubmit = (ctx: SubmitContext) => {
   if (ctx.validateResult === true) {
-    MessagePlugin.success('新建成功');
-    console.log('表单数据:', formData.value);
+    createProject({
+      name: formData.value.name,
+      customer_id: formData.value.customer_id === 'self' ? null : formData.value.customer_id,
+      desc: formData.value.desc,
+      invoice_type_id: formData.value.invoice_type_id,
+      start_time: formData.value.time_range[0],
+      end_time: formData.value.time_range[1],
+      project_type: formData.value.project_type,
+    })
+      .then((res) => {
+        MessagePlugin.success('发布成功');
+        formData.value = { ...INITIAL_DATA };
+      })
+      .finally(() => {});
   }
 };
 
-// 表单分组配置（用于通用表单组件的自动生成功能）
-const formGroups = [
+const onReset = () => {
+  formData.value = { ...INITIAL_DATA };
+};
+
+// 表单分组配置
+const formGroups = computed(() => [
   {
     title: '',
     items: [
@@ -51,23 +91,47 @@ const formGroups = [
         },
       },
       {
-        name: 'type',
+        name: 'project_type',
         label: '项目类型',
         type: 'select',
         span: 6,
+        rules: [{ required: true, message: '请选择项目类型' }],
         props: {
           clearable: true,
-          options: TYPE_OPTIONS,
+          options: projectTypeOptions.value,
         },
       },
       {
-        name: 'company',
+        name: 'customer_id',
         label: '所属企业',
         type: 'select',
         span: 6,
+        rules: [{ required: true, message: '请选择所属企业' }],
         props: {
           clearable: true,
-          options: COMPANY_OPTIONS,
+          options: enterpriseOptions.value,
+        },
+      },
+      {
+        name: 'invoice_type_id',
+        label: '开票类型',
+        type: 'treeSelect',
+        span: 6,
+        rules: [{ required: true, message: '请选择开票类型' }],
+        props: {
+          clearable: true,
+          data: invoiceTypeOptions.value,
+        },
+      },
+      {
+        name: 'time_range',
+        label: '项目时间',
+        type: 'dateRangePicker',
+        span: 12,
+        rules: [{ required: true, message: '请选择项目时间范围' }],
+        props: {
+          format: 'YYYY-MM-DD HH:mm:ss',
+          enableTimePicker: true,
         },
       },
       {
@@ -75,13 +139,30 @@ const formGroups = [
         label: '项目描述',
         type: 'textarea',
         span: 6,
+        rules: [{ required: true, message: '请输入项目描述' }],
         props: {
           placeholder: '请输入项目描述',
+          maxlength: 500,
         },
       },
     ],
   },
-];
+]);
+
+onMounted(() => {
+  // 并行获取项目类型和开票类型
+  Promise.all([getEnterpriseInfo(), getCustomerList()])
+    .then(([enterpriseRes, customerRes]) => {
+      enterpriseList.value = [
+        { id: 'self', name: enterpriseRes.data?.enterprise.name },
+        ...customerRes.data.map((item) => ({ id: item.id, name: item.full_name })),
+      ];
+    })
+    .catch((error) => {
+      console.error('获取数据失败:', error);
+      MessagePlugin.error('获取数据失败，请稍后重试');
+    });
+});
 </script>
 <style lang="less" scoped>
 // 通用表单组件已经包含了基本样式，这里可以添加项目特定的样式

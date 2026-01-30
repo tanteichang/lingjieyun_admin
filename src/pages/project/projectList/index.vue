@@ -13,10 +13,16 @@
       @page-change="handlePageChange"
       @more="handleMoreAction"
     >
-      <template #status="{ record }">
-        <t-tag :theme="statusTag[(record as ProjectRow).status].theme">{{
-          statusTag[(record as ProjectRow).status].label
-        }}</t-tag>
+      <template #projectTime="{ record }">
+        <span>{{ (record as ProjectItem).start_time || '-' }}至{{ (record as ProjectItem).end_time || '-' }}</span>
+      </template>
+      <template #project_status="{ record }">
+        <t-tag
+          :variant="PROJECT_STATUS_TAG[(record as ProjectItem).project_status].variant"
+          :theme="PROJECT_STATUS_TAG[(record as ProjectItem).project_status].theme"
+        >
+          {{ PROJECT_STATUS_TAG[(record as ProjectItem).project_status].label }}
+        </t-tag>
       </template>
       <template #op="{ record }">
         <t-space>
@@ -26,11 +32,16 @@
             </t-col>
             <t-col>
               <t-dropdown
-                :options="getDropdownOption((record as ProjectRow).status)"
+                :options="getDropdownOption((record as ProjectItem).project_status)"
                 trigger="click"
                 @click="() => handleMoreActionClick(record)"
               >
-                <t-button variant="text" size="medium">更多操作</t-button>
+                <t-button
+                  variant="text"
+                  size="medium"
+                  :disabled="getDropdownOption((record as ProjectItem).project_status).length === 0"
+                  >更多操作</t-button
+                >
               </t-dropdown>
             </t-col>
           </t-row>
@@ -60,13 +71,17 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-import type { ProjectItem, ProjectQuery, ProjectStatus } from '@/api/model/projectModel';
-import { getProjectList } from '@/api/project';
+import type { Row } from '@/api/model/common';
+import type { ProjectItem, ProjectQuery } from '@/api/model/projectModel';
+import { PROJECT_STATUS_TAG, ProjectStatus } from '@/api/model/projectModel';
+import { getProjectList, pauseProject, resumeProject, terminateProject } from '@/api/project';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
 import { useSettingStore } from '@/store';
+import { useDictStore } from '@/store/modules/dict';
+import { useProjectStore } from '@/store/modules/project';
 
 defineOptions({
   name: 'ProjectList',
@@ -74,104 +89,114 @@ defineOptions({
 
 const store = useSettingStore();
 const router = useRouter();
+const dictStore = useDictStore();
 
-type ProjectRow = ProjectItem;
+const projectStore = useProjectStore();
+
+type ProjectRow = ProjectItem & Row;
 
 const moreActionDialogVisible = ref(false);
 const moreActionType = ref('');
 const moreActionRecord = ref<ProjectRow>({} as ProjectRow);
 
+const projectTypeOptions = computed(() => dictStore.getProjectTypeOptions);
+
 const dropdownOptions: DropdownOption[] = [
   { content: '发布任务', value: 'publish', onClick: () => moreActionClick('publish') },
   { content: '暂停项目', value: 'pause', onClick: () => moreActionClick('pause') },
-  { content: '继续项目', value: 'resume', onClick: () => moreActionClick('resume') },
+  { content: '恢复项目', value: 'resume', onClick: () => moreActionClick('resume') },
   { content: '终止项目', value: 'terminate', onClick: () => moreActionClick('terminate') },
 ];
 
+/**
+ * 1-待开始 发布任务 暂停项目 终止项目
+ * 2-进行中 发布任务 暂停项目 终止项目
+ * 3-已暂停 恢复项目 终止项目
+ * 4-已终止
+ * 5-已完成
+ */
 const getDropdownOption = (status: ProjectStatus) => {
   switch (status) {
-    case 'processing':
+    case ProjectStatus.NotStarted:
       return dropdownOptions.filter((item) => item.value !== 'resume');
-    case 'paused':
-      return dropdownOptions.filter((item) => item.value !== 'pause');
-    case 'completed':
-      return [dropdownOptions[0]];
-    case 'terminated':
-      return [dropdownOptions[0]];
+    case ProjectStatus.InProgress:
+      return dropdownOptions.filter((item) => item.value !== 'resume');
+    case ProjectStatus.Paused:
+      return dropdownOptions.filter((item) => item.value !== 'pause' && item.value !== 'publish');
+    case ProjectStatus.Completed:
+      return [];
+    case ProjectStatus.Terminated:
+      return [];
     default:
       return dropdownOptions;
   }
 };
 
 const moreActionClick = (type: string) => {
-  console.log(type);
   moreActionType.value = type;
   moreActionDialogVisible.value = true;
 };
 
 const defaultQuery: ProjectQuery = {
-  name: '',
-  type: '',
-  status: 'processing',
-  company: '',
   page: 1,
   limit: 20,
 };
 
-const formConfig: FormConfig<ProjectRow, keyof ProjectRow> = {
+const formConfig = computed<FormConfig<ProjectQuery, keyof ProjectQuery>>(() => ({
   formItem: [
     { label: '项目名称', name: 'name', type: 'input', placeholder: '请输入项目名称' },
     {
-      label: '项目类型',
-      name: 'type',
-      type: 'select',
-      placeholder: '请选择项目类型',
-      options: [
-        { label: '资讯服务费', value: '12' },
-        { label: '移动端项目', value: '23' },
-        { label: '企业服务', value: '43' },
-      ],
-    },
-    {
       label: '项目状态',
-      name: 'status',
+      name: 'project_status',
       type: 'select',
       placeholder: '请选择项目状态',
-      options: [
-        { label: '进行中', value: 'processing' },
-        { label: '已暂停', value: 'paused' },
-        { label: '已完成', value: 'completed' },
-        { label: '终止', value: 'terminated' },
-      ],
+      props: {
+        options: [
+          { label: '未开始', value: ProjectStatus.NotStarted },
+          { label: '进行中', value: ProjectStatus.InProgress },
+          { label: '已暂停', value: ProjectStatus.Paused },
+          { label: '已完成', value: ProjectStatus.Completed },
+          { label: '已终止', value: ProjectStatus.Terminated },
+        ],
+      },
     },
-    { label: '所属企业', name: 'company', type: 'input', placeholder: '请输入所属企业' },
+    {
+      label: '项目类型',
+      name: 'project_type_id',
+      type: 'select',
+      placeholder: '请选择项目类型',
+      props: {
+        clearable: true,
+        options: projectTypeOptions.value,
+      },
+    },
+    {
+      label: '所属企业',
+      name: 'customer_id',
+      type: 'select',
+      placeholder: '请选择所属企业',
+      props: {
+        clearable: true,
+        // options: projectStore.enterpriseOptions.value,
+      },
+    },
   ],
   formData: defaultQuery,
-};
-const tableConfig: TableConfig<ProjectRow> = {
+}));
+const tableConfig: TableConfig<ProjectRow, keyof ProjectRow> = {
   tableItem: [
-    { title: '#', colKey: 'index', width: 80, align: 'center', fixed: 'left' },
-    { title: '项目编号', colKey: 'code', width: 120, align: 'center' },
+    { title: '#', colKey: 'id', width: 80, fixed: 'left' },
+    { title: '项目编号', colKey: 'task_no', width: 140 },
     { title: '项目名称', colKey: 'name', minWidth: 240, ellipsis: true },
-    { title: '发票类型', colKey: 'invoiceType', width: 140, align: 'center' },
-    { title: '所属企业', colKey: 'company', minWidth: 220, ellipsis: true },
-    { title: '项目时间', colKey: 'projectPeriod', width: 200 },
-    { title: '任务数量', colKey: 'taskCount', width: 120, align: 'center' },
-    { title: '项目状态', colKey: 'status', width: 120, align: 'center' },
-    { title: '所需人员', colKey: 'requiredStaff', width: 120, align: 'center' },
-    { title: '成员数量', colKey: 'memberCount', width: 120, align: 'center' },
-    { title: '操作', colKey: 'op', width: 180, fixed: 'right', align: 'center' },
+    { title: '发票类型', colKey: 'invoice_type_name', width: 140 },
+    { title: '所属企业', colKey: 'enterprise_name', minWidth: 220, ellipsis: true },
+    { title: '项目时间', colKey: 'projectTime', width: 200 },
+    { title: '任务数量', colKey: 'task_count', width: 120, align: 'center' },
+    { title: '项目状态', colKey: 'project_status', width: 120, align: 'center' },
+    { title: '所需人员', colKey: 'required_personnel', width: 120, align: 'center' },
+    { title: '成员数量', colKey: 'task_count', width: 120, align: 'center' },
+    { title: '操作', colKey: 'op', width: 150, align: 'center', fixed: 'right' },
   ],
-};
-
-const statusTag: Record<
-  ProjectStatus,
-  { label: string; theme: 'primary' | 'warning' | 'success' | 'danger'; variant?: 'light' | 'light-outline' }
-> = {
-  processing: { label: '进行中', theme: 'success', variant: 'light' },
-  paused: { label: '已暂停', theme: 'primary', variant: 'light-outline' },
-  completed: { label: '已完成', theme: 'primary', variant: 'light' },
-  terminated: { label: '已终止', theme: 'danger', variant: 'light' },
 };
 
 const headerAffixedTop = computed(
@@ -184,10 +209,11 @@ const headerAffixedTop = computed(
 
 const tableHook = useCommonTable<ProjectQuery, ProjectRow>({
   fetcher: async (params) => {
-    const { list, total } = await getProjectList(params);
+    const { data } = await getProjectList(params);
+    projectStore.setProjects(data?.list || []);
     return {
-      list,
-      total,
+      list: data?.list || [],
+      total: data?.total || 0,
     };
   },
   defaultQuery,
@@ -204,7 +230,7 @@ const {
 } = tableHook;
 
 const handleView = (row: ProjectRow) => {
-  router.push({ name: 'ProjectDetail', query: { id: row.id } });
+  router.push({ name: 'ProjectDetail', query: { projectID: row.id } });
 };
 
 const handleMoreAction = (action: DropdownOption, row: ProjectRow) => {
@@ -218,7 +244,6 @@ const handleCreate = () => {
 };
 
 const handleMoreActionClick = (record: ProjectRow) => {
-  console.log(record);
   moreActionRecord.value = record;
 };
 
@@ -226,7 +251,26 @@ const handleDialogCancel = () => {
   moreActionDialogVisible.value = false;
 };
 const handleDialogConfirm = (type: string) => {
+  console.log('handleDialogConfirm');
   console.log(type);
+  console.log(moreActionRecord.value);
+  let request = null;
+  if (type === 'pause') {
+    request = pauseProject;
+  } else if (type === 'resume') {
+    request = resumeProject;
+  } else if (type === 'terminate') {
+    request = terminateProject;
+  }
+  if (!request) return;
+  request({ id: moreActionRecord.value.id })
+    .then(() => {
+      MessagePlugin.success('操作成功');
+      tableHook.search();
+    })
+    .finally(() => {
+      handleDialogCancel();
+    });
 };
 </script>
 <style lang="less" scoped>

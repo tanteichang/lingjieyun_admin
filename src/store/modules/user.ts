@@ -19,6 +19,9 @@ export const useUserStore = defineStore('user', {
     },
   },
   actions: {
+    setToken(token: string) {
+      this.token = token;
+    },
     async login(userInfo: Record<string, unknown>) {
       const mockLogin = async (userInfo: Record<string, unknown>) => {
         // 登录请求流程

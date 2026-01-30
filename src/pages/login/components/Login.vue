@@ -9,10 +9,10 @@
     @submit="onSubmit"
   >
     <template v-if="type === 'password'">
-      <t-form-item name="account">
-        <t-input v-model="formData.account" size="large" :placeholder="`${t('pages.login.input.account')}：admin`">
+      <t-form-item name="mobile">
+        <t-input v-model="formData.mobile" size="large" :placeholder="t('pages.login.input.phone')">
           <template #prefix-icon>
-            <t-icon name="user" />
+            <t-icon name="mobile" />
           </template>
         </t-input>
       </t-form-item>
@@ -35,8 +35,8 @@
       </t-form-item>
 
       <div class="check-container remember-pwd">
-        <t-checkbox>{{ t('pages.login.remember') }}</t-checkbox>
-        <span class="tip">{{ t('pages.login.forget') }}</span>
+        <t-checkbox v-model="rememberAccount">记住账号</t-checkbox>
+        <span class="tip">忘记密码</span>
       </div>
     </template>
 
@@ -68,7 +68,7 @@
     </template>
 
     <t-form-item v-if="type !== 'qrcode'" class="btn-container">
-      <t-button block size="large" type="submit"> {{ t('pages.login.signIn') }} </t-button>
+      <t-button block size="large" type="submit" :loading="loading"> 登录 </t-button>
     </t-form-item>
 
     <div class="switch-container">
@@ -87,18 +87,17 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
+import { login } from '@/api/auth';
+import type { LoginPayload } from '@/api/model/auth';
 import { useCounter } from '@/hooks';
 import { t } from '@/locales';
 import { useUserStore } from '@/store';
 
 const userStore = useUserStore();
 
-const INITIAL_DATA = {
-  phone: '',
-  account: 'admin',
-  password: 'admin',
-  verifyCode: '',
-  checked: false,
+const INITIAL_DATA: LoginPayload = {
+  mobile: '',
+  password: '',
 };
 
 const FORM_RULES: Record<string, FormRule[]> = {
@@ -113,6 +112,20 @@ const type = ref('password');
 const form = ref<FormInstanceFunctions>();
 const formData = ref({ ...INITIAL_DATA });
 const showPsw = ref(false);
+const rememberAccount = ref(false);
+const loading = ref(false);
+
+// 初始化时从本地存储读取记住的账号
+const initRememberAccount = () => {
+  const savedAccount = localStorage.getItem('rememberedAccount');
+  if (savedAccount) {
+    formData.value.mobile = savedAccount;
+    rememberAccount.value = true;
+  }
+};
+
+// 初始化
+initRememberAccount();
 
 const [countDown, handleCounter] = useCounter();
 
@@ -137,15 +150,29 @@ const sendCode = () => {
 const onSubmit = async (ctx: SubmitContext) => {
   if (ctx.validateResult === true) {
     try {
-      await userStore.login(formData.value);
+      loading.value = true;
+      const res = await login(formData.value);
+      if (res.code === 200) {
+        // 处理记住账号
+        if (rememberAccount.value) {
+          localStorage.setItem('rememberedAccount', formData.value.mobile);
+        } else {
+          localStorage.removeItem('rememberedAccount');
+        }
 
-      MessagePlugin.success('登录成功');
-      const redirect = route.query.redirect as string;
-      const redirectUrl = redirect ? decodeURIComponent(redirect) : '/dashboard';
-      router.push(redirectUrl);
+        userStore.setToken(res.data.token);
+        MessagePlugin.success('登录成功');
+        const redirect = route.query.redirect as string;
+        const redirectUrl = redirect ? decodeURIComponent(redirect) : '/dashboard';
+        router.push(redirectUrl);
+      } else {
+        MessagePlugin.error(res.msg || '登录失败');
+      }
     } catch (e) {
       console.log(e);
       MessagePlugin.error(e.message);
+    } finally {
+      loading.value = false;
     }
   }
 };

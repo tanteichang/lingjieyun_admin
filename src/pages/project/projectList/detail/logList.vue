@@ -18,11 +18,10 @@
   </t-card>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 
-import type { LogQuery } from '@/api/model/projectModel';
 import { getLogList } from '@/api/project';
-import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
+import type { TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
@@ -32,27 +31,47 @@ defineOptions({
   name: 'LogList',
 });
 
+const emit = defineEmits<{
+  (e: 'update:total', total: number): void;
+}>();
+
 const store = useSettingStore();
 
 // Log相关类型定义
 export interface LogItem {
   id: number;
   operator: string;
+  action: string;
   operateTime: string;
 }
 
 type LogRow = LogItem;
 
-const defaultQuery: LogQuery = {
-  dateRange: [],
+const defaultQuery = {
+  name: '',
+  time: '',
+  status: '',
   page: 1,
   limit: 20,
 };
 
-const formConfig: FormConfig<LogQuery, keyof LogQuery> = {
-  formItem: [{ label: '时间范围', name: 'dateRange', type: 'date-range', placeholder: '请输入操作时间范围', span: 12 }],
+const formConfig = {
+  formItem: [
+    { label: '关键字', name: 'name', type: 'input', placeholder: '请输入名称标签', span: 6 },
+    { label: '时间', name: 'time', type: 'input', placeholder: '请输入时间范围', span: 6 },
+    {
+      label: '任务状态',
+      name: 'status',
+      type: 'select',
+      placeholder: '请选择合同编号',
+      options: [],
+      span: 6
+    },
+  ],
   formData: {
-    dateRange: ['2022-01-01 11:11:11', '2022-08-08 12:12:12'],
+    name: '',
+    time: '',
+    status: '',
   },
 };
 
@@ -73,7 +92,7 @@ const headerAffixedTop = computed(
     }) as any,
 );
 
-const tableHook = useCommonTable<TaskQuery, LogRow>({
+const tableHook = useCommonTable({
   fetcher: async (params) => {
     const { list, total } = await getLogList(params);
     return {
@@ -93,6 +112,15 @@ const {
   reset: handleReset,
   handlePageChange,
 } = tableHook;
+
+// 监听总数变化，传递给父组件
+watch(
+  () => pagination.total,
+  (newTotal) => {
+    emit('update:total', newTotal);
+  },
+  { immediate: true },
+);
 </script>
 <style lang="less" scoped>
 .log-list-card {

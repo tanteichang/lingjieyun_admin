@@ -1,11 +1,8 @@
 import { defineStore } from 'pinia';
 import type { RouteRecordRaw } from 'vue-router';
 
-import type { RouteItem } from '@/api/model/permissionModel';
-import { getMenuList } from '@/api/permission';
 import router, { fixedRouterList, homepageRouterList } from '@/router';
 import { store } from '@/store';
-import { transformObjectToRoute } from '@/utils/route';
 
 export const usePermissionStore = defineStore('permission', {
   state: () => ({
@@ -13,27 +10,22 @@ export const usePermissionStore = defineStore('permission', {
     routers: [],
     removeRoutes: [],
     asyncRoutes: [],
+    isRoutesInitialized: false,
   }),
   actions: {
     async initRoutes() {
-      const accessedRouters = this.asyncRoutes;
-
-      // 在菜单展示全部路由
-      this.routers = [...homepageRouterList, ...accessedRouters, ...fixedRouterList];
-      // 在菜单只展示动态路由和首页
-      // this.routers = [...homepageRouterList, ...accessedRouters];
-      // 在菜单只展示动态路由
-      // this.routers = [...accessedRouters];
+      // 在菜单展示全部固定路由
+      this.routers = [...homepageRouterList, ...fixedRouterList];
+      this.isRoutesInitialized = true;
     },
     async buildAsyncRoutes() {
       try {
-        // 发起菜单权限请求 获取菜单列表
-        const asyncRoutes: Array<RouteItem> = (await getMenuList()).list;
-        this.asyncRoutes = transformObjectToRoute(asyncRoutes);
+        // 不再通过接口获取菜单，直接使用本地路由
+        this.asyncRoutes = [];
         await this.initRoutes();
         return this.asyncRoutes;
       } catch (error) {
-        throw new Error("Can't build routes", error);
+        throw new Error("Can't build routes");
       }
     },
     async restoreRoutes() {
@@ -44,6 +36,8 @@ export const usePermissionStore = defineStore('permission', {
         }
       });
       this.asyncRoutes = [];
+      this.routers = [];
+      this.isRoutesInitialized = false;
     },
   },
 });

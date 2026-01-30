@@ -2,10 +2,6 @@ import type { defineComponent } from 'vue';
 
 import type { RouteMeta } from '@/types/interface';
 
-export interface MenuListResult {
-  list: Array<RouteItem>;
-}
-
 export type Component<T = any> =
   | ReturnType<typeof defineComponent>
   | (() => Promise<typeof import('*.vue')>)

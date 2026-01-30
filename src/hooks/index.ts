@@ -37,7 +37,9 @@ export const useChart = (domId: string): ShallowRef<echarts.ECharts> => {
  * @param duration
  * @returns counter
  */
-export const useCounter = (duration = 60): [Ref<number>, () => void] => {
+export const useCounter = (
+  duration = 60,
+): [Ref<number>, (callback?: () => void, validate?: () => boolean) => boolean] => {
   let intervalTimer: ReturnType<typeof setInterval>;
   onUnmounted(() => {
     clearInterval(intervalTimer);
@@ -46,7 +48,18 @@ export const useCounter = (duration = 60): [Ref<number>, () => void] => {
 
   return [
     countDown,
-    () => {
+    (callback?: () => void, validate?: () => boolean) => {
+      // 执行校验
+      if (validate && !validate()) {
+        return false;
+      }
+
+      // 执行回调
+      if (callback) {
+        callback();
+      }
+
+      // 启动倒计时
       countDown.value = duration;
       intervalTimer = setInterval(() => {
         if (countDown.value > 0) {
@@ -56,6 +69,8 @@ export const useCounter = (duration = 60): [Ref<number>, () => void] => {
           countDown.value = 0;
         }
       }, 1000);
+
+      return true;
     },
   ];
 };

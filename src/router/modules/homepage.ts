@@ -85,8 +85,8 @@ export default [
         component: () => import('@/pages/project/projectList/publish.vue'),
         meta: {
           title: {
-            zh_CN: '发布任务',
-            en_US: 'Publish Task',
+            zh_CN: '发布项目',
+            en_US: 'Publish Project',
           },
           hidden: true,
         },
@@ -100,6 +100,69 @@ export default [
             zh_CN: '任务列表',
             en_US: 'Task List',
           },
+        },
+      },
+      {
+        path: 'publishTask',
+        name: 'ProjectPublishTask',
+        component: () => import('@/pages/project/projectList/publishTask/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '发布任务',
+            en_US: 'Publish Task',
+          },
+          hidden: true,
+        },
+      },
+      {
+        path: 'taskDetail',
+        name: 'TaskDetail',
+        component: () => import('@/pages/project/taskList/detail/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '任务详情',
+            en_US: 'Task Detail',
+          },
+          hidden: true,
+        },
+      },
+    ],
+  },
+  {
+    path: '/customer',
+    component: Layout,
+    redirect: '/customer/list',
+    name: 'customer',
+    meta: {
+      title: {
+        zh_CN: '企业管理',
+        en_US: 'Customer',
+      },
+      icon: shallowRef(AssignmentIcon),
+      orderNo: 2,
+    },
+    children: [
+      {
+        path: 'list',
+        name: 'CustomerList',
+        component: () => import('@/pages/customer/list/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '企业列表',
+            en_US: 'Customer List',
+          },
+        },
+      },
+      {
+        path: 'form',
+        name: 'CustomerForm',
+        component: () => import('@/pages/customer/form/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '企业表单',
+            en_US: 'Customer Form',
+          },
+          hidden: true,
         },
       },
     ],

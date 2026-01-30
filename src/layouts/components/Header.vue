@@ -37,9 +37,14 @@
               <translate-icon />
             </t-button>
             <t-dropdown>
-              <t-dropdown-item v-for="(lang, index) in langList" :key="index" :value="lang.value"
-                @click="(options) => changeLang(options.value as string)">{{ lang.content
-                }}</t-dropdown-item></t-dropdown>
+              <t-dropdown-item
+                v-for="(lang, index) in langList"
+                :key="index"
+                :value="lang.value"
+                @click="(options) => changeLang(options.value as string)"
+                >{{ lang.content }}</t-dropdown-item
+              ></t-dropdown
+            >
           </t-dropdown>
           <t-dropdown :min-column-width="120" trigger="click">
             <template #dropdown>
@@ -73,7 +78,6 @@ import { ChevronDownIcon, PoweroffIcon, SettingIcon, TranslateIcon, UserCircleIc
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import LBreadcrumb from './Breadcrumb.vue';
 
 import LogoFull from '@/assets/assets-logo-full.svg?component';
 import { prefix } from '@/config/global';
@@ -83,6 +87,7 @@ import { getActive } from '@/router';
 import { useSettingStore, useUserStore } from '@/store';
 import type { MenuRoute, ModeType } from '@/types/interface';
 
+import LBreadcrumb from './Breadcrumb.vue';
 import MenuContent from './MenuContent.vue';
 import Notice from './Notice.vue';
 import Search from './Search.vue';

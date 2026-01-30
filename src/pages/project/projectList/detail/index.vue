@@ -1,46 +1,51 @@
 <template>
   <div class="project-detail-page">
     <!-- 页面头部 -->
-    <t-card :bordered="false" class="project-detail-header">
+    <t-card v-if="projectInfo" :bordered="false" class="project-detail-header">
       <!-- 基本信息 -->
       <div class="basic-info-section">
         <h3 class="section-title">基本信息</h3>
         <div class="basic-info-grid">
           <div class="info-item">
             <span class="info-label">项目编号：</span>
-            <span class="info-value">{{ projectInfo.projectCode }}</span>
+            <span class="info-value">{{ projectInfo.task_no }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">项目名称：</span>
-            <span class="info-value">{{ projectInfo.projectName }}</span>
+            <span class="info-value">{{ projectInfo.name }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">项目状态：</span>
-            <span class="status-tag" :class="[projectInfo.status]">{{ projectInfo.statusText }}</span>
+            <t-tag
+              :theme="PROJECT_STATUS_TAG[projectInfo.project_status].theme"
+              :color="PROJECT_STATUS_TAG[projectInfo.project_status].color"
+              variant="light-outline"
+              >{{ PROJECT_STATUS_TAG[projectInfo.project_status].label || '--' }}</t-tag
+            >
           </div>
           <div class="info-item">
             <span class="info-label">项目时间：</span>
-            <span class="info-value">{{ projectInfo.projectTime }}</span>
+            <span class="info-value">{{ projectInfo.start_time }} - {{ projectInfo.end_time }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">项目类型：</span>
-            <span class="info-value">{{ projectInfo.projectType }}</span>
+            <span class="info-value">{{ projectInfo.invoice_type_name }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">完成所需人数：</span>
-            <span class="info-value">{{ projectInfo.requiredPeople }}</span>
+            <span class="info-value">{{ projectInfo.required_personnel }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">发票类型：</span>
-            <span class="info-value">{{ projectInfo.invoiceType }}</span>
+            <span class="info-value">{{ projectInfo.invoice_type_name }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">所属公司：</span>
-            <span class="info-value">{{ projectInfo.company }}</span>
+            <span class="info-value">{{ projectInfo.enterprise_name }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">自由报名人数：</span>
-            <span class="info-value">{{ projectInfo.registeredPeople }}</span>
+            <span class="info-value">{{ projectInfo.free_recruitment_count }}</span>
           </div>
         </div>
       </div>
@@ -49,7 +54,7 @@
       <!-- 项目描述 -->
       <div class="project-description">
         <span class="info-label">项目描述：</span>
-        <span class="info-value">{{ projectInfo.description }}</span>
+        <span class="info-value">{{ projectInfo.desc }}</span>
       </div>
     </t-card>
 
@@ -60,15 +65,19 @@
         <t-tab-panel key="tasks" :label="`任务列表 (${taskTotal || 0})`" value="tasks" :destroy-on-hide="false">
           <task-list @update:total="updateTaskTotal" />
         </t-tab-panel>
-
-        <t-tab-panel key="members" :label="`项目成员 (${memberTotal || 0})`" value="members" :destroy-on-hide="false">
+        <t-tab-panel
+          key="members"
+          :label="`项目成员 (${memberTotal || '-'}人)`"
+          value="members"
+          :destroy-on-hide="false"
+        >
           <!-- 成员列表 -->
           <member-list @update:total="updateMemberTotal" />
         </t-tab-panel>
 
-        <t-tab-panel key="logs" label="操作日志" value="logs" :destroy-on-hide="false">
+        <t-tab-panel key="logs" :label="`操作日志 (${logTotal || 0})`" value="logs" :destroy-on-hide="false">
           <!-- 日志列表 -->
-          <log-list />
+          <log-list @update:total="updateLogTotal" />
         </t-tab-panel>
       </t-tabs>
     </t-card>
@@ -79,6 +88,12 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
+import type { ProjectItem } from '@/api/model/projectModel';
+import { PROJECT_STATUS_TAG, ProjectStatus } from '@/api/model/projectModel';
+import { useProjectStore } from '@/store/modules/project';
+
+const projectStore = useProjectStore();
+
 import LogList from './logList.vue';
 import MemberList from './memberList.vue';
 import TaskList from './taskList.vue';
@@ -88,6 +103,7 @@ const route = useRoute();
 const currentTab = ref('tasks');
 const taskTotal = ref(0);
 const memberTotal = ref(0);
+const logTotal = ref(0);
 
 // 更新任务总数
 const updateTaskTotal = (total: number) => {
@@ -99,20 +115,27 @@ const updateMemberTotal = (total: number) => {
   memberTotal.value = total;
 };
 
+// 更新日志总数
+const updateLogTotal = (total: number) => {
+  logTotal.value = total;
+};
+
 // 项目基本信息
-const projectInfo = ref({
-  projectCode: 'XM487',
-  projectName: '贵港市政务平台APP项目',
-  status: 'processing',
-  statusText: '进行中',
-  projectTime: '2025-12-28至2026-02-15',
-  projectType: '重要类',
-  requiredPeople: 3,
-  invoiceType: '资讯服务',
-  company: '新新网络科技有限公司',
-  registeredPeople: 5,
-  description:
-    '我公司需开展服务类项目，项目不分期完成，预计完成时间为2025-12-28至2026-02-14，需要由包括山客等其他服务商提供服务',
+const projectInfo = ref<ProjectItem>({
+  id: '', // 唯一标识
+  task_no: '', // 项目编号
+  name: '', // 项目名称
+  desc: '', // 项目描述
+  invoice_type_name: '', // 发票类型
+  enterprise_name: '', // 所属企业
+  projectTime: '', // 项目时间
+  start_time: '', // 项目开始时间
+  end_time: '', // 项目结束时间
+  task_count: 0, // 任务数量
+  project_status: ProjectStatus.NotStarted, // 项目状态（枚举值）
+  required_personnel: 0, // 所需人员数量表
+  direct_recruitment_count: 0, // 定向招募人数
+  free_recruitment_count: 0, // 自由招募人数
 });
 
 // 任务搜索条件
@@ -367,7 +390,13 @@ const viewTaskDetail = (taskId: number) => {
 // 页面加载时获取数据
 onMounted(() => {
   // 这里可以实现实际的数据获取逻辑
-  console.log('项目详情页面加载');
+  console.log('路由参数:', route);
+  const projectId = route.query.projectID as string;
+  const project = projectStore.getProject(projectId);
+  console.log('项目详情:', project);
+  if (project) {
+    projectInfo.value = project;
+  }
 });
 </script>
 <style lang="less" scoped>

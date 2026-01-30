@@ -82,7 +82,7 @@ const defaultQuery: TaskQuery = {
   limit: 20,
 };
 
-const formConfig: FormConfig<MemberRow, keyof MemberRow> = {
+const formConfig = {
   formItem: [
     { label: '姓名', name: 'name', type: 'input', placeholder: '请输入姓名或名称', span: 6 },
     { label: '手机号码', name: 'phone', type: 'input', placeholder: '请输入手机号', span: 6 },
@@ -91,8 +91,10 @@ const formConfig: FormConfig<MemberRow, keyof MemberRow> = {
       name: 'status',
       type: 'select',
       placeholder: '请选择任务编号',
-      options: [{ label: 'XM487', value: 'XM487' }],
       span: 6,
+      props: {
+        options: [{ label: '111', value: 'XM487' }],
+      },
     },
     { label: '所属任务', name: 'taskName', type: 'input', placeholder: '请选择任务类型', span: 6 },
   ],

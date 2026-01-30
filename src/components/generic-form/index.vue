@@ -9,8 +9,15 @@
     @submit="onSubmit"
   >
     <div class="form-container">
-      <div class="form-item" :style="{ width: props.containerWidth + 'px' }">
-        <div v-if="title" class="form-container-title">{{ title }}</div>
+      <div class="form-item" :style="{ width: `${props.containerWidth}px` }">
+        <t-row justify="space-between" align="middle">
+          <t-col align="left">
+            <div v-if="title" class="form-container-title">{{ title }}</div>
+          </t-col>
+          <t-col align="right">
+            <t-button variant="text" theme="primary" @click="handleBack">返回</t-button>
+          </t-col>
+        </t-row>
 
         <!-- 自定义内容插槽 -->
         <slot name="content">
@@ -20,7 +27,7 @@
 
             <t-row :gutter="group.gutter || [32, 24]">
               <t-col v-for="(item, itemIndex) in group.items" :key="itemIndex" :span="item.span || 6">
-                <t-form-item :label="item.label" :name="item.name">
+                <t-form-item v-if="item.show !== false" :label="item.label" :name="item.name">
                   <!-- 根据字段类型渲染不同的表单控件 -->
                   <component
                     :is="getFormComponent(item.type)"
@@ -41,10 +48,10 @@
         <div class="form-submit-left">
           <!-- 自定义操作按钮插槽 -->
           <slot name="actions">
-            <t-button theme="primary" class="form-submit-confirm" type="submit">
+            <t-button :loading="loading" theme="primary" class="form-submit-confirm" type="submit">
               {{ confirmText }}
             </t-button>
-            <t-button type="reset" class="form-submit-cancel" theme="default" variant="base">
+            <t-button :loading="loading" type="reset" class="form-submit-cancel" theme="default" variant="base">
               {{ cancelText }}
             </t-button>
           </slot>
@@ -54,11 +61,31 @@
   </t-form>
 </template>
 <script setup lang="ts">
-import type { SubmitContext, FormRule } from 'tdesign-vue-next';
-import { t } from '@/locales';
-import { computed } from 'vue';
+import type { FormRule, SubmitContext } from 'tdesign-vue-next';
 // 导入TDesign表单组件
-import { Input, Select, RadioGroup, Radio, DatePicker, Upload, Textarea } from 'tdesign-vue-next';
+import { DatePicker, DateRangePicker, Input, RadioGroup, Select, Textarea, TreeSelect, Upload } from 'tdesign-vue-next';
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+
+const props = withDefaults(defineProps<GenericFormProps>(), {
+  labelAlign: 'top',
+  labelWidth: 100,
+  confirmText: () => t('pages.formBase.confirm'),
+  cancelText: () => t('pages.formBase.cancel'),
+  containerWidth: 800,
+  loading: false,
+});
+
+// 组件事件
+const emit = defineEmits<{
+  (e: 'submit', ctx: SubmitContext): void;
+  (e: 'reset'): void;
+}>();
+
+const router = useRouter();
+
+import RichTextEditor from '@/components/rich-text-editor/index.vue';
+import { t } from '@/locales';
 
 // 表单控件映射
 const formComponents = {
@@ -68,6 +95,9 @@ const formComponents = {
   datePicker: DatePicker,
   upload: Upload,
   textarea: Textarea,
+  treeSelect: TreeSelect,
+  dateRangePicker: DateRangePicker,
+  richTextEditor: RichTextEditor,
 };
 
 // 组件Props
@@ -75,6 +105,7 @@ interface FormItem {
   name: string;
   label: string;
   type: keyof typeof formComponents | string;
+  show?: boolean;
   span?: number;
   rules?: FormRule[];
   props?: Record<string, any>;
@@ -95,15 +126,8 @@ interface GenericFormProps {
   confirmText?: string;
   cancelText?: string;
   containerWidth?: number;
+  loading?: boolean;
 }
-
-const props = withDefaults(defineProps<GenericFormProps>(), {
-  labelAlign: 'top',
-  labelWidth: 100,
-  confirmText: () => t('pages.formBase.confirm'),
-  cancelText: () => t('pages.formBase.cancel'),
-  containerWidth: 800,
-});
 
 const rules = computed(() => {
   const rules: Record<string, FormRule[]> = {};
@@ -117,15 +141,9 @@ const rules = computed(() => {
   return rules;
 });
 
-// 组件事件
-const emit = defineEmits<{
-  (e: 'submit', ctx: SubmitContext): void;
-  (e: 'reset'): void;
-}>();
-
 // 获取表单组件
 const getFormComponent = (type: string) => {
-  return formComponents[type as keyof typeof formComponents] || TInput;
+  return formComponents[type as keyof typeof formComponents];
 };
 
 // 表单提交处理
@@ -137,8 +155,13 @@ const onSubmit = (ctx: SubmitContext) => {
 const onReset = () => {
   emit('reset');
 };
-</script>
 
+const handleBack = () => {
+  if (window.history.length > 1) {
+    router.back();
+  }
+};
+</script>
 <style lang="less" scoped>
 .generic-form {
   width: 100%;
@@ -153,7 +176,7 @@ const onReset = () => {
   padding: var(--td-comp-paddingTB-xxl) var(--td-comp-paddingLR-xxl) 80px var(--td-comp-paddingLR-xxl);
 
   .form-item {
-    width:100%;
+    width: 100%;
 
     .form-container-title {
       font: var(--td-font-title-large);

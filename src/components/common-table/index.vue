@@ -12,14 +12,15 @@
                   type="search"
                   :placeholder="item.placeholder"
                   class="form-item-content"
+                  v-bind="item.props"
                 />
                 <t-select
                   v-else-if="item.type === 'select'"
                   v-model="form[item.name]"
                   :placeholder="item.placeholder"
-                  :options="item.options"
                   clearable
                   class="form-item-content"
+                  v-bind="item.props"
                 />
                 <t-date-picker
                   v-else-if="item.type === 'date'"
@@ -27,14 +28,15 @@
                   type="date"
                   :placeholder="item.placeholder"
                   class="form-item-content"
+                  v-bind="item.props"
                 />
                 <t-date-range-picker
                   v-else-if="item.type === 'date-range'"
                   v-model="form[item.name]"
-                  enable-time-picker
                   type="daterange"
                   :placeholder="item.placeholder"
                   class="form-item-content"
+                  v-bind="item.props"
                 />
               </t-form-item>
             </t-col>
@@ -78,41 +80,43 @@
   lang="ts"
   generic="
     RowType extends Record<string, any> = Record<string, any>,
-    NameType extends Extract<keyof RowType, string> = Extract<keyof RowType, string>
+    FormType extends Record<string, any> = Record<string, any>,
+    NameType extends Extract<keyof FormType, string> = Extract<keyof FormType, string>
   "
 >
 import type { DropdownOption, PaginationProps } from 'tdesign-vue-next';
 import { computed, onMounted, reactive, toRefs, useSlots, watch, withDefaults } from 'vue';
 
-export type RowKey<Row> = Extract<keyof Row, string>;
+// export type RowKey<Row> = Extract<keyof Row, string>;
+export type RowKey<Row> = keyof Row;
 
-export interface FormConfig<Row, FieldKey extends RowKey<Row>> {
+export interface FormConfig<T, K extends keyof T = keyof T> {
   /** 表单配置 */
   formItem: Array<{
     /** 表单项标签 */
     label: string;
     /** 表单项名称 */
-    name: FieldKey;
+    name: K;
     /** 表单项宽度 */
     span?: number;
     /** 表单项类型 */
     type: 'input' | 'select' | 'date' | 'date-range';
     /** 表单项占位符 */
     placeholder?: string;
-    /** select 表单项选项 */
-    options?: DropdownOption[];
+    /** 传递给渲染组件的额外属性 */
+    props?: Record<string, any>;
   }>;
   /** 表单数据 */
-  formData: Partial<Pick<Row, FieldKey>>;
+  formData: Partial<Pick<T, K>>;
 }
 
-export interface TableConfig<Row> {
+export interface TableConfig<Row, FieldKey extends RowKey<Row>> {
   /** 表格配置 */
   tableItem: Array<{
     /** 表格项标签 */
     title: string;
     /** 表格项名称 */
-    colKey: RowKey<Row> | string;
+    colKey: FieldKey;
     /** 表格项宽度 */
     width?: number;
     /** 表格项最小宽度 */
@@ -133,7 +137,7 @@ const props = withDefaults(
     pagination?: PaginationProps;
     headerAffixedTop?: any;
     dropdownOptions?: DropdownOption[];
-    formConfig: FormConfig<RowType, NameType>;
+    formConfig: FormConfig<FormType, NameType>;
     tableConfig: TableConfig<RowType>;
     /** 是否在挂载时自动触发查询 */
     autoSearch?: boolean;
@@ -159,8 +163,8 @@ const props = withDefaults(
 const emit = defineEmits(['search', 'reset', 'page-change', 'more', 'create']);
 
 const createInitialForm = () =>
-  JSON.parse(JSON.stringify(props.formConfig.formData || {})) as Partial<Pick<RowType, NameType>>;
-const form = reactive<Partial<Pick<RowType, NameType>>>(createInitialForm());
+  JSON.parse(JSON.stringify(props.formConfig.formData || {})) as Partial<Pick<FormType, NameType>>;
+const form = reactive<Partial<Pick<FormType, NameType>>>(createInitialForm());
 
 watch(
   () => props.formConfig.formData,

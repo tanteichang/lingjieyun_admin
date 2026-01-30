@@ -11,9 +11,12 @@
       @reset="handleReset"
       @page-change="handlePageChange"
     >
-      <template #status="{ record }">
-        <t-tag :theme="statusTag[(record as TaskRow).status].theme">
-          {{ statusTag[(record as TaskRow).status].label }}
+      <template #task_status="{ record }">
+        <t-tag
+          :variant="TASK_STATUS_TAG[(record as TaskItem).task_status].variant"
+          :theme="TASK_STATUS_TAG[(record as TaskItem).task_status].theme"
+        >
+          {{ TASK_STATUS_TAG[(record as TaskItem).task_status].label }}
         </t-tag>
       </template>
       <template #op="{ record }">
@@ -35,13 +38,15 @@
 import { computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import type { TaskQuery } from '@/api/model/projectModel';
-import { getTaskList } from '@/api/project';
+import type { Row } from '@/api/model/common';
+import type { TaskItem, TaskQuery } from '@/api/model/taskModel';
+import { TASK_STATUS_TAG, TaskStatus } from '@/api/model/taskModel';
+import { getTaskList } from '@/api/task';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
-import { useSettingStore } from '@/store';
+import { useSettingStore, useTaskStore } from '@/store';
 
 defineOptions({
   name: 'TaskList',
@@ -51,75 +56,64 @@ const emit = defineEmits<{
   (e: 'update:total', total: number): void;
 }>();
 const store = useSettingStore();
+const taskStore = useTaskStore();
 const router = useRouter();
 
-// Task相关类型定义
-export type TaskStatus = 'processing' | 'paused' | 'completed' | 'terminated' | '';
-
-export interface TaskItem {
-  id: number;
-  code: string;
-  name: string;
-  type: string;
-  recruitType: string;
-  status: TaskStatus;
-  memberCount: number;
-}
-
-type TaskRow = TaskItem;
+type TaskRow = TaskItem & Row;
 
 const defaultQuery: TaskQuery = {
-  name: '',
-  status: '',
+  task_name: '',
+  task_status: null,
+  project_id: Number(router.currentRoute.value.query.projectID),
   page: 1,
   limit: 20,
 };
 
-const formConfig: FormConfig<TaskRow, keyof TaskRow> = {
+const formConfig: FormConfig<TaskQuery> = {
   formItem: [
-    { label: '任务名称', name: 'name', type: 'input', placeholder: '请输入任务名称', span: 6 },
+    {
+      label: '任务名称',
+      name: 'task_name',
+      type: 'input',
+      placeholder: '请输入任务名称',
+      span: 6,
+      props: { clearable: true },
+    },
     {
       label: '任务状态',
-      name: 'status',
+      name: 'task_status',
       type: 'select',
       placeholder: '请选择任务状态',
-      options: [
-        { label: '进行中', value: 'processing' },
-        { label: '已暂停', value: 'paused' },
-        { label: '已完成', value: 'completed' },
-        { label: '已终止', value: 'terminated' },
-      ],
+      props: {
+        clearable: true,
+        options: [
+          { label: '未发布', value: TaskStatus.UNRELEASED },
+          { label: '进行中', value: TaskStatus.IN_PROGRESS },
+          { label: '已暂停', value: TaskStatus.PAUSED },
+          { label: '已完成', value: TaskStatus.COMPLETED },
+          { label: '已终止', value: TaskStatus.TERMINATED },
+        ],
+      },
       span: 6,
     },
   ],
   formData: {
-    name: '',
-    status: '',
+    task_name: '',
+    task_status: null,
   },
 };
 
-const tableConfig: TableConfig<TaskRow> = {
+const tableConfig: TableConfig<TaskRow, keyof TaskRow> = {
   tableItem: [
-    { title: '#', colKey: 'index', width: 80, align: 'center' as const, fixed: 'left' },
-    { title: '任务编号', colKey: 'code', width: 120, align: 'center' as const },
+    { title: '#', colKey: 'id', width: 80, align: 'center' as const, fixed: 'left' },
+    { title: '任务编号', colKey: 'task_no', width: 120, align: 'center' as const },
     { title: '任务名称', colKey: 'name', minWidth: 240, ellipsis: true },
-    { title: '任务类型', colKey: 'type', width: 120, align: 'center' as const },
-    { title: '招募方式', colKey: 'recruitType', width: 120, align: 'center' as const },
-    { title: '任务状态', colKey: 'status', width: 120, align: 'center' as const },
-    { title: '成员数量', colKey: 'memberCount', width: 120, align: 'center' as const },
-    { title: '操作', colKey: 'op', width: 180, fixed: 'right', align: 'center' as const },
+    // { title: '任务类型', colKey: 'type', width: 120, align: 'center' as const },
+    { title: '招募方式', colKey: 'recruitment_type_text', width: 120, align: 'center' as const },
+    { title: '任务状态', colKey: 'task_status', width: 120, align: 'center' as const },
+    { title: '成员数量', colKey: 'member_count', width: 120, align: 'center' as const },
+    { title: '操作', colKey: 'op', width: 60, fixed: 'right', align: 'center' as const },
   ],
-};
-
-const statusTag: Record<
-  TaskStatus,
-  { label: string; theme: 'primary' | 'warning' | 'success' | 'danger'; variant?: 'light' | 'light-outline' }
-> = {
-  '': { label: '全部', theme: 'primary', variant: 'light' },
-  processing: { label: '进行中', theme: 'success', variant: 'light' },
-  paused: { label: '已暂停', theme: 'primary', variant: 'light-outline' },
-  completed: { label: '已完成', theme: 'primary', variant: 'light' },
-  terminated: { label: '已终止', theme: 'danger', variant: 'light' },
 };
 
 const headerAffixedTop = computed(
@@ -132,10 +126,12 @@ const headerAffixedTop = computed(
 
 const tableHook = useCommonTable<TaskQuery, TaskRow>({
   fetcher: async (params) => {
-    const { list, total } = await getTaskList(params);
+    const { data } = await getTaskList(params);
+    // 存储当前页面的任务列表
+    taskStore.setTasks(data?.list || []);
     return {
-      list,
-      total,
+      list: data?.list || [],
+      total: data?.total || 0,
     };
   },
   defaultQuery,
@@ -163,11 +159,12 @@ watch(
 );
 
 const handleView = (row: TaskRow) => {
-  router.push({ name: 'TaskDetail', query: { id: row.id } });
+  router.push({ name: 'TaskDetail', query: { taskID: row.id } });
 };
 
 const handleCreate = () => {
-  router.push({ name: 'TaskPublish' });
+  const projectID = router.currentRoute.value.query.projectID as string;
+  router.push({ name: 'ProjectPublishTask', query: { projectID } });
 };
 </script>
 <style lang="less" scoped>

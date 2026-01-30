@@ -1,8 +1,10 @@
 // axios配置  可自行根据项目进行更改，只需更改该文件即可，其他文件可以不动
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance, AxiosRequestConfig } from 'axios';
 import isString from 'lodash/isString';
 import merge from 'lodash/merge';
+import { MessagePlugin } from 'tdesign-vue-next';
 
+import { Code } from '@/api/model/common';
 import { ContentTypeEnum } from '@/constants';
 import { useUserStore } from '@/store';
 
@@ -36,7 +38,7 @@ const transform: AxiosTransform = {
     if (!isTransformResponse) {
       return res.data;
     }
-
+    console.log('res', res);
     // 错误的时候返回
     const { data } = res;
     if (!data) {
@@ -127,12 +129,24 @@ const transform: AxiosTransform = {
 
   // 响应拦截器处理
   responseInterceptors: (res) => {
+    if (res.data.code === 1004) {
+      handleLoginExpired();
+    }
     return res;
   },
 
   // 响应错误处理
   responseInterceptorsCatch: (error: any, instance: AxiosInstance) => {
+    console.log('error', error);
     const { config } = error;
+
+    if (error.response.status === 401) {
+      handleLoginExpired();
+    }
+    if (error.response.status === 500) {
+      MessagePlugin.error('服务器内部错误，请联系客服处理');
+    }
+
     if (!config || !config.requestOptions.retry) return Promise.reject(error);
 
     config.retryCount = config.retryCount || 0;
@@ -150,6 +164,13 @@ const transform: AxiosTransform = {
     return backoff.then((config) => instance.request(config));
   },
 };
+
+function handleLoginExpired() {
+  MessagePlugin.error('登录过期，3秒后将跳转至登录页');
+  setTimeout(() => {
+    window.location.href = '/login';
+  }, 3000);
+}
 
 function createAxios(opt?: Partial<CreateAxiosOptions>) {
   return new VAxios(
@@ -169,7 +190,7 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
         // 配置项，下面的选项都可以在独立的接口请求中覆盖
         requestOptions: {
           // 接口地址
-          apiUrl: host,
+          apiUrl: '',
           // 是否自动添加接口前缀
           isJoinPrefix: true,
           // 接口前缀
@@ -179,7 +200,7 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
           // 是否返回原生响应头 比如：需要获取响应头时使用该属性
           isReturnNativeResponse: false,
           // 需要对返回数据进行处理
-          isTransformResponse: true,
+          isTransformResponse: false,
           // post请求的时候添加参数到url
           joinParamsToUrl: false,
           // 格式化提交参数时间
@@ -194,7 +215,7 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
           withToken: true,
           // 重试
           retry: {
-            count: 3,
+            count: 0,
             delay: 1000,
           },
         },
@@ -204,3 +225,43 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
   );
 }
 export const request = createAxios();
+
+type RequestConfig = AxiosRequestConfig & {
+  showError?: boolean;
+};
+
+export const postRequest: <T>(config: RequestConfig) => Promise<T> = (config) => {
+  return new Promise((resolve, reject) => {
+    request
+      .post(config)
+      .then((res) => {
+        if (res.code !== Code.OK) {
+          config.showError && MessagePlugin.error(res.msg);
+          reject(res.msg);
+        }
+        resolve(res);
+      })
+      .catch((err) => {
+        config.showError && MessagePlugin.error(err);
+        reject(err);
+      });
+  });
+};
+
+export const getRequest = (config: RequestConfig) => {
+  return new Promise((resolve, reject) => {
+    request
+      .get(config)
+      .then((res) => {
+        if (res.code !== Code.OK) {
+          config.showError && MessagePlugin.error(res.msg);
+          reject(res.msg);
+        }
+        resolve(res);
+      })
+      .catch((err) => {
+        config.showError && MessagePlugin.error(err);
+        reject(err);
+      });
+  });
+};

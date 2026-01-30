@@ -18,3 +18,6 @@
 ## Project Structure
 - App entry at `src/main.ts`; routing under `src/router`; auth/permission guard in `src/permission.ts`.
 - Pages under `src/pages`; shared UI in `src/components`; layouts in `src/layouts`; state in `src/store`; i18n strings in `src/locales`; configuration helpers in `src/config`.
+
+## Components
+- 列表/查询页优先使用 `src/components/common-table` 组合件：通过 `formConfig`（formItem/formData）和 `tableConfig`（tableItem）定义表单与表格列，插槽名与 `colKey` 对应；搭配 `useCommonTable` 处理分页/搜索重置，必要时传 `header-affixed-top` 以适配吸顶。

@@ -4,14 +4,13 @@ import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 import type { ConfigEnv, UserConfig } from 'vite';
 import { loadEnv } from 'vite';
-import { viteMockServe } from 'vite-plugin-mock';
 import svgLoader from 'vite-svg-loader';
 
 const CWD = process.cwd();
 
 // https://vitejs.dev/config/
 export default ({ mode }: ConfigEnv): UserConfig => {
-  const { VITE_BASE_URL, VITE_API_URL_PREFIX } = loadEnv(mode, CWD);
+  const { VITE_BASE_URL, VITE_API_URL_PREFIX, VITE_API_URL } = loadEnv(mode, CWD);
   return {
     base: VITE_BASE_URL,
     resolve: {
@@ -32,22 +31,17 @@ export default ({ mode }: ConfigEnv): UserConfig => {
       },
     },
 
-    plugins: [
-      vue(),
-      vueJsx(),
-      viteMockServe({
-        watchFiles: true,
-        mockPath: 'mock',
-        enable: true,
-      }),
-      svgLoader(),
-    ],
+    plugins: [vue(), vueJsx(), svgLoader()],
 
     server: {
       port: 3002,
       host: '0.0.0.0',
       proxy: {
-        [VITE_API_URL_PREFIX]: 'http://127.0.0.1:3000/',
+        [VITE_API_URL_PREFIX]: {
+          target: VITE_API_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(new RegExp(`^${VITE_API_URL_PREFIX}`), ''),
+        },
       },
     },
   };

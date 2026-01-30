@@ -15,16 +15,13 @@ export const FORM_RULES: Record<string, FormRule[]> = {
 
 export const INITIAL_DATA = {
   name: '',
-  type: '',
-  partyA: '',
-  partyB: '',
-  signDate: '',
-  startDate: '',
-  endDate: '',
-  payment: '1',
-  amount: 0,
-  comment: '',
-  files: [] as Array<UploadFile>,
+  customer_id: '',
+  desc: '',
+  invoice_type_id: null,
+  start_time: '',
+  end_time: '',
+  project_type: null,
+  time_range: [],
 };
 
 export const TYPE_OPTIONS = [
