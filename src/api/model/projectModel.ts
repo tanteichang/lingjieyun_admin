@@ -18,6 +18,10 @@ export interface LogQuery extends Query {
   dateRange?: string[];
 }
 
+export interface MemberListQuery {
+  product_id: string;
+}
+
 // 项目状态枚举（与后端统一）
 export enum ProjectStatus {
   NotStarted = 1,
@@ -86,7 +90,8 @@ export interface ProjectCreatePayload {
   invoice_type_id: number;
   start_time: string;
   end_time: string;
-  project_type: number;
+  project_type_id: number;
+  required_personnel: number;
 }
 
 export interface ProjectCreateResult {

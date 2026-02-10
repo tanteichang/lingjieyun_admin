@@ -25,8 +25,9 @@ export interface CreateCustomerPayload {
   full_name: string; // 客户名称full_name
   contact_person: string; // 联系人
   contact_phone: string; // 联系电话
+  credit_code: string; // 信用代码
   address: string; // 客户地址
-  remark: string; // 备注
+  manager_id: number; // 管理员ID
 }
 
 // 创建客户响应
@@ -37,15 +38,8 @@ export interface CreateCustomerResponseData {
 export type CreateCustomerResponse = ApiResponse<CreateCustomerResponseData>;
 
 // 更新客户请求参数
-export interface UpdateCustomerPayload {
+export interface UpdateCustomerPayload extends CreateCustomerPayload {
   id: number; // 客户ID
-  name: string; // 客户名称
-  full_name: string; // 客户全称
-  credit_code: string; // 信用代码
-  contact_person: string; // 联系人
-  contact_phone: string; // 联系电话
-  address: string; // 客户地址
-  remark: string; // 备注
 }
 
 // 更新客户响应

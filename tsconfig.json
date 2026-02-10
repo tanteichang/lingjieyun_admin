@@ -21,14 +21,9 @@
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "noImplicitThis": true,
-    "alwaysStrict": true
+    "alwaysStrict": true,
+    "noEmitOnError": false
   },
-  "include": [
-    "**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "node_modules/tdesign-vue-next/global.d.ts"
-  ],
+  "include": ["**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "node_modules/tdesign-vue-next/global.d.ts"],
   "compileOnSave": false
 }

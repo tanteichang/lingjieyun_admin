@@ -1,6 +1,7 @@
 import { MessagePlugin } from 'tdesign-vue-next';
 
 import type {
+  MemberListQuery,
   ProjectClosePayload,
   ProjectCloseResponse,
   ProjectCreatePayload,
@@ -17,7 +18,7 @@ import type {
   ProjectUpdateResponse,
   TaskQuery,
 } from '@/api/model/projectModel';
-import { request, postRequest } from '@/utils/request';
+import { postRequest, request } from '@/utils/request';
 
 const Api = {
   ProjectList: '/admin/enterprise/project/list',
@@ -27,7 +28,7 @@ const Api = {
   ProjectPause: '/admin/enterprise/project/pause',
   ProjectResume: '/admin/enterprise/project/resume',
   TaskList: '/project/task/list',
-  MemberList: '/project/member/list',
+  MemberList: '/admin/enterprise/member/applyList',
   LogList: '/project/log/list',
   ProjectTerminate: '/admin/enterprise/project/terminate',
 };
@@ -63,7 +64,7 @@ interface MemberListResult {
   total: number;
 }
 
-export function getMemberList(params: TaskQuery) {
+export function getMemberList(params: MemberListQuery) {
   return request.get<MemberListResult>({
     url: Api.MemberList,
     params,

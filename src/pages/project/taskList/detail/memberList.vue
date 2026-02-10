@@ -30,10 +30,12 @@
 </template>
 <script setup lang="ts">
 import type { DropdownOption } from 'tdesign-vue-next';
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
-import type { TaskQuery } from '@/api/model/projectModel';
-import { getMemberList } from '@/api/project';
+import type { Row } from '@/api/model/common';
+import type { TaskMemberItem, TaskMemberListQuery } from '@/api/model/taskModel';
+import { getTaskMemberList } from '@/api/task';
 import type { TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
@@ -44,18 +46,26 @@ defineOptions({
   name: 'TaskMemberList',
 });
 
+const emit = defineEmits<{
+  (e: 'update:total', total: number): void;
+}>();
+
+const route = useRoute();
+
+const total = ref(0);
+
+watch(
+  () => total.value,
+  (total) => {
+    emit('update:total', total);
+  },
+  { immediate: true },
+);
+
 type RealNameStatus = 'pending' | 'signed';
 type ContractStatus = 'pending' | 'processing' | 'signed';
 
-interface MemberRow {
-  id: number;
-  name: string;
-  phone: string;
-  channel: string;
-  realNameStatus: RealNameStatus;
-  contractStatus: ContractStatus;
-  joinTime: string;
-}
+type MemberRow = TaskMemberItem & Row;
 
 const filters = reactive({
   name: '',
@@ -94,23 +104,21 @@ const formConfig = {
     },
   ],
   formData: {
-    name: '',
-    phone: '',
-    contractStatus: '',
+    task_id: Number(route.query.taskID),
     page: 1,
     limit: 10,
   },
 };
 
-const tableConfig: TableConfig<MemberRow> = {
+const tableConfig: TableConfig<MemberRow, keyof MemberRow> = {
   tableItem: [
     { title: '#', colKey: 'index', width: 70, align: 'center', fixed: 'left' },
-    { title: '姓名', colKey: 'name', width: 120, align: 'center' },
-    { title: '手机号码', colKey: 'phone', width: 150, align: 'center' },
+    { title: '姓名', colKey: 'talent_info_name', width: 120, align: 'center' },
+    { title: '手机号码', colKey: 'talent_info_phone', width: 150, align: 'center' },
     { title: '入驻渠道', colKey: 'channel', width: 120, align: 'center' },
     { title: '实名状态', colKey: 'realNameStatus', width: 120, align: 'center' },
     { title: '签约状态', colKey: 'contractStatus', width: 120, align: 'center' },
-    { title: '加入时间', colKey: 'joinTime', width: 160, align: 'center' },
+    { title: '加入时间', colKey: 'join_time', width: 160, align: 'center' },
     { title: '操作', colKey: 'op', width: 200, align: 'center', fixed: 'right' },
   ],
 };
@@ -124,10 +132,20 @@ const headerAffixedTop = computed(
     }) as any,
 );
 
-const tableHook = useCommonTable<TaskQuery, MemberRow>({
+const tableHook = useCommonTable<TaskMemberListQuery, MemberRow>({
   fetcher: async (params) => {
-    const { list, total } = await getMemberList(params);
-    return { list, total };
+    const { data } = await getTaskMemberList(params);
+    total.value = data.total;
+    return {
+      list:
+        data.list.map((item, index) => ({
+          ...item,
+          index: index + 1,
+          talent_info_name: item.talent_info.name,
+          talent_info_phone: item.talent_info.phone,
+        })) || [],
+      total: data.total || 0,
+    };
   },
   defaultQuery: formConfig.formData,
   debounceWait: 300,

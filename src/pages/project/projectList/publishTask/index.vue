@@ -60,23 +60,22 @@
 <script setup lang="ts">
 import type { SubmitContext } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import type { TaskPublishPayload } from '@/api/model/taskModel';
 import { AcceptanceType, DeliveryMode, RecruitmentType } from '@/api/model/taskModel';
 import { publishTask } from '@/api/task';
 import GenericForm from '@/components/generic-form/index.vue';
+import type { LngLatValue } from '@/components/lngLatPicker/index.vue';
+import type { ProvinceCityAreaValue } from '@/components/provinceCityAreaPicker/index.vue';
 import { useDictStore } from '@/store/modules/dict';
 import { useProjectStore } from '@/store/modules/project';
 
 import {
   acceptanceOptions,
   acceptancePeriodOptions,
-  cityOptions,
   deliveryOptions,
-  districtOptions,
-  provinceOptions,
   recruitModeOptions,
   settlementOptions,
 } from './constants';
@@ -91,7 +90,7 @@ const dictStore = useDictStore();
 const router = useRouter();
 const route = useRoute();
 
-const currentStep = ref(0);
+const currentStep = ref(1);
 
 const projectInfo = computed(() => projectStore.getProject(route.query.projectID as string));
 const projectTypeOptions = computed(() => dictStore.getProjectTypeOptions);
@@ -100,6 +99,8 @@ type FormData = TaskPublishPayload & {
   _dateRange: string[];
   _recruitment_type: number[];
   _delivery_mode: number[];
+  _provinceCityArea: ProvinceCityAreaValue;
+  _lngLat: LngLatValue;
 };
 
 const formData = ref<FormData>({
@@ -112,6 +113,15 @@ const formData = ref<FormData>({
   _dateRange: [],
   _recruitment_type: [],
   _delivery_mode: [],
+  _provinceCityArea: {
+    province: '',
+    city: '',
+    district: '',
+  },
+  _lngLat: {
+    lng: '',
+    lat: '',
+  },
 });
 
 const formGroupsStep1 = computed(() => [
@@ -160,42 +170,36 @@ const formGroupsStep1 = computed(() => [
         },
       },
       {
-        name: 'province',
+        name: '_provinceCityArea',
         label: '任务地址',
-        type: 'select',
-        span: 4,
+        type: 'provinceCityAreaPicker',
+        span: 8,
         rules: [{ required: true, message: '请选择省份' }],
-        props: { options: provinceOptions, placeholder: '省' },
       },
       {
-        name: 'city',
-        label: '',
-        type: 'select',
-        span: 4,
-        rules: [{ required: true, message: '请选择城市' }],
-        props: { options: cityOptions, placeholder: '市' },
-      },
-      {
-        name: 'district',
-        label: '',
-        type: 'select',
-        span: 4,
-        rules: [{ required: true, message: '请选择区县' }],
-        props: { options: districtOptions, placeholder: '区' },
-      },
-      {
-        name: 'address',
+        name: 'detail_address',
         label: '具体地址',
         type: 'input',
-        span: 12,
+        span: 8,
         rules: [{ required: true, message: '请填写具体地址' }],
         props: { placeholder: '请填写具体地址' },
+      },
+      {
+        name: '_lngLat',
+        label: '经纬度',
+        type: 'lngLatPicker',
+        span: 8,
+        rules: [{ required: true, message: '请选择经纬度' }],
+        props: {
+          disabled: !formData.value.detail_address,
+          mapKeyword: `${formData.value._provinceCityArea.province}${formData.value._provinceCityArea.city}${formData.value._provinceCityArea.district}${formData.value.detail_address}`,
+        },
       },
       {
         name: 'settlement_type',
         label: '佣金结算',
         type: 'select',
-        span: 4,
+        span: 6,
         rules: [{ required: true, message: '请选择结算方式' }],
         props: { options: settlementOptions, placeholder: '请选择' },
       },
@@ -203,8 +207,24 @@ const formGroupsStep1 = computed(() => [
         name: 'commission',
         label: '佣金',
         type: 'input',
-        span: 4,
+        span: 6,
         rules: [{ required: true, message: '请输入结算金额' }],
+        props: { placeholder: '请输入金额', suffix: '元', type: 'number' },
+      },
+      {
+        name: 'commission_min',
+        label: '最小佣金',
+        type: 'input',
+        span: 6,
+        rules: [{ required: false, message: '请输入结算金额' }],
+        props: { placeholder: '请输入金额', suffix: '元', type: 'number' },
+      },
+      {
+        name: 'commission_max',
+        label: '最大佣金',
+        type: 'input',
+        span: 6,
+        rules: [{ required: false, message: '请输入结算金额' }],
         props: { placeholder: '请输入金额', suffix: '元', type: 'number' },
       },
       {
@@ -332,6 +352,7 @@ const projectSubtitle = computed(() => {
 });
 
 const handleBack = () => {
+  currentStep.value = 0;
   if (window.history.length > 1) {
     router.back();
   } else {
@@ -355,6 +376,11 @@ const onSubmitStep2 = (ctx: SubmitContext) => {
       recruitment_type:
         formData.value._recruitment_type.length > 1 ? RecruitmentType.BOTH : formData.value._recruitment_type[0],
       delivery_mode: formData.value._delivery_mode.length > 1 ? DeliveryMode.BOTH : formData.value._delivery_mode[0],
+      province: formData.value._provinceCityArea.province,
+      city: formData.value._provinceCityArea.city,
+      district: formData.value._provinceCityArea.district,
+      longitude: formData.value._lngLat.lng,
+      latitude: formData.value._lngLat.lat,
     };
     console.log(payload);
     publishTask(payload).then((res) => {
@@ -381,31 +407,35 @@ const handlePrev = () => {
 const handleCreateAnother = () => {
   currentStep.value = 0;
   formData.value = {
-    company: 'company-1',
-    project: '灵捷云平台开发',
+    project: '',
     title: '',
-    type: 'dev',
+    type: '',
     startDate: '',
     endDate: '',
-    province: 'gd',
-    city: 'gz',
-    district: 'tianhe',
+    province: '',
+    city: '',
+    district: '',
     address: '',
-    settlementType: 'monthly',
+    settlementType: '',
     settlementAmount: '',
-    recruitMode: ['free'],
-    acceptance: 'history',
-    deliveryMode: ['miniProgram'],
-    tags: ['veteran'],
+    recruitMode: [''],
+    acceptance: '',
+    deliveryMode: [''],
+    tags: [''],
     requiredPeople: '',
-    education: 'none',
-    experience: 'none',
+    education: '',
+    experience: '',
     taskDescription: '',
     acceptanceStandard: '',
     deliveryRequirement: '',
   };
 };
-
+watch(
+  () => formData.value.city,
+  (newCity) => {
+    formData.value.district = null;
+  },
+);
 // 页面加载时获取数据
 onMounted(() => {});
 </script>

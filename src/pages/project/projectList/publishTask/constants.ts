@@ -6,16 +6,9 @@ import {
   SettlementType,
 } from '@/api/model/taskModel';
 
-export const provinceOptions = [{ label: '广东省', value: '广东省' }];
-export const cityOptions = [{ label: '广州市', value: '广州市' }];
-export const districtOptions = [
-  { label: '天河区', value: '天河区' },
-  { label: '越秀区', value: '越秀区' },
-  { label: '海珠区', value: '海珠区' },
-];
 export const settlementOptions: { label: string; value: SettlementType }[] = [
   { label: '按次', value: SettlementType.PER_TIME },
-  { label: '按单', value: SettlementType.PER_ORDER },
+  { label: '按单', value: SettlementType.ORDER },
   { label: '按日', value: SettlementType.DAILY },
   { label: '按周', value: SettlementType.WEEKLY },
   { label: '按月', value: SettlementType.MONTHLY },

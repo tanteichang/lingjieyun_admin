@@ -15,7 +15,6 @@ router.beforeEach(async (to, from, next) => {
   const { whiteListRouters } = permissionStore;
 
   const userStore = useUserStore();
-  console.log('userStore.token', userStore.token);
 
   if (userStore.token) {
     if (to.path === '/login') {

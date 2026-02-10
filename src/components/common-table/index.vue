@@ -58,14 +58,16 @@
     <div class="table-container">
       <t-table
         :data="data"
-        :columns="tableConfig.tableItem"
+        :columns="columnsWithIndex"
         :row-key="rowKey"
         vertical-align="middle"
         :hover="true"
         :loading="loading"
         :pagination="pagination"
         :header-affixed-top="headerAffixedTop"
+        :selected-row-keys="innerSelectedRowKeys"
         table-layout="fixed"
+        @select-change="handleSelectChange"
         @page-change="(pageInfo) => $emit('page-change', pageInfo)"
       >
         <template v-for="slot in columnSlots" :key="slot.colKey" #[slot.colKey]="{ row }">
@@ -85,7 +87,7 @@
   "
 >
 import type { DropdownOption, PaginationProps } from 'tdesign-vue-next';
-import { computed, onMounted, reactive, toRefs, useSlots, watch, withDefaults } from 'vue';
+import { computed, onMounted, reactive, ref, toRefs, useSlots, watch, withDefaults } from 'vue';
 
 // export type RowKey<Row> = Extract<keyof Row, string>;
 export type RowKey<Row> = keyof Row;
@@ -117,6 +119,8 @@ export interface TableConfig<Row, FieldKey extends RowKey<Row>> {
     title: string;
     /** 表格项名称 */
     colKey: FieldKey;
+    /** 表格项类型（用于行选择等） */
+    type?: 'single' | 'multiple';
     /** 表格项宽度 */
     width?: number;
     /** 表格项最小宽度 */
@@ -130,6 +134,8 @@ export interface TableConfig<Row, FieldKey extends RowKey<Row>> {
   }>;
 }
 
+type SelectionType = 'single' | 'multiple';
+
 const props = withDefaults(
   defineProps<{
     data?: RowType[];
@@ -141,6 +147,11 @@ const props = withDefaults(
     tableConfig: TableConfig<RowType>;
     /** 是否在挂载时自动触发查询 */
     autoSearch?: boolean;
+    /** 表格选择类型：single | multiple */
+    selectionType?: SelectionType;
+    /** 选中的行 key */
+    selectedRowKeys?: Array<string | number>;
+    selectionDisabled?: (param: { row: RowType; rowIndex: number }) => boolean;
   }>(),
   {
     data: () => [],
@@ -157,10 +168,19 @@ const props = withDefaults(
       }) as PaginationProps,
     dropdownOptions: () => [],
     autoSearch: true,
+    selectedRowKeys: () => [],
   },
 );
 
-const emit = defineEmits(['search', 'reset', 'page-change', 'more', 'create']);
+const emit = defineEmits([
+  'search',
+  'reset',
+  'page-change',
+  'more',
+  'create',
+  'selection-change',
+  'update:selectedRowKeys',
+]);
 
 const createInitialForm = () =>
   JSON.parse(JSON.stringify(props.formConfig.formData || {})) as Partial<Pick<FormType, NameType>>;
@@ -191,6 +211,61 @@ const columnSlots = computed(() => {
 });
 
 const rowKey = 'id';
+
+const innerSelectedRowKeys = ref<Array<string | number>>([...props.selectedRowKeys]);
+
+watch(
+  () => props.selectedRowKeys,
+  (next) => {
+    if (next) {
+      innerSelectedRowKeys.value = [...next];
+    }
+  },
+  { deep: true },
+);
+
+const handleSelectChange = (
+  selectedRowKeys: Array<number>,
+  context: { selectedRowData?: RowType[]; currentRowKey?: string | number; type?: string },
+) => {
+  innerSelectedRowKeys.value = [...selectedRowKeys];
+  emit('update:selectedRowKeys', [...selectedRowKeys]);
+  emit('selection-change', {
+    selectedRowKeys: [...selectedRowKeys],
+    selectedRowData: context?.selectedRowData || [],
+    currentRowKey: context?.currentRowKey,
+    type: context?.type,
+  });
+};
+
+const columnsWithIndex = computed(() => {
+  const baseColumns = props.tableConfig.tableItem || [];
+  const hasRowSelect = baseColumns.some((col) => col.colKey === 'row-select');
+  const hasIndex = baseColumns.some((col) => col.colKey === '__index');
+  const pageSize = pagination.value?.pageSize || 20;
+  const current = pagination.value?.current || 1;
+  const indexColumn = {
+    title: '#',
+    colKey: '__index',
+    width: 80,
+    align: 'center',
+    cell: (_h: any, { rowIndex }: { rowIndex: number }) => (current - 1) * pageSize + rowIndex + 1,
+  };
+  const prefixColumns: Array<Record<string, any>> = [];
+  if (props.selectionType && !hasRowSelect) {
+    prefixColumns.push({
+      colKey: 'row-select',
+      type: props.selectionType,
+      disabled: props.selectionDisabled,
+      width: 64,
+      fixed: 'left',
+    });
+  }
+  if (!hasIndex) {
+    prefixColumns.push(indexColumn);
+  }
+  return [...prefixColumns, ...baseColumns];
+});
 
 const handleSubmit = () => {
   emit('search', { ...form });

@@ -21,7 +21,13 @@
         <div class="info-item">
           <span class="label">所属项目</span><span class="value">{{ taskInfo.project.name }}</span>
         </div>
-        <div class="info-item"><span class="label">佣金结算方式</span><span class="value">按日 / 200元</span></div>
+        <div class="info-item">
+          <span class="label">佣金结算方式</span
+          ><span class="value">
+            {{ taskInfo.commission }}
+            {{ taskInfo.commission_settlement_type_text }}
+          </span>
+        </div>
         <div class="info-item"><span class="label">发放时间要求</span><span class="value">按日</span></div>
         <div class="info-item"><span class="label">自由招募人数</span><span class="value">0</span></div>
         <div class="info-item"><span class="label">定向招募人数</span><span class="value">5</span></div>
@@ -40,18 +46,23 @@
     <t-card :bordered="false" class="tabs-card">
       <t-tabs v-model="currentTab">
         <t-tab-panel :label="`任务成员 (${memberTotal})`" value="members">
-          <memberList />
+          <memberList @update:total="handleUpdateMemberTotal" />
         </t-tab-panel>
         <t-tab-panel value="apply">
           <template #label>
-            <t-badge :count="applyTotal" :offset="[0, 0]">
+            <t-badge :count="applyPending" :offset="[0, 0]">
               <span>报名审批&nbsp;&nbsp;</span>
             </t-badge>
           </template>
-          <registrationList />
+          <registrationList @update:pending="handleUpdatePending" />
         </t-tab-panel>
-        <t-tab-panel :label="`交付物审核 (${deliveryTotal})`" value="delivery">
-          <div>sdf</div>
+        <t-tab-panel value="delivery">
+          <template #label>
+            <t-badge :count="deliveryPending" :offset="[0, 0]">
+              <span>交付物审核&nbsp;&nbsp;</span>
+            </t-badge>
+          </template>
+          <deliveryList @update:pending="handleUpdateDelivery" />
         </t-tab-panel>
         <t-tab-panel label="交付物上传" value="upload">
           <div>sdf</div>
@@ -75,6 +86,7 @@ const route = useRoute();
 import type { TaskItem } from '@/api/model/taskModel';
 import { useTaskStore } from '@/store';
 
+import deliveryList from './deliveryList.vue';
 import memberList from './memberList.vue';
 import registrationList from './registrationList.vue';
 
@@ -84,9 +96,9 @@ const taskStore = useTaskStore();
 
 const currentTab = ref('members');
 
-const memberTotal = ref(1);
-const applyTotal = ref(1);
-const deliveryTotal = ref(3);
+const memberTotal = ref(0);
+const applyPending = ref(0);
+const deliveryPending = ref(0);
 
 onMounted(() => {
   const taskID = route.query.taskID as string;
@@ -96,6 +108,16 @@ onMounted(() => {
     console.log(taskInfo.value);
   }
 });
+
+const handleUpdateMemberTotal = (total: number) => {
+  memberTotal.value = total;
+};
+const handleUpdatePending = (pending: number) => {
+  applyPending.value = pending;
+};
+const handleUpdateDelivery = (pending: number) => {
+  deliveryPending.value = pending;
+};
 </script>
 <style lang="less" scoped>
 .task-detail-page {

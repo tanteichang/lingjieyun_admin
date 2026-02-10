@@ -14,7 +14,7 @@
           <t-col align="left">
             <div v-if="title" class="form-container-title">{{ title }}</div>
           </t-col>
-          <t-col align="right">
+          <t-col v-if="props.goBack" align="right">
             <t-button variant="text" theme="primary" @click="handleBack">返回</t-button>
           </t-col>
         </t-row>
@@ -26,7 +26,12 @@
             <div v-if="group.title" class="form-group-title">{{ group.title }}</div>
 
             <t-row :gutter="group.gutter || [32, 24]">
-              <t-col v-for="(item, itemIndex) in group.items" :key="itemIndex" :span="item.span || 6">
+              <t-col
+                v-for="(item, itemIndex) in group.items"
+                :key="itemIndex"
+                :span="item.span || 6"
+                :offset="item.offset || 0"
+              >
                 <t-form-item v-if="item.show !== false" :label="item.label" :name="item.name">
                   <!-- 根据字段类型渲染不同的表单控件 -->
                   <component
@@ -67,6 +72,9 @@ import { DatePicker, DateRangePicker, Input, RadioGroup, Select, Textarea, TreeS
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
+import LngLatPicker from '../lngLatPicker/index.vue';
+import ProvinceCityAreaPicker from '../provinceCityAreaPicker/index.vue';
+
 const props = withDefaults(defineProps<GenericFormProps>(), {
   labelAlign: 'top',
   labelWidth: 100,
@@ -74,6 +82,7 @@ const props = withDefaults(defineProps<GenericFormProps>(), {
   cancelText: () => t('pages.formBase.cancel'),
   containerWidth: 800,
   loading: false,
+  goBack: false,
 });
 
 // 组件事件
@@ -98,6 +107,8 @@ const formComponents = {
   treeSelect: TreeSelect,
   dateRangePicker: DateRangePicker,
   richTextEditor: RichTextEditor,
+  provinceCityAreaPicker: ProvinceCityAreaPicker,
+  lngLatPicker: LngLatPicker,
 };
 
 // 组件Props
@@ -107,6 +118,7 @@ interface FormItem {
   type: keyof typeof formComponents | string;
   show?: boolean;
   span?: number;
+  offset?: number;
   rules?: FormRule[];
   props?: Record<string, any>;
 }
@@ -127,6 +139,7 @@ interface GenericFormProps {
   cancelText?: string;
   containerWidth?: number;
   loading?: boolean;
+  goBack?: boolean;
 }
 
 const rules = computed(() => {

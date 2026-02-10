@@ -36,8 +36,6 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { useCustomerStore } from '@/store/modules/customer';
-
 import { deleteCustomer, getCustomerList } from '@/api/customer';
 import type { Row } from '@/api/model/common';
 import type { Customer } from '@/api/model/customer';
@@ -46,6 +44,7 @@ import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
 import { useSettingStore } from '@/store';
+import { useCustomerStore } from '@/store/modules/customer';
 
 defineOptions({
   name: 'CustomerList',
@@ -73,7 +72,7 @@ const statusTabs: Array<{ label: string; value: CustomerStatus | '' }> = [
 
 const statusTag: Record<CustomerStatus, { label: string; theme: DropdownOption['theme'] }> = {
   1: { label: '正常', theme: 'success' },
-  0: { label: '禁用', theme: 'danger' },
+  0: { label: '禁用', theme: 'warning' },
 };
 
 const customerStatusOptions = statusTabs.slice(1);
@@ -93,14 +92,14 @@ const formConfig: FormConfig<CustomerRow, keyof CustomerRow> = {
       name: 'status',
       type: 'select',
       placeholder: '请选择状态',
-      options: customerStatusOptions,
       span: 6,
+      props: { options: customerStatusOptions },
     },
   ],
   formData: { ...defaultQuery },
 };
 
-const tableConfig: TableConfig<CustomerRow> = {
+const tableConfig: TableConfig<CustomerRow, keyof CustomerRow> = {
   tableItem: [
     { title: '#', colKey: 'index', width: 70, align: 'center', fixed: 'left' },
     { title: '客户编号', colKey: 'customer_no', width: 140, align: 'center' },
@@ -126,13 +125,14 @@ const headerAffixedTop = computed(
 
 const tableHook = useCommonTable<CustomerQuery, CustomerRow>({
   fetcher: async (params) => {
-    const response = await getCustomerList();
+    const response = await getCustomerList(params);
     const data = response.data;
     useCustomerStore().setCustomers(data);
     return { list: data, total: data.length };
   },
   defaultQuery,
   debounceWait: 300,
+  autoSearch: true,
 });
 
 const {

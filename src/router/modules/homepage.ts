@@ -126,6 +126,40 @@ export default [
           hidden: true,
         },
       },
+      {
+        path: 'registrationApproval',
+        name: 'RegistrationApproval',
+        component: () => import('@/pages/project/registrationApproval/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '报名审核',
+            en_US: 'Registration Approval',
+          },
+        },
+      },
+      {
+        path: 'deliveryUpload',
+        name: 'DeliveryUpload',
+        component: () => import('@/pages/project/deliveryUpload/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '交付上传',
+            en_US: 'Delivery Upload',
+          },
+        },
+      },
+      {
+        path: 'deliveryUploadDetail',
+        name: 'DeliveryUploadDetail',
+        component: () => import('@/pages/project/deliveryUpload/uploadDetail.vue'),
+        meta: {
+          title: {
+            zh_CN: '交付物明细',
+            en_US: 'Delivery Upload Detail',
+          },
+          hidden: true,
+        },
+      },
     ],
   },
   {
@@ -151,6 +185,7 @@ export default [
             zh_CN: '企业列表',
             en_US: 'Customer List',
           },
+          keepAlive: false,
         },
       },
       {

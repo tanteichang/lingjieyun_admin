@@ -20,8 +20,9 @@ export const INITIAL_DATA = {
   invoice_type_id: null,
   start_time: '',
   end_time: '',
-  project_type: null,
+  project_type_id: null,
   time_range: [],
+  required_personnel: null,
 };
 
 export const TYPE_OPTIONS = [

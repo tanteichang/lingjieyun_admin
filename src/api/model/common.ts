@@ -10,6 +10,7 @@ export interface Query {
 }
 
 export interface Row {
+  index?: number;
   op?: VNode;
 }
 

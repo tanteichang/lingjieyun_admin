@@ -7,8 +7,8 @@ import type { SubmitContext } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, onMounted, ref } from 'vue';
 
-import { getEnterpriseInfo } from '@/api/enterprise';
 import { getCustomerList } from '@/api/customer';
+import { getEnterpriseInfo } from '@/api/enterprise';
 import type { ProjectCreatePayload } from '@/api/model/projectModel';
 import { createProject } from '@/api/project';
 import { useDictStore } from '@/store/modules/dict';
@@ -61,7 +61,8 @@ const onSubmit = (ctx: SubmitContext) => {
       invoice_type_id: formData.value.invoice_type_id,
       start_time: formData.value.time_range[0],
       end_time: formData.value.time_range[1],
-      project_type: formData.value.project_type,
+      project_type_id: formData.value.project_type_id,
+      required_personnel: formData.value.required_personnel,
     })
       .then((res) => {
         MessagePlugin.success('发布成功');
@@ -91,7 +92,7 @@ const formGroups = computed(() => [
         },
       },
       {
-        name: 'project_type',
+        name: 'project_type_id',
         label: '项目类型',
         type: 'select',
         span: 6,
@@ -127,11 +128,21 @@ const formGroups = computed(() => [
         name: 'time_range',
         label: '项目时间',
         type: 'dateRangePicker',
-        span: 12,
+        span: 6,
         rules: [{ required: true, message: '请选择项目时间范围' }],
         props: {
-          format: 'YYYY-MM-DD HH:mm:ss',
-          enableTimePicker: true,
+          format: 'YYYY-MM-DD',
+        },
+      },
+      {
+        name: 'required_personnel',
+        label: '所需人员数量',
+        type: 'input',
+        span: 6,
+        rules: [{ required: true, message: '请输入必填人员数量' }],
+        props: {
+          type: 'number',
+          placeholder: '请输入必填人员数量',
         },
       },
       {

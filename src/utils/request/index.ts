@@ -190,7 +190,7 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
         // 配置项，下面的选项都可以在独立的接口请求中覆盖
         requestOptions: {
           // 接口地址
-          apiUrl: '',
+          apiUrl: host,
           // 是否自动添加接口前缀
           isJoinPrefix: true,
           // 接口前缀
@@ -248,7 +248,7 @@ export const postRequest: <T>(config: RequestConfig) => Promise<T> = (config) =>
   });
 };
 
-export const getRequest = (config: RequestConfig) => {
+export const getRequest: <T>(config: RequestConfig) => Promise<T> = (config) => {
   return new Promise((resolve, reject) => {
     request
       .get(config)

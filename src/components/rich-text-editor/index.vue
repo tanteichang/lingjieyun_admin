@@ -42,7 +42,7 @@ const editorRef = shallowRef<any>(null); // TS 加 any 避免类型报错，新�
 // const valueHtml = ref('<p>hello</p>');
 
 // 工具栏配置，可按需扩展
-const toolbarConfig = ref({});
+const toolbarConfig = {};
 // 编辑器配置，保留原有占位符
 const editorConfig = ref({ placeholder: '请输入内容...' });
 // 编辑器模式，和template中mode一致
@@ -56,6 +56,8 @@ watch(
     const editor = editorRef.value;
     if (!editor || newVal === oldVal) return; // 避免无意义更新和循环
     // 同步编辑器内容，保持和父组件v-model一致
+    console.log('-----');
+    console.log(editor.getAllMenuKeys());
     editor.setHtml(newVal || '');
   },
   { immediate: true }, // 立即执行：确保初始值正常回显
@@ -109,9 +111,9 @@ const customAlert = (info: string, type: string) => {
 const customPaste = (editor: any, event: ClipboardEvent, callback: (flag: boolean) => void) => {
   console.log('ClipboardEvent 粘贴事件对象', event);
   // 自定义插入内容
-  editor.insertText('xxx');
+  // editor.insertText('xxx');
   // 阻止默认粘贴行为
-  callback(false);
+  callback(true);
   // callback(true) // 返回 true ，继续默认的粘贴行为
 };
 

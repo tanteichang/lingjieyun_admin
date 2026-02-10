@@ -39,8 +39,6 @@ import type { MenuRoute, ModeType } from '@/types/interface';
 import pgk from '../../../package.json';
 import MenuContent from './MenuContent.vue';
 
-const envMode = import.meta.env.MODE
-
 const { menu, showLogo, isFixed, layout, theme, isCompact } = defineProps({
   menu: {
     type: Array as PropType<MenuRoute[]>,
@@ -71,6 +69,8 @@ const { menu, showLogo, isFixed, layout, theme, isCompact } = defineProps({
     default: false,
   },
 });
+
+const envMode = import.meta.env.MODE;
 
 const MIN_POINT = 992 - 1;
 

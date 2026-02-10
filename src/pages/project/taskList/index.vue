@@ -20,6 +20,9 @@
       @reset="handleReset"
       @page-change="handlePageChange"
     >
+      <template #project="{ record }">
+        {{ record.project?.name || '-' }}
+      </template>
       <template #status="{ record }">
         <t-tag :theme="statusTag[(record as TaskRow).status]?.theme" variant="light">
           {{ statusTag[(record as TaskRow).status]?.label || '-' }}
@@ -51,13 +54,14 @@
   </t-card>
 </template>
 <script setup lang="ts">
-import type { DropdownOption } from 'tdesign-vue-next';
+import type { TdTagProps } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import type { Row } from '@/api/model/common';
-import type { TaskItem, TaskQuery } from '@/api/model/taskModel';
+import type { Status_Counts, TaskItem, TaskQuery } from '@/api/model/taskModel';
+import { TaskStatus } from '@/api/model/taskModel';
 import { getTaskList } from '@/api/task';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
@@ -71,25 +75,23 @@ defineOptions({
 
 const router = useRouter();
 
-type TaskStatus = 'processing' | 'paused' | 'completed' | 'terminated' | 'draft';
-
 type TaskRow = TaskItem & Row;
 
-const statusTabs: Array<{ label: string; value: TaskStatus | '' }> = [
-  { label: '全部', value: '' },
-  { label: '未发布', value: 'draft' },
-  { label: '进行中', value: 'processing' },
+const statusTabs: Array<{ label: string; value: keyof Status_Counts }> = [
+  { label: '全部', value: 'all' },
+  { label: '未发布', value: 'unpublished' },
+  { label: '进行中', value: 'ongoing' },
   { label: '已完成', value: 'completed' },
   { label: '已暂停', value: 'paused' },
   { label: '已终止', value: 'terminated' },
 ];
 
-const statusTag: Record<TaskStatus, { label: string; theme: DropdownOption['theme'] }> = {
-  processing: { label: '进行中', theme: 'warning' },
-  paused: { label: '已暂停', theme: 'primary' },
-  completed: { label: '已完成', theme: 'success' },
-  terminated: { label: '已终止', theme: 'danger' },
-  draft: { label: '未发布', theme: 'primary' },
+const statusTag: Record<TaskStatus, { label: string; theme: TdTagProps['theme'] }> = {
+  [TaskStatus.ongoing]: { label: '进行中', theme: 'warning' },
+  [TaskStatus.paused]: { label: '已暂停', theme: 'primary' },
+  [TaskStatus.completed]: { label: '已完成', theme: 'success' },
+  [TaskStatus.terminated]: { label: '已终止', theme: 'danger' },
+  [TaskStatus.unpublished]: { label: '未发布', theme: 'primary' },
 };
 
 const taskTypeOptions = [
@@ -129,27 +131,27 @@ const formConfig: FormConfig<TaskRow, keyof TaskRow> = {
   formData: { ...defaultQuery },
 };
 
-const tableConfig: TableConfig<TaskRow> = {
+const tableConfig: TableConfig<TaskRow, keyof TaskRow> = {
   tableItem: [
-    { title: '#', colKey: 'index', width: 70, align: 'center', fixed: 'left' },
-    { title: '任务编号', colKey: 'code', width: 120, align: 'center' },
+    { title: 'ID', colKey: 'id', width: 70, align: 'center', fixed: 'left' },
+    { title: '任务编号', colKey: 'task_no', width: 120, align: 'center' },
     { title: '任务名称', colKey: 'name', minWidth: 180, ellipsis: true },
-    { title: '任务类型', colKey: 'type', width: 140 },
+    { title: '任务类型', colKey: 'project', width: 140 },
     { title: '所属项目', colKey: 'project', minWidth: 200, ellipsis: true },
-    { title: '招募方式', colKey: 'recruitType', width: 120 },
-    { title: '任务时间', colKey: 'taskPeriod', width: 180 },
-    { title: '任务状态', colKey: 'status', width: 110, align: 'center' },
-    { title: '所需人员', colKey: 'requiredPeople', width: 100, align: 'center' },
-    { title: '成员数量', colKey: 'memberCount', width: 100, align: 'center' },
+    { title: '招募方式', colKey: 'recruitment_type_text', width: 120 },
+    { title: '任务时间', colKey: 'task_time', width: 180 },
+    { title: '任务状态', colKey: 'task_status', width: 110, align: 'center' },
+    { title: '所需人员', colKey: 'required_personnel', width: 100, align: 'center' },
+    { title: '成员数量', colKey: 'member_count', width: 100, align: 'center' },
     { title: '操作', colKey: 'op', width: 180, align: 'center', fixed: 'right' },
   ],
 };
 
-const currentStatus = ref<string>('');
-const tabCounts = reactive<Record<string, number>>({
-  '': 0,
-  draft: 0,
-  processing: 0,
+const currentStatus = ref<string>(statusTabs[0].value);
+const tabCounts = reactive<Record<keyof Status_Counts, number>>({
+  all: 0,
+  unpublished: 0,
+  ongoing: 0,
   completed: 0,
   paused: 0,
   terminated: 0,
@@ -167,7 +169,11 @@ const headerAffixedTop = computed(
 const tableHook = useCommonTable<TaskQuery, TaskRow>({
   fetcher: async (params) => {
     const { data } = await getTaskList(params);
-    tabCounts[''] = data.total || 0;
+    tabCounts.all = data.total || 0;
+    Object.keys(data.status_counts).forEach((key) => {
+      const typedKey = key as keyof Status_Counts;
+      tabCounts[typedKey] = data.status_counts[typedKey];
+    });
     return { list: data.list, total: data.total, status_counts: data.status_counts || {} };
   },
   defaultQuery,
@@ -184,22 +190,26 @@ const {
   query,
 } = tableHook;
 
-// watch(
-//   () => tableData.value,
-//   (list) => {
-//     const countMap: Record<string, number> = { '': pagination.total || 0 };
-//     list?.forEach((item) => {
-//       countMap[item.status] = (countMap[item.status] || 0) + 1;
-//     });
-//     Object.keys(tabCounts).forEach((key) => {
-//       tabCounts[key] = countMap[key] ?? tabCounts[key];
-//     });
-//   },
-// );
+const handleTabChange = (value: keyof Status_Counts) => {
+  console.log('切换标签:', value);
+  currentStatus.value = value;
 
-const handleTabChange = (value: string | number) => {
-  currentStatus.value = String(value);
-  query.status = currentStatus.value;
+  // 处理 'all' 特殊情况，因为它不在 TaskStatus 枚举中
+  let statusValue: TaskStatus | undefined;
+  if (value !== 'all') {
+    // 创建状态映射，将字符串键转换为对应的枚举值
+    const statusMap: Record<Exclude<keyof Status_Counts, 'all'>, TaskStatus> = {
+      ongoing: TaskStatus.ongoing,
+      paused: TaskStatus.paused,
+      terminated: TaskStatus.terminated,
+      completed: TaskStatus.completed,
+      unpublished: TaskStatus.unpublished,
+    };
+    statusValue = statusMap[value];
+  }
+
+  console.log('状态值:', statusValue);
+  query.task_status = statusValue ? String(statusValue) : '';
   pagination.current = 1;
   handleSearch();
 };

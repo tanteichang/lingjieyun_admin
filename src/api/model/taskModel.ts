@@ -7,11 +7,11 @@ export interface TaskQuery extends Query {
 }
 
 export enum TaskStatus {
-  IN_PROGRESS = 2, // 进行中
-  PAUSED = 3, // 已暂停
-  TERMINATED = 4, // 已终止
-  COMPLETED = 5, // 已完成
-  UNRELEASED = 6, // 未发布
+  ongoing = 2, // 进行中
+  paused = 3, // 已暂停
+  terminated = 4, // 已终止
+  completed = 5, // 已完成
+  unpublished = 6, // 未发布
 }
 
 export const TASK_STATUS_TAG: Record<
@@ -23,11 +23,11 @@ export const TASK_STATUS_TAG: Record<
     color?: string;
   }
 > = {
-  [TaskStatus.IN_PROGRESS]: { label: '进行中', theme: 'success', variant: 'light' },
-  [TaskStatus.PAUSED]: { label: '已暂停', theme: 'primary', variant: 'light-outline' },
-  [TaskStatus.COMPLETED]: { label: '已完成', theme: 'primary', variant: 'light' },
-  [TaskStatus.TERMINATED]: { label: '已终止', theme: 'danger', variant: 'light' },
-  [TaskStatus.UNRELEASED]: {
+  [TaskStatus.ongoing]: { label: '进行中', theme: 'success', variant: 'light' },
+  [TaskStatus.paused]: { label: '已暂停', theme: 'primary', variant: 'light-outline' },
+  [TaskStatus.completed]: { label: '已完成', theme: 'primary', variant: 'light' },
+  [TaskStatus.terminated]: { label: '已终止', theme: 'danger', variant: 'light' },
+  [TaskStatus.unpublished]: {
     label: '未发布',
     theme: 'primary',
     variant: 'light',
@@ -70,7 +70,7 @@ export interface TaskProject {
 
 export enum SettlementType {
   PER_TIME = 1, // 按次
-  PER_ORDER = 2, // 按单
+  ORDER = 2, // 按单
   DAILY = 3, // 按日
   WEEKLY = 4, // 按周
   MONTHLY = 5, // 按月
@@ -80,6 +80,15 @@ export enum AcceptancePeriodType {
   BY_DAY = 1, // 按日
   BY_WEEK = 2, // 按周
   BY_MONTH = 3, // 按月
+}
+
+export interface TaskCustomerInfo {
+  contact_person: string;
+  contact_phone: string;
+  customer_no: string;
+  full_name: string;
+  id: number;
+  name: string;
 }
 
 // 单个任务项的类型
@@ -104,21 +113,28 @@ export interface TaskItem {
   acceptance_period_type: AcceptancePeriodType; // 验收周期类型（1-按日，2-按周，3-按月）
   acceptance_start_date: string; // 验收开始日期（格式：Y-m-d）
   acceptance_end_date: string; // 验收结束日期（格式：Y-m-d）
+  commission: string; // 任务佣金（必填）
   commission_settlement_type: CommissionSettlementType; // 佣金结算方式（1-日结，2-次结，3-周结，4-月结）
   commission_settlement_type_text: string; // 佣金结算方式文本（根据commission_settlement_type自动生成）
   commission_min: string; // 佣金最小值（必填）
   commission_max: string; // 佣金最大值（必填）
+  created_at: string; // 创建时间（格式：Y-m-d H:i:s）
+  customer_info: TaskCustomerInfo;
+  customer_id: number; // 客户ID
+  delivery_mode: DeliveryMode; // 交付模式（1-小程序上传，2-系统批量上传，3-同时选择（无限制））
+}
+
+export interface Status_Counts {
+  all: number; // 所有
+  unpublished: number; // 未发布
+  ongoing: number; // 进行中
+  completed: number; // 已完成
+  paused: number; // 已暂停
+  terminated: number; // 已终止
 }
 
 export interface TaskListResult extends Pagination<TaskItem> {
-  status_counts: {
-    all: number; // 所有
-    unpublished: number; // 未发布
-    ongoing: number; // 进行中
-    completed: number; // 已完成
-    paused: number; // 已暂停
-    terminated: number; // 已终止
-  };
+  status_counts: Status_Counts;
 }
 
 export interface TaskListResponse extends ApiResponse<TaskListResult> {}
@@ -134,9 +150,10 @@ export interface TaskPublishPayload {
   end_time: string; // 结束时间（必填，格式：Y-m-d H:i:s）
   province?: string; // 省份（可选）
   city?: string; // 城市（可选）
-  detail_address?: string; // 区县（可选）
-  longitude?: number; // 经度
-  latitude?: number; // 纬度
+  district?: string; // 区县（可选）
+  detail_address?: string; // 详细地址（可选）
+  longitude?: string; // 经度
+  latitude?: string; // 纬度
   education_id?: number; // 学历要求（可选）
   experience_id?: number; // 工作经验要求（可选）
   job_id?: number; // 职位要求（可选）
@@ -178,4 +195,103 @@ export interface TaskTerminateResponse extends ApiResponse<[]> {}
 export interface TaskMemberListPayload {
   task_id: number; // 任务ID（必填）
 }
-export interface TaskMemberListResponse extends ApiResponse<[]> {}
+
+export type TaskMemberListQuery = TaskMemberListPayload & Query;
+
+export interface TaskMemberTalentInfo {
+  id: number;
+  name: string;
+  phone: string;
+  id_card: string;
+}
+
+export interface TaskMemberItem {
+  id: number;
+  product_id: number;
+  apply_id: number;
+  user_id: number;
+  talent_pool_id: number;
+  enterprise_id: number;
+  member_type: number;
+  member_status: number;
+  join_time: string;
+  status: number;
+  created_at: string;
+  updated_at: string | null;
+  member_status_text: string;
+  talent_info: TaskMemberTalentInfo;
+  talent_info_name: string;
+  talent_info_phone: string;
+}
+
+export interface TaskMemberListResponse extends ApiResponse<Pagination<TaskMemberItem>> {}
+
+export interface TaskApplyListPayload {
+  product_id?: number;
+  date_range?: string;
+  keyword_name?: string;
+  keyword_mobile?: string;
+  keyword_task?: string;
+}
+
+export type TaskApplyQuery = TaskApplyListPayload & Query;
+
+export enum TaskApplyStatus {
+  pending = 0, // 待审核
+  passed = 1, // 已通过
+  rejected = 2, // 已拒绝
+}
+
+export interface TaskApplyUserInfo {
+  id: number;
+  username: string;
+  real_name: string;
+  mobile: string;
+  avatar: string;
+}
+
+export interface TaskApplyItem {
+  id: number;
+  product_id: number;
+  user_id: number;
+  enterprise_id: number;
+  apply_status: TaskApplyStatus;
+  apply_status_text: string;
+  review_remark: string | null;
+  review_time: string | null;
+  review_user_id: number;
+  status: number;
+  created_at: string;
+  updated_at: string;
+  task_title: string; // 任务标题
+  task_no: string; // 任务编号
+  project_name: string; // 项目名称
+  apply_time_text: string; // 报名时间文本
+  user_info: TaskApplyUserInfo;
+  user_info_mobile: string;
+  user_info_real_name: string;
+}
+
+export interface TaskApplyListResult extends Pagination<TaskApplyItem> {
+  stats: {
+    total: number; // 总人数
+    pending: number; // 待审核
+    passed: number; // 已通过
+    rejected: number; // 已拒绝
+  };
+}
+
+export type TaskApplyListResponse = ApiResponse<TaskApplyListResult>;
+
+export interface TaskApplyReviewPayload {
+  apply_id: number;
+  apply_status: TaskApplyStatus;
+  review_remark: string;
+}
+
+export interface TaskApplyReviewResponse
+  extends ApiResponse<{
+    apply_id: number; // 报名ID
+    apply_status: TaskApplyStatus; // 审核状态：1 审核通过 2 审核拒绝
+    status_text: string; // 审核状态文本：通过 拒绝
+  }> {}

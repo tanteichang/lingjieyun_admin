@@ -1,6 +1,10 @@
-import { request } from '@/utils/request';
+import { postRequest, request } from '@/utils/request';
 
 import type {
+  TaskApplyListPayload,
+  TaskApplyListResponse,
+  TaskApplyReviewPayload,
+  TaskApplyReviewResponse,
   TaskListResponse,
   TaskMemberListPayload,
   TaskMemberListResponse,
@@ -21,7 +25,9 @@ const API = {
   TaskPause: '/admin/enterprise/task/pause',
   TaskResume: '/admin/enterprise/task/resume',
   TaskTerminate: '/admin/enterprise/task/terminate',
-  TaskMemberList: '/admin/enterprise/task/member/list',
+  TaskMemberList: '/admin/enterprise/task/memberList',
+  TaskApplyList: '/admin/enterprise/member/applyList',
+  TaskApplyReview: '/admin/enterprise/member/reviewApply',
 };
 /**
  * 获取任务列表
@@ -75,5 +81,20 @@ export const getTaskMemberList = (params: TaskMemberListPayload) => {
   return request.get<TaskMemberListResponse>({
     url: API.TaskMemberList,
     params,
+  });
+};
+
+export const getTaskApplyList = (params: TaskApplyListPayload) => {
+  return request.get<TaskApplyListResponse>({
+    url: API.TaskApplyList,
+    params,
+  });
+};
+
+export const reviewTaskApply = (params: TaskApplyReviewPayload) => {
+  return postRequest<TaskApplyReviewResponse>({
+    url: API.TaskApplyReview,
+    params,
+    showError: true,
   });
 };

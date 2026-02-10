@@ -40,7 +40,7 @@
 import { computed, watch } from 'vue';
 
 import type { TaskQuery } from '@/api/model/projectModel';
-import { getMemberList } from '@/api/project';
+import { getTaskMemberList } from '@/api/task';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
@@ -148,7 +148,7 @@ const headerAffixedTop = computed(
 
 const tableHook = useCommonTable<TaskQuery, MemberRow>({
   fetcher: async (params) => {
-    const { list, total } = await getMemberList(params);
+    const { list, total } = await getTaskMemberList(params);
     return {
       list,
       total,

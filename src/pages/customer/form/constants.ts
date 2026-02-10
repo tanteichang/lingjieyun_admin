@@ -6,5 +6,6 @@ export const INITIAL_DATA: CreateCustomerPayload = {
   contact_person: '',
   contact_phone: '',
   address: '',
-  remark: '',
+  manager_id: null,
+  credit_code: '',
 };
