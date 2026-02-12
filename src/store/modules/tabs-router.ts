@@ -38,13 +38,18 @@ export const useTabsRouterStore = defineStore('tabsRouter', {
     appendTabRouterList(newRoute: TRouterInfo) {
       // 不要将判断条件newRoute.meta.keepAlive !== false修改为newRoute.meta.keepAlive，starter默认开启保活，所以meta.keepAlive未定义时也需要进行保活，只有显式说明false才禁用保活。
       const needAlive = !ignoreCacheRoutes.includes(newRoute.name as string) && newRoute.meta?.keepAlive !== false;
-      console.log('appendTabRouterList-------------');
-      console.log(newRoute);
-      console.log(needAlive);
-      console.log('--------');
-      if (!this.tabRouters.find((route: TRouterInfo) => route.path === newRoute.path)) {
+      const existIdx = this.tabRouters.findIndex((route: TRouterInfo) => route.path === newRoute.path);
+      if (existIdx === -1) {
         this.tabRouterList = this.tabRouterList.concat({ ...newRoute, isAlive: needAlive });
+        return;
       }
+      // 已存在时同步最新meta/保活配置，避免持久化旧值导致 keepAlive 失效
+      this.tabRouterList[existIdx] = {
+        ...this.tabRouterList[existIdx],
+        ...newRoute,
+        isAlive: needAlive,
+        meta: newRoute.meta,
+      };
     },
     // 处理关闭当前
     subtractCurrentTabRouter(newRoute: TRouterInfo) {

@@ -11,6 +11,7 @@
           :header-affixed-top="headerAffixedTop"
           selection-type="multiple"
           :selection-disabled="selectionDisabled"
+          row-key="member_id"
           @search="handleSearch"
           @reset="handleReset"
           @page-change="handlePageChange"
@@ -51,31 +52,37 @@
       </t-space>
 
       <template #footer>
-        <t-button variant="base" theme="default" type="reset" @click="handleCancelUpload" :disabled="requestLading"
+        <t-button variant="base" theme="default" type="reset" :disabled="requestLading" @click="handleCancelUpload"
           >取消</t-button
         >
-        <t-button theme="primary" @click="handleUpload" :disabled="requestLading">上传</t-button>
+        <t-button theme="primary" :disabled="requestLading" @click="handleUpload">上传</t-button>
       </template>
     </t-dialog>
   </t-layout>
 </template>
 <script setup lang="ts">
-import { MessagePlugin, type TagProps, type TdUploadProps, type UploadFile } from 'tdesign-vue-next';
+import type { TagProps, TdUploadProps, UploadFile } from 'tdesign-vue-next';
+import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import type { DeliveryUploadPayload } from '@/api/model/delivery';
-import { getDeliveryList, uploadDelivery } from '@/api/delivery';
-import { uploadFile, uploadImage } from '@/api/upload';
+
+import { getDeliveryCompletion, uploadDelivery } from '@/api/delivery';
 import type { Row } from '@/api/model/common';
-import type { DeliveryItem, DeliveryListPayload } from '@/api/model/delivery';
+import type {
+  DeliveryCompletionItem,
+  DeliveryCompletionPayload,
+  DeliveryListPayload,
+  DeliveryUploadPayload,
+} from '@/api/model/delivery';
 import { DeliverySubmitStatus } from '@/api/model/delivery';
+import { uploadFile, uploadImage } from '@/api/upload';
 import type { TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
-import FileViewer from '@/components/file-viewer/index.vue';
+import { isImage } from '@/components/file-viewer/util';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
 import { useSettingStore } from '@/store';
-import { isImage } from '@/components/file-viewer/util';
+
 defineOptions({
   name: 'DeliveryUploadDetail',
 });
@@ -91,7 +98,7 @@ const requestLading = ref(false);
 
 type DeliveryListQuery = DeliveryListPayload;
 
-type DeliveryRow = DeliveryItem & Row;
+type DeliveryRow = DeliveryCompletionItem & Row;
 
 const formConfig = {
   formItem: [
@@ -100,7 +107,7 @@ const formConfig = {
     { label: '交付状态', name: 'submit_status', width: 140, align: 'center', type: 'select' },
   ],
   formData: {
-    project_id: taskId,
+    product_id: taskId,
     keyword_name: '',
     keyword_mobile: '',
     submit_status: null,
@@ -109,9 +116,10 @@ const formConfig = {
 
 const tableConfig: TableConfig<DeliveryRow, keyof DeliveryRow> = {
   tableItem: [
-    { title: '姓名', colKey: 'user_name', width: 200, align: 'left' },
-    { title: '手机号', colKey: 'user_mobile', width: 200, align: 'left' },
-    { title: '交付状态', colKey: 'delivery_status', width: 140, align: 'center' },
+    { title: '姓名', colKey: 'real_name', width: 200, align: 'left' },
+    { title: '手机号', colKey: 'mobile', width: 200, align: 'left' },
+    { title: '身份证号', colKey: 'card_no', width: 140, align: 'center' },
+    { title: '交付状态', colKey: 'delivery_status_text', width: 200, align: 'center' },
   ],
 };
 
@@ -130,9 +138,9 @@ const headerAffixedTop = computed(
     }) as any,
 );
 
-const tableHook = useCommonTable<DeliveryListQuery, DeliveryRow>({
+const tableHook = useCommonTable<DeliveryCompletionPayload, DeliveryRow>({
   fetcher: async (params) => {
-    const { data } = await getDeliveryList(params);
+    const { data } = await getDeliveryCompletion(params);
     const list = data.list || [];
     return {
       list: list.map((item, index) => ({

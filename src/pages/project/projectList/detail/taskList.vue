@@ -69,7 +69,7 @@ const defaultQuery: TaskQuery = {
   limit: 20,
 };
 
-const formConfig: FormConfig<TaskQuery> = {
+const formConfig: FormConfig<TaskQuery, keyof TaskQuery> = {
   formItem: [
     {
       label: '任务名称',

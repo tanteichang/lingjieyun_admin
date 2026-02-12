@@ -32,11 +32,12 @@
                 />
                 <t-date-range-picker
                   v-else-if="item.type === 'date-range'"
-                  v-model="form[item.name]"
+                  :value="getRangeValue(item.name)"
                   type="daterange"
                   :placeholder="item.placeholder"
                   class="form-item-content"
                   v-bind="item.props"
+                  @change="(value) => handleRangeChange(item.name, value)"
                 />
               </t-form-item>
             </t-col>
@@ -149,6 +150,8 @@ const props = withDefaults(
     autoSearch?: boolean;
     /** 表格选择类型：single | multiple */
     selectionType?: SelectionType;
+    /** 行 key */
+    rowKey?: RowKey<RowType> | ((row: RowType) => number);
     /** 选中的行 key */
     selectedRowKeys?: Array<string | number>;
     selectionDisabled?: (param: { row: RowType; rowIndex: number }) => boolean;
@@ -168,6 +171,7 @@ const props = withDefaults(
       }) as PaginationProps,
     dropdownOptions: () => [],
     autoSearch: true,
+    rowKey: 'id',
     selectedRowKeys: () => [],
   },
 );
@@ -210,7 +214,39 @@ const columnSlots = computed(() => {
   }
 });
 
-const rowKey = 'id';
+const rowKey = computed(() => props.rowKey ?? 'id');
+
+const parseDateRangeString = (value: string) => {
+  const match = value.match(/^\s*(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})\s*$/);
+  if (!match) {
+    return value;
+  }
+  return [match[1], match[2]];
+};
+
+const getRangeValue = (name: NameType) => {
+  const value = (form as Record<string, any>)[name];
+  if (Array.isArray(value) || value == null || value === '') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    return parseDateRangeString(value);
+  }
+  return value;
+};
+
+const handleRangeChange = (name: NameType, value: any) => {
+  if (Array.isArray(value)) {
+    const [start, end] = value;
+    (form as Record<string, any>)[name] = start && end ? `${start} - ${end}` : '';
+    return;
+  }
+  if (typeof value === 'string') {
+    (form as Record<string, any>)[name] = value;
+    return;
+  }
+  (form as Record<string, any>)[name] = '';
+};
 
 const innerSelectedRowKeys = ref<Array<string | number>>([...props.selectedRowKeys]);
 

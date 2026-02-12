@@ -1,11 +1,18 @@
-import type { ApiResponse, Pagination } from './common';
+import type { ApiResponse, Pagination, Query } from './common';
+import type { TaskStatus } from './taskModel';
 
-export interface DeliveryListPayload {
-  project_id?: string;
-  keyword_name?: string; // 申请人姓名
-  keyword_mobile?: string; // 申请人手机号
+export interface DeliveryListPayload extends Query {
+  keyword_name?: string; // 所属项目名称
   submit_status?: DeliverySubmitStatus; // 提交状态
-  date_range?: string; // 提交时间范围
+  date_range?: string; // 日期范围
+  keyword_mobile?: string; // 手机号
+  project_id?: number; // 任务ID
+}
+
+export interface DeliveryUploadListPayload extends Query {
+  project_name?: string; // 所属项目名称
+  enterprise_name?: string; // 企业名称
+  delivery_status?: DeliveryStatus;
 }
 
 // 提交类型：1 用户提交 2 企业代提交
@@ -64,6 +71,25 @@ export interface DeliveryItem {
   user_mobile: string;
 }
 
+export interface DeliveryUploadItem {
+  id: number;
+  name: string; // 任务名称
+  project_id: number; // 任务ID
+  project_type_id: number; // 任务类型ID
+  delivery_mode: number; // 交付模式：1-小程序上传（只能小程序端上传），2-系统批量上传（只能企业端上传），3-同时选择（无限制）
+  task_status: TaskStatus; // 任务
+  status: number;
+  created_at: string;
+  task_title: string; // 任务标题
+  project_name: string; // 所属项目名称
+  enterprise_name: string;
+  task_type_text: string;
+  delivery_mode_text: string;
+  publish_time: string;
+  delivery_upload_time: string; // 上传时间
+  status_text: string;
+}
+
 export interface DeliveryListResult extends Pagination<DeliveryItem> {
   stats: {
     total: number; // 所有数
@@ -80,6 +106,8 @@ export interface DeliveryReviewPayload {
   submit_status: DeliverySubmitStatus;
   review_remark?: string;
 }
+
+export type DeliveryUploadListResponse = ApiResponse<Pagination<DeliveryUploadItem>>;
 
 export type DeliveryReviewResponse = ApiResponse<[]>;
 
@@ -102,3 +130,22 @@ export interface DeliveryUploadResult {
 }
 
 export type DeliveryUploadResponse = ApiResponse<DeliveryUploadResult>;
+
+export interface DeliverySummaryPayload {
+  project_id: number;
+}
+
+export interface DeliveryCompletionPayload {
+  project_id: number;
+}
+
+export interface DeliveryCompletionItem {
+  member_id: number;
+  user_id: number;
+  real_name: string;
+  mobile: string;
+  card_no: string;
+  delivery_status: DeliveryStatus;
+  delivery_status_text: string;
+}
+export type DeliveryCompletionResponse = ApiResponse<Pagination<DeliveryCompletionItem>>;

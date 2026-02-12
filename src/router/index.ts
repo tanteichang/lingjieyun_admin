@@ -18,6 +18,11 @@ const defaultRouterList: Array<RouteRecordRaw> = [
     component: () => import('@/pages/login/index.vue'),
   },
   {
+    path: '/enterprise-register',
+    name: 'enterpriseRegister',
+    component: () => import('@/pages/login/enterprise.vue'),
+  },
+  {
     path: '/',
     redirect: '/dashboard/base',
   },

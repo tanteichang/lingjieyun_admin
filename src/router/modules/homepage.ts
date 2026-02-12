@@ -1,5 +1,5 @@
 import { AssignmentIcon, DashboardIcon } from 'tdesign-icons-vue-next';
-import { h, shallowRef } from 'vue';
+import { h, KeepAlive, shallowRef } from 'vue';
 
 import Layout from '@/layouts/index.vue';
 
@@ -65,6 +65,7 @@ export default [
             zh_CN: '项目列表',
             en_US: 'Project List',
           },
+          keepAlive: false,
         },
       },
       {
@@ -154,10 +155,22 @@ export default [
         component: () => import('@/pages/project/deliveryUpload/uploadDetail.vue'),
         meta: {
           title: {
-            zh_CN: '交付物明细',
+            zh_CN: '上传交付物',
             en_US: 'Delivery Upload Detail',
           },
           hidden: true,
+          keepAlive: false,
+        },
+      },
+      {
+        path: 'deliveryApproval',
+        name: 'DeliveryApproval',
+        component: () => import('@/pages/project/deliveryApproval/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '交付物审批',
+            en_US: 'Delivery Approval',
+          },
         },
       },
     ],
@@ -198,6 +211,138 @@ export default [
             en_US: 'Customer Form',
           },
           hidden: true,
+        },
+      },
+    ],
+  },
+  {
+    path: '/talent',
+    component: Layout,
+    redirect: '/talent/list',
+    name: 'talent',
+    meta: {
+      title: {
+        zh_CN: '人员管理',
+        en_US: 'Talent',
+      },
+      icon: shallowRef(AssignmentIcon),
+      orderNo: 3,
+    },
+    children: [
+      {
+        path: 'list',
+        name: 'TalentList',
+        component: () => import('@/pages/talent/list/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '人员列表',
+            en_US: 'Talent List',
+          },
+          keepAlive: false,
+        },
+      },
+      {
+        path: 'detail',
+        name: 'TalentDetail',
+        component: () => import('@/pages/talent/detail/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '人员详情',
+            en_US: 'Talent Detail',
+          },
+          hidden: true,
+        },
+      },
+    ],
+  },
+  {
+    path: '/payment',
+    component: Layout,
+    redirect: '/payment/list',
+    name: 'payment',
+    meta: {
+      title: {
+        zh_CN: '结算管理',
+        en_US: 'Payment',
+      },
+      icon: shallowRef(AssignmentIcon),
+      orderNo: 4,
+    },
+    children: [
+      {
+        path: 'upload',
+        name: 'PaymentUpload',
+        component: () => import('@/pages/payment/upload/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '结算单上传',
+            en_US: 'Payment Upload',
+          },
+          keepAlive: false,
+        },
+      },
+      {
+        path: 'pay',
+        name: 'PaymentPay',
+        component: () => import('@/pages/payment/pay/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '账单支付',
+            en_US: 'Payment Pay',
+          },
+          keepAlive: false,
+        },
+      },
+      {
+        path: 'record',
+        name: 'PaymentRecord',
+        component: () => import('@/pages/payment/record/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '支付记录',
+            en_US: 'Payment Record',
+          },
+          keepAlive: false,
+        },
+      },
+    ],
+  },
+  {
+    path: '/setting',
+    component: Layout,
+    redirect: '/setting/account',
+    name: 'setting',
+    meta: {
+      title: {
+        zh_CN: '系统设置',
+        en_US: 'Setting',
+      },
+      icon: shallowRef(AssignmentIcon),
+      orderNo: 5,
+    },
+    children: [
+      {
+        path: 'security',
+        name: 'SettingSecurity',
+        component: () => import('@/pages/setting/security/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '安全设置',
+            en_US: 'Security Setting',
+          },
+          keepAlive: false,
+        },
+      },
+      {
+        path: 'profile',
+        name: 'SettingProfile',
+        component: () => import('@/pages/setting/profile/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '个人信息',
+            en_US: 'Profile',
+          },
+          keepAlive: false,
         },
       },
     ],

@@ -7,8 +7,6 @@
       :form-config="formConfig"
       :table-config="tableConfig"
       :header-affixed-top="headerAffixedTop"
-      selection-type="multiple"
-      :selected-row-keys="[]"
       @search="handleSearch"
       @reset="handleReset"
       @page-change="handlePageChange"
@@ -17,9 +15,6 @@
         <t-tooltip :content="record.customer_info?.full_name || '-'">
           <span>{{ record.customer_info?.name || '-' }}</span>
         </t-tooltip>
-      </template>
-      <template #delivery_mode="{ record }">
-        {{ getDeliveryModeText(record.delivery_mode) }}
       </template>
       <template #project="{ record }">
         {{ record.project?.name || '-' }}
@@ -33,13 +28,12 @@
 </template>
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 
+import { getDeliveryUploadList } from '@/api/delivery';
 import type { Row } from '@/api/model/common';
-import type { TaskItem, TaskQuery } from '@/api/model/taskModel';
-import { DeliveryMode } from '@/api/model/taskModel';
-import { getTaskList } from '@/api/task';
-import type { TableConfig } from '@/components/common-table/index.vue';
+import type { DeliveryUploadItem, DeliveryUploadListPayload } from '@/api/model/delivery';
+import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
@@ -51,27 +45,43 @@ defineOptions({
 
 const router = useRouter();
 
-const route = useRoute();
+type DeliveryUploadListQuery = DeliveryUploadListPayload;
 
-type TaskListQuery = TaskQuery;
+type DeliveryUploadRow = DeliveryUploadItem & Row;
 
-type TaskRow = TaskItem & Row;
-
-const formConfig = {
-  formItem: [],
-  formData: {},
+const formConfig: FormConfig<DeliveryUploadListQuery, keyof DeliveryUploadListQuery> = {
+  formItem: [
+    { label: '企业名称', name: 'enterprise_name', type: 'input', placeholder: '请输入企业名称', span: 6 },
+    { label: '项目名称', name: 'project_name', type: 'input', placeholder: '请输入所属项目名称', span: 6 },
+    {
+      label: '交付状态',
+      name: 'delivery_status',
+      type: 'select',
+      placeholder: '请选择交付状态',
+      span: 6,
+      props: {
+        options: [],
+      },
+    },
+  ],
+  formData: {
+    project_name: '',
+    enterprise_name: '',
+    delivery_status: null,
+    page: 1,
+    limit: 20,
+  },
 };
 
-const tableConfig: TableConfig<TaskRow, keyof TaskRow> = {
+const tableConfig: TableConfig<DeliveryUploadRow, keyof DeliveryUploadRow> = {
   tableItem: [
-    { title: 'ID', colKey: 'id', width: 80, align: 'center', fixed: 'left' },
     { title: '发布时间', colKey: 'created_at', width: 200, align: 'center' },
     { title: '任务名称', colKey: 'name', minWidth: 200, ellipsis: true },
-    { title: '所属项目', colKey: 'project', minWidth: 200, ellipsis: true },
-    { title: '所属企业', colKey: 'customer_info', width: 140, align: 'center' },
-    { title: '交付模式', colKey: 'delivery_mode', width: 140, align: 'center' },
-    { title: '任务状态', colKey: 'task_status_text', width: 140, align: 'center' },
-    { title: '任务时间', colKey: 'task_time', width: 180, align: 'center' },
+    { title: '所属项目', colKey: 'project_name', minWidth: 200, ellipsis: true },
+    { title: '所属企业', colKey: 'enterprise_name', width: 140, align: 'center' },
+    { title: '交付模式', colKey: 'delivery_mode_text', width: 140, align: 'center' },
+    { title: '交付物上传更新时间', colKey: 'delivery_upload_time', width: 180, align: 'center' },
+    { title: '状态', colKey: 'status', width: 140, align: 'center' },
     { title: '操作', colKey: 'op', width: 120, align: 'center', fixed: 'right' },
   ],
 };
@@ -85,42 +95,29 @@ const headerAffixedTop = computed(
     }) as any,
 );
 
-const tableHook = useCommonTable<TaskListQuery, TaskRow>({
+const tableHook = useCommonTable<DeliveryUploadListQuery, DeliveryUploadRow>({
   fetcher: async (params) => {
-    const { data } = await getTaskList(params);
+    const { data } = await getDeliveryUploadList(params);
     const list = data.list || [];
     return {
       list,
       total: data.total ?? list.length,
     };
   },
-  defaultQuery: formConfig.formData,
+  defaultQuery: formConfig.formData as DeliveryUploadListQuery,
   autoSearch: true,
   debounceWait: 300,
 });
 
 const { data: tableData, loading, pagination, search: handleSearch, reset: handleReset, handlePageChange } = tableHook;
 
-const handleUpload = (record: TaskRow) => {
+const handleUpload = (record: DeliveryUploadRow) => {
   router.push({
     name: 'DeliveryUploadDetail',
     query: {
       task_id: record.id,
     },
   });
-};
-
-const getDeliveryModeText = (deliveryMode: DeliveryMode) => {
-  switch (deliveryMode) {
-    case DeliveryMode.MINI_APP:
-      return '小程序上传';
-    case DeliveryMode.SYSTEM_BATCH:
-      return '系统批量上传';
-    case DeliveryMode.BOTH:
-      return '小程序上传/系统批量上传';
-    default:
-      return '-';
-  }
 };
 </script>
 <style lang="less" scoped>
