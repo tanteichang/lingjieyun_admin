@@ -80,8 +80,8 @@ import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
 import { useSettingStore } from '@/store';
-import { useDictStore } from '@/store/modules/dict';
-import { useProjectStore } from '@/store/modules/project';
+import { useDictStore } from '@/store/modules/enterprise/dict';
+import { useProjectStore } from '@/store/modules/enterprise/project';
 
 defineOptions({
   name: 'ProjectList',

@@ -90,7 +90,7 @@ import { useRoute } from 'vue-router';
 
 import type { ProjectItem } from '@/api/model/projectModel';
 import { PROJECT_STATUS_TAG, ProjectStatus } from '@/api/model/projectModel';
-import { useProjectStore } from '@/store/modules/project';
+import { useProjectStore } from '@/store/modules/enterprise/project';
 
 const projectStore = useProjectStore();
 

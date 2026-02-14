@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 
 import type { TaskItem } from '@/api/model/taskModel';
 
-export const useTaskStore = defineStore('_task_list', {
+export const useTaskStore = defineStore('_enterprise_task_list', {
   state: () => ({
     tasks: {} as Record<string, TaskItem>,
   }),

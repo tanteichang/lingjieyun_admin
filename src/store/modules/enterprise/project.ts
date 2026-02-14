@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 
 import type { ProjectItem } from '@/api/model/projectModel';
 
-export const useProjectStore = defineStore('_project_list', {
+export const useProjectStore = defineStore('_enterprise_project_list', {
   state: () => ({
     projects: {} as Record<string, ProjectItem>,
   }),

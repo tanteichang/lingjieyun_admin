@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { getEducation, getExperience, getInvoiceType, getJob, getProjectType, getSalary } from '@/api/dict';
 import type { Education, Experience, InvoiceType, Job, ProjectType, Salary } from '@/api/model/dict';
 
-export const useDictStore = defineStore('_dict', {
+export const useDictStore = defineStore('_enterprise_dict', {
   state: () => ({
     projectType: [] as ProjectType[],
     invoiceType: [] as InvoiceType[],

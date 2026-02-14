@@ -44,7 +44,7 @@ import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
 import { useSettingStore } from '@/store';
-import { useCustomerStore } from '@/store/modules/customer';
+import { useCustomerStore } from '@/store/modules/enterprise/customer';
 
 defineOptions({
   name: 'CustomerList',

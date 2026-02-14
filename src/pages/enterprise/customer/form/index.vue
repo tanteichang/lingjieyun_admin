@@ -16,7 +16,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { createCustomer, updateCustomer } from '@/api/customer';
 import type { CreateCustomerPayload } from '@/api/model/customer';
-import { useCustomerStore } from '@/store/modules/customer';
+import { useCustomerStore } from '@/store/modules/enterprise/customer';
 
 import { INITIAL_DATA } from './constants';
 

@@ -44,7 +44,7 @@ export default [
       {
         path: 'base',
         name: 'DashboardBase',
-        component: () => import('@/pages/dashboard/base/index.vue'),
+        component: () => import('@/pages/enterprise/dashboard/base/index.vue'),
         meta: {
           title: {
             zh_CN: '概览仪表盘',
@@ -56,7 +56,7 @@ export default [
       {
         path: 'detail',
         name: 'DashboardDetail',
-        component: () => import('@/pages/dashboard/detail/index.vue'),
+        component: () => import('@/pages/enterprise/dashboard/detail/index.vue'),
         meta: {
           title: {
             zh_CN: '统计报表',
@@ -84,7 +84,7 @@ export default [
       {
         path: 'list',
         name: 'ProjectList',
-        component: () => import('@/pages/project/projectList/index.vue'),
+        component: () => import('@/pages/enterprise/project/projectList/index.vue'),
         meta: {
           title: {
             zh_CN: '项目列表',
@@ -97,7 +97,7 @@ export default [
       {
         path: 'detail',
         name: 'ProjectDetail',
-        component: () => import('@/pages/project/projectList/detail/index.vue'),
+        component: () => import('@/pages/enterprise/project/projectList/detail/index.vue'),
         meta: {
           title: {
             zh_CN: '项目详情',
@@ -110,7 +110,7 @@ export default [
       {
         path: 'publish',
         name: 'ProjectPublish',
-        component: () => import('@/pages/project/projectList/publish.vue'),
+        component: () => import('@/pages/enterprise/project/projectList/publish.vue'),
         meta: {
           title: {
             zh_CN: '发布项目',
@@ -123,7 +123,7 @@ export default [
       {
         path: 'task',
         name: 'TaskList',
-        component: () => import('@/pages/project/taskList/index.vue'),
+        component: () => import('@/pages/enterprise/project/taskList/index.vue'),
         meta: {
           title: {
             zh_CN: '任务列表',
@@ -135,7 +135,7 @@ export default [
       {
         path: 'publishTask',
         name: 'ProjectPublishTask',
-        component: () => import('@/pages/project/projectList/publishTask/index.vue'),
+        component: () => import('@/pages/enterprise/project/projectList/publishTask/index.vue'),
         meta: {
           title: {
             zh_CN: '发布任务',
@@ -148,7 +148,7 @@ export default [
       {
         path: 'taskDetail',
         name: 'TaskDetail',
-        component: () => import('@/pages/project/taskList/detail/index.vue'),
+        component: () => import('@/pages/enterprise/project/taskList/detail/index.vue'),
         meta: {
           title: {
             zh_CN: '任务详情',
@@ -161,7 +161,7 @@ export default [
       {
         path: 'registrationApproval',
         name: 'RegistrationApproval',
-        component: () => import('@/pages/project/registrationApproval/index.vue'),
+        component: () => import('@/pages/enterprise/project/registrationApproval/index.vue'),
         meta: {
           title: {
             zh_CN: '报名审核',
@@ -173,7 +173,7 @@ export default [
       {
         path: 'deliveryUpload',
         name: 'DeliveryUpload',
-        component: () => import('@/pages/project/deliveryUpload/index.vue'),
+        component: () => import('@/pages/enterprise/project/deliveryUpload/index.vue'),
         meta: {
           title: {
             zh_CN: '交付上传',
@@ -185,7 +185,7 @@ export default [
       {
         path: 'deliveryUploadDetail',
         name: 'DeliveryUploadDetail',
-        component: () => import('@/pages/project/deliveryUpload/uploadDetail.vue'),
+        component: () => import('@/pages/enterprise/project/deliveryUpload/uploadDetail.vue'),
         meta: {
           title: {
             zh_CN: '上传交付物',
@@ -199,7 +199,7 @@ export default [
       {
         path: 'deliveryApproval',
         name: 'DeliveryApproval',
-        component: () => import('@/pages/project/deliveryApproval/index.vue'),
+        component: () => import('@/pages/enterprise/project/deliveryApproval/index.vue'),
         meta: {
           title: {
             zh_CN: '交付物审批',
@@ -227,7 +227,7 @@ export default [
       {
         path: 'list',
         name: 'CustomerList',
-        component: () => import('@/pages/customer/list/index.vue'),
+        component: () => import('@/pages/enterprise/customer/list/index.vue'),
         meta: {
           title: {
             zh_CN: '企业列表',
@@ -240,7 +240,7 @@ export default [
       {
         path: 'form',
         name: 'CustomerForm',
-        component: () => import('@/pages/customer/form/index.vue'),
+        component: () => import('@/pages/enterprise/customer/form/index.vue'),
         meta: {
           title: {
             zh_CN: '企业表单',
@@ -269,7 +269,7 @@ export default [
       {
         path: 'list',
         name: 'TalentList',
-        component: () => import('@/pages/talent/list/index.vue'),
+        component: () => import('@/pages/enterprise/talent/list/index.vue'),
         meta: {
           title: {
             zh_CN: '人员列表',
@@ -282,7 +282,7 @@ export default [
       {
         path: 'detail',
         name: 'TalentDetail',
-        component: () => import('@/pages/talent/detail/index.vue'),
+        component: () => import('@/pages/enterprise/talent/detail/index.vue'),
         meta: {
           title: {
             zh_CN: '人员详情',
@@ -311,7 +311,7 @@ export default [
       {
         path: 'upload',
         name: 'PaymentUpload',
-        component: () => import('@/pages/payment/upload/index.vue'),
+        component: () => import('@/pages/enterprise/payment/upload/index.vue'),
         meta: {
           title: {
             zh_CN: '结算单上传',
@@ -324,7 +324,7 @@ export default [
       {
         path: 'pay',
         name: 'PaymentPay',
-        component: () => import('@/pages/payment/pay/index.vue'),
+        component: () => import('@/pages/enterprise/payment/pay/index.vue'),
         meta: {
           title: {
             zh_CN: '账单支付',
@@ -337,7 +337,7 @@ export default [
       {
         path: 'record',
         name: 'PaymentRecord',
-        component: () => import('@/pages/payment/record/index.vue'),
+        component: () => import('@/pages/enterprise/payment/record/index.vue'),
         meta: {
           title: {
             zh_CN: '支付记录',
@@ -366,7 +366,7 @@ export default [
       {
         path: 'security',
         name: 'SettingSecurity',
-        component: () => import('@/pages/setting/security/index.vue'),
+        component: () => import('@/pages/enterprise/setting/security/index.vue'),
         meta: {
           title: {
             zh_CN: '安全设置',
@@ -379,7 +379,7 @@ export default [
       {
         path: 'profile',
         name: 'SettingProfile',
-        component: () => import('@/pages/setting/profile/index.vue'),
+        component: () => import('@/pages/enterprise/setting/profile/index.vue'),
         meta: {
           title: {
             zh_CN: '个人信息',

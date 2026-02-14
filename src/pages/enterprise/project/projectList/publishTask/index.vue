@@ -69,8 +69,8 @@ import { publishTask } from '@/api/task';
 import GenericForm from '@/components/generic-form/index.vue';
 import type { LngLatValue } from '@/components/lngLatPicker/index.vue';
 import type { ProvinceCityAreaValue } from '@/components/provinceCityAreaPicker/index.vue';
-import { useDictStore } from '@/store/modules/dict';
-import { useProjectStore } from '@/store/modules/project';
+import { useDictStore } from '@/store/modules/enterprise/dict';
+import { useProjectStore } from '@/store/modules/enterprise/project';
 
 import {
   acceptanceOptions,

@@ -2,38 +2,50 @@ import uniq from 'lodash/uniq';
 import type { RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 
-const env = import.meta.env.MODE || 'development';
+import homepageAdmin from '@/router/modules/homepage.admin';
+import homepageEnterprise from '@/router/modules/homepage.enterprise';
 
-// 导入homepage相关固定路由
-const homepageModules = import.meta.glob('./modules/**/homepage.ts', { eager: true });
+const env = import.meta.env.MODE || 'development';
+const appSide = (import.meta.env.VITE_APP_SIDE || 'enterprise').toLowerCase();
 
 // 导入modules非homepage相关固定路由
-const fixedModules = import.meta.glob('./modules/**/!(homepage).ts', { eager: true });
+const fixedModules = import.meta.glob('./modules/**/!(homepage.enterprise|homepage.admin).ts', { eager: true });
 
 // 其他固定路由
 const defaultRouterList: Array<RouteRecordRaw> = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/pages/login/index.vue'),
+    component: () => import('@/pages/enterprise/login/index.vue'),
   },
   {
     path: '/enterprise-register',
     name: 'enterpriseRegisterEntry',
-    component: () => import('@/pages/login/enterprise-entry.vue'),
+    component: () => import('@/pages/enterprise/login/enterprise-entry.vue'),
   },
   {
     path: '/enterprise-register/form',
     name: 'enterpriseRegister',
-    component: () => import('@/pages/login/enterprise.vue'),
+    component: () => import('@/pages/enterprise/login/enterprise.vue'),
   },
   {
     path: '/',
     redirect: '/dashboard/base',
   },
+  {
+    path: '/base',
+    redirect: '/dashboard/base',
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/',
+  },
 ];
 // 存放固定路由
-export const homepageRouterList: Array<RouteRecordRaw> = mapModuleRouterList(homepageModules);
+const homepageRouteModule = appSide === 'admin' ? homepageAdmin : homepageEnterprise;
+export const homepageRouterList: Array<RouteRecordRaw> = Array.isArray(homepageRouteModule)
+  ? homepageRouteModule
+  : [homepageRouteModule];
 export const fixedRouterList: Array<RouteRecordRaw> = mapModuleRouterList(fixedModules);
 
 export const allRoutes = [...homepageRouterList, ...fixedRouterList, ...defaultRouterList];

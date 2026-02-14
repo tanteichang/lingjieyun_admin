@@ -8,7 +8,7 @@ import { computed, onMounted } from 'vue';
 
 import { useLocale } from '@/locales/useLocale';
 import { useSettingStore } from '@/store';
-import { useDictStore } from '@/store/modules/dict';
+import { useDictStore } from '@/store/modules/enterprise/dict';
 
 const store = useSettingStore();
 const dictStore = useDictStore();

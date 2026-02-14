@@ -11,7 +11,7 @@ import { getCustomerList } from '@/api/customer';
 import { getEnterpriseInfo } from '@/api/enterprise';
 import type { ProjectCreatePayload } from '@/api/model/projectModel';
 import { createProject } from '@/api/project';
-import { useDictStore } from '@/store/modules/dict';
+import { useDictStore } from '@/store/modules/enterprise/dict';
 
 import { INITIAL_DATA } from './constants';
 

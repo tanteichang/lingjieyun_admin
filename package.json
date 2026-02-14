@@ -5,9 +5,13 @@
   "scripts": {
     "dev:mock": "vite --open --mode mock",
     "dev": "vite --open --mode development",
+    "dev:admin": "VITE_APP_SIDE=admin vite --open --mode development",
+    "dev:enterprise": "VITE_APP_SIDE=enterprise vite --open --mode development",
     "dev:linux": "vite --mode development",
     "build:test": "vite build --mode test",
     "build": "vite build --mode release",
+    "build:admin": "VITE_APP_SIDE=admin vite build --mode release",
+    "build:enterprise": "VITE_APP_SIDE=enterprise vite build --mode release",
     "build:type": "vue-tsc --noEmit",
     "build:site": "vue-tsc --noEmit && vite build --mode site",
     "preview": "vite preview",
