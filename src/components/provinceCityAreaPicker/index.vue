@@ -75,6 +75,8 @@ const province = ref('');
 const city = ref('');
 const area = ref('');
 
+console.log(props.modelValue);
+
 const provinceOptions = computed(() => data.map((item) => ({ label: item.name, value: item.name })));
 
 const cityOptions = computed(() => {

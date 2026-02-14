@@ -90,7 +90,7 @@ const dictStore = useDictStore();
 const router = useRouter();
 const route = useRoute();
 
-const currentStep = ref(1);
+const currentStep = ref(0);
 
 const projectInfo = computed(() => projectStore.getProject(route.query.projectID as string));
 const projectTypeOptions = computed(() => dictStore.getProjectTypeOptions);

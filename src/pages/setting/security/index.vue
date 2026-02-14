@@ -9,9 +9,7 @@
         <div class="shield-wrap">
           <div class="shield-outer">
             <div class="shield-inner">
-              <div class="lock-circle">
-                <t-icon name="lock-on" size="20" />
-              </div>
+              <img src="@/assets/setting/lock.png" alt="账户安全盾牌" />
             </div>
           </div>
         </div>
@@ -36,7 +34,6 @@
     </t-card>
   </div>
 </template>
-
 <script setup lang="ts">
 import LoginPasswordSection from './components/LoginPasswordSection.vue';
 import PayPasswordSection from './components/PayPasswordSection.vue';
@@ -45,7 +42,6 @@ defineOptions({
   name: 'SettingSecurity',
 });
 </script>
-
 <style lang="less" scoped>
 .security-page {
   display: grid;

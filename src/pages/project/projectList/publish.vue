@@ -64,7 +64,7 @@ const onSubmit = (ctx: SubmitContext) => {
       project_type_id: formData.value.project_type_id,
       required_personnel: formData.value.required_personnel,
     })
-      .then((res) => {
+      .then(() => {
         MessagePlugin.success('发布成功');
         formData.value = { ...INITIAL_DATA };
       })

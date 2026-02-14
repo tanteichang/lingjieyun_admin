@@ -24,11 +24,11 @@
 
           <t-dropdown :min-column-width="120" trigger="click">
             <template #dropdown>
-              <t-dropdown-item class="operations-dropdown-container-item" @click="handleNav('/user/index')">
-                <user-circle-icon />{{ t('layout.header.user') }}
+              <t-dropdown-item class="operations-dropdown-container-item" @click="handleNav('/setting/profile')">
+                <user-circle-icon />个人信息
               </t-dropdown-item>
               <t-dropdown-item class="operations-dropdown-container-item" @click="handleLogout">
-                <poweroff-icon />{{ t('layout.header.signOut') }}
+                <poweroff-icon />退出登录
               </t-dropdown-item>
             </template>
             <t-button class="header-user-btn" theme="default" variant="text">

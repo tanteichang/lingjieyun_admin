@@ -149,7 +149,6 @@ const handleSavePassword = () => {
   align-items: center;
   justify-content: space-between;
   padding: 0 20px 0 24px;
-  background: linear-gradient(180deg, #d9e7ff 0%, #f3f7ff 100%);
 }
 
 .modal-title {

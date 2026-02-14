@@ -16,7 +16,7 @@
       </template>
       <menu-content :nav-data="menu" />
       <template #operations>
-        <span :class="versionCls"> {{ envMode }}.{{ pgk.version }} </span>
+        <span :class="versionCls"> {{ versionText }} </span>
       </template>
     </t-menu>
     <div :class="`${prefix}-side-nav-placeholder${collapsed ? '-hidden' : ''}`"></div>
@@ -124,6 +124,7 @@ const versionCls = computed(() => {
     },
   ];
 });
+const versionText = computed(() => (collapsed.value ? pgk.version : `${envMode}_${pgk.version}`));
 const menuCls = computed(() => {
   return [
     `${prefix}-side-nav`,

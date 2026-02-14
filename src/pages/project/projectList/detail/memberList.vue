@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 
-import type { TaskQuery } from '@/api/model/projectModel';
+import type { TaskMemberListQuery } from '@/api/model/taskModel';
 import { getTaskMemberList } from '@/api/task';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
@@ -75,9 +75,8 @@ export interface MemberItem {
 
 type MemberRow = MemberItem;
 
-const defaultQuery: TaskQuery = {
-  name: '',
-  status: '',
+const defaultQuery: TaskMemberListQuery = {
+  task_id: undefined,
   page: 1,
   limit: 20,
 };

@@ -15,7 +15,6 @@
     />
   </div>
 </template>
-
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 
@@ -112,7 +111,6 @@ defineExpose({
   focusIndex,
 });
 </script>
-
 <style lang="less" scoped>
 .digit-wrap {
   margin-top: 22px;

@@ -19,6 +19,11 @@ const defaultRouterList: Array<RouteRecordRaw> = [
   },
   {
     path: '/enterprise-register',
+    name: 'enterpriseRegisterEntry',
+    component: () => import('@/pages/login/enterprise-entry.vue'),
+  },
+  {
+    path: '/enterprise-register/form',
     name: 'enterpriseRegister',
     component: () => import('@/pages/login/enterprise.vue'),
   },

@@ -21,8 +21,8 @@
       @page-change="handlePageChange"
     >
       <template #submit_status="{ record }">
-        <t-tag :theme="submitStatusTag[record.submit_status].theme">
-          {{ submitStatusTag[record.submit_status].label }}
+        <t-tag :theme="getSubmitStatusTag(record.submit_status).theme">
+          {{ getSubmitStatusTag(record.submit_status).label }}
         </t-tag>
       </template>
       <template #op="{ record }">
@@ -103,6 +103,20 @@ const submitStatusTag: Record<DeliverySubmitStatus, { label: string; theme: TdTa
   [DeliverySubmitStatus.Pending]: { label: '待验收', theme: 'warning' },
   [DeliverySubmitStatus.Accepted]: { label: '已验收', theme: 'success' },
   [DeliverySubmitStatus.RejectedNeedResubmit]: { label: '不合格需重提', theme: 'danger' },
+};
+const submitStatusDefaultTag: { label: string; theme: TdTagProps['theme'] } = { label: '未知', theme: 'default' };
+const submitStatusValues = Object.values(DeliverySubmitStatus).filter(
+  (value): value is DeliverySubmitStatus => typeof value === 'number',
+);
+
+const isDeliverySubmitStatus = (value: unknown): value is DeliverySubmitStatus =>
+  submitStatusValues.includes(value as DeliverySubmitStatus);
+
+const getSubmitStatusTag = (value: unknown) => {
+  if (!isDeliverySubmitStatus(value)) {
+    return submitStatusDefaultTag;
+  }
+  return submitStatusTag[value];
 };
 
 const defaultQuery: DeliveryListQuery = {
@@ -189,7 +203,10 @@ const {
   query,
 } = tableHook;
 
-const handleTabChange = (value: 'all' | DeliverySubmitStatus) => {
+const handleTabChange = (value: string | number) => {
+  if (value !== 'all' && !isDeliverySubmitStatus(value)) {
+    return;
+  }
   currentStatus.value = value;
   query.submit_status = value === 'all' ? undefined : value;
   pagination.current = 1;

@@ -3,24 +3,10 @@
     <generic-form
       :form-data="formData"
       :form-groups="formGroups"
-      :container-width="1160"
       label-align="top"
       @submit="handleSubmit"
       @reset="handleCancel"
     >
-      <template #content>
-        <div class="section-title">企业基础信息</div>
-        <div v-for="(group, groupIndex) in formGroups" :key="groupIndex" class="form-group">
-          <t-row :gutter="[22, 16]">
-            <t-col v-for="(item, itemIndex) in group.items" :key="itemIndex" :span="item.span || 6">
-              <t-form-item :label="item.label" :name="item.name">
-                <component :is="getFormComponent(item.type)" v-model="formData[item.name]" v-bind="item.props" />
-              </t-form-item>
-            </t-col>
-          </t-row>
-        </div>
-      </template>
-
       <template #actions>
         <t-button v-if="!isEditing" theme="primary" class="save-btn" @click="handleEdit">编辑</t-button>
         <template v-else>
@@ -57,7 +43,11 @@ const INITIAL_FORM_DATA = {
   workTime: '周一至周五 09:00 - 18:00',
   email: 'contact@newedge.com',
   industry: '软件开发',
-  region: '广东省 -- 广州市 -- 番禺区',
+  region: {
+    province: '广东省',
+    city: '广州市',
+    district: '番禺区',
+  },
   summary:
     '我们是一家专注于自动驾驶核心技术研发的国家高新技术企业，致力于通过人工智能改变未来的交通方式。公司团队来自硅谷及国内顶尖高校的专家组成，拥有百余项核心专利。',
   detailAddress: '中关村大街1号智行大厦22层',
@@ -94,7 +84,6 @@ const formGroups = computed(() => [
         rules: [{ required: true, message: '请输入企业简称' }],
         props: {
           disabled: !isEditing.value,
-          readonly: !isEditing.value,
           placeholder: '请输入企业简称',
         },
       },
@@ -106,7 +95,6 @@ const formGroups = computed(() => [
         rules: [{ required: true, message: '请输入联系电话' }],
         props: {
           disabled: !isEditing.value,
-          readonly: !isEditing.value,
           placeholder: '请输入联系电话',
         },
       },
@@ -117,7 +105,6 @@ const formGroups = computed(() => [
         span: 6,
         props: {
           disabled: !isEditing.value,
-          readonly: !isEditing.value,
           placeholder: '请输入工作时间',
         },
       },
@@ -128,7 +115,6 @@ const formGroups = computed(() => [
         span: 6,
         props: {
           disabled: !isEditing.value,
-          readonly: !isEditing.value,
           placeholder: '请输入邮箱地址',
         },
       },
@@ -139,19 +125,16 @@ const formGroups = computed(() => [
         span: 6,
         props: {
           disabled: !isEditing.value,
-          readonly: !isEditing.value,
           placeholder: '请输入所属行业',
         },
       },
       {
         name: 'region',
         label: '企业地址',
-        type: 'input',
+        type: 'provinceCityAreaPicker',
         span: 6,
         props: {
           disabled: !isEditing.value,
-          readonly: !isEditing.value,
-          placeholder: '请输入企业地址',
         },
       },
       {
@@ -161,7 +144,6 @@ const formGroups = computed(() => [
         span: 6,
         props: {
           disabled: !isEditing.value,
-          readonly: !isEditing.value,
           maxlength: 400,
           autosize: { minRows: 5, maxRows: 7 },
           placeholder: '请输入企业简介',
@@ -174,7 +156,6 @@ const formGroups = computed(() => [
         span: 6,
         props: {
           disabled: !isEditing.value,
-          readonly: !isEditing.value,
           placeholder: '请输入企业详细地址',
         },
       },
@@ -185,7 +166,6 @@ const formGroups = computed(() => [
         span: 6,
         props: {
           disabled: !isEditing.value,
-          readonly: !isEditing.value,
           maxlength: 400,
           autosize: { minRows: 5, maxRows: 7 },
           placeholder: '请输入员工福利',
@@ -196,6 +176,21 @@ const formGroups = computed(() => [
 ]);
 </script>
 <style lang="less" scoped>
+:deep(.form-container) {
+  justify-content: flex-start;
+}
+
+:deep(.form-submit-container) {
+  justify-content: flex-start;
+  background-color: var(--td-bg-color-container);
+}
+
+:deep(.form-submit-container .form-submit-sub) {
+  margin-left: 30px;
+  width: 100%;
+  justify-content: flex-start;
+}
+
 .section-title {
   font-size: 30px;
   color: var(--td-text-color-primary);
