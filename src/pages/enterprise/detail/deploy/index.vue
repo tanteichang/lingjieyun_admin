@@ -80,7 +80,7 @@ import * as echarts from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
-import { getProjectList } from '@/api/detail';
+import { getProjectList } from '@/api/enterprise/detail';
 import { t } from '@/locales';
 import { useSettingStore } from '@/store';
 import { changeChartsTheme } from '@/utils/color';

@@ -72,10 +72,10 @@ import type { TdTagProps } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, reactive, ref } from 'vue';
 
-import { getDeliveryList, reviewDelivery } from '@/api/delivery';
+import { getDeliveryList, reviewDelivery } from '@/api/enterprise/delivery';
 import type { Row } from '@/api/model/common';
-import type { DeliveryItem, DeliveryListPayload } from '@/api/model/delivery';
-import { DeliverySubmitStatus } from '@/api/model/delivery';
+import type { DeliveryItem, DeliveryListPayload } from '@/api/model/enterprise/delivery';
+import { DeliverySubmitStatus } from '@/api/model/enterprise/delivery';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import type { FileViewerItem } from '@/components/file-viewer/index.vue';
@@ -149,11 +149,13 @@ const formConfig: FormConfig<DeliveryListQuery, keyof DeliveryListQuery> = {
 
 const tableConfig: TableConfig<DeliveryRow, keyof DeliveryRow> = {
   tableItem: [
-    { title: '姓名', colKey: 'user_name', width: 140, align: 'center' },
+    { title: '姓名', colKey: 'user_name', width: 80, align: 'center' },
     { title: '手机号', colKey: 'user_mobile', width: 140, align: 'center' },
-    { title: '提交类型', colKey: 'submit_type_text', width: 120, align: 'center' },
+    { title: '所属日期', colKey: 'plan_date', width: 100, align: 'center' },
+    { title: '提交类型', colKey: 'submit_type_text', width: 100, align: 'center' },
     { title: '提交状态', colKey: 'submit_status', width: 140, align: 'center' },
-    { title: '提交次数', colKey: 'submit_count', width: 100, align: 'center' },
+    { title: '项目名称', colKey: 'project_name', width: 200, align: 'center' },
+    { title: '任务名称', colKey: 'task_name', width: 200, align: 'center' },
     { title: '提交时间', colKey: 'created_at', width: 180, align: 'center' },
     { title: '操作', colKey: 'op', width: 160, align: 'center', fixed: 'right' },
   ],

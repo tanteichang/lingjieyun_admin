@@ -63,9 +63,10 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import type { TaskPublishPayload } from '@/api/model/taskModel';
-import { AcceptanceType, DeliveryMode, RecruitmentType } from '@/api/model/taskModel';
-import { publishTask } from '@/api/task';
+import { publishTask } from '@/api/enterprise/task';
+import { DeliveryMode } from '@/api/model/enterprise/delivery';
+import type { TaskPublishPayload } from '@/api/model/enterprise/taskModel';
+import { AcceptanceType, RecruitmentType } from '@/api/model/enterprise/taskModel';
 import GenericForm from '@/components/generic-form/index.vue';
 import type { LngLatValue } from '@/components/lngLatPicker/index.vue';
 import type { ProvinceCityAreaValue } from '@/components/provinceCityAreaPicker/index.vue';
@@ -90,7 +91,7 @@ const dictStore = useDictStore();
 const router = useRouter();
 const route = useRoute();
 
-const currentStep = ref(0);
+const currentStep = ref(1);
 
 const projectInfo = computed(() => projectStore.getProject(route.query.projectID as string));
 const projectTypeOptions = computed(() => dictStore.getProjectTypeOptions);
@@ -313,7 +314,7 @@ const formGroupsStep2 = computed(() => [
       {
         name: 'job_id',
         label: '岗位要求',
-        type: 'select',
+        type: 'treeSelect',
         span: 6,
         rules: [{ required: false, message: '请选择岗位要求' }],
         props: { options: dictStore.getJobOptions, placeholder: '请选择岗位要求', clearable: true },

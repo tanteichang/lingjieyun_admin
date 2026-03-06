@@ -4,7 +4,7 @@ import NProgress from 'nprogress'; // progress bar
 import { MessagePlugin } from 'tdesign-vue-next';
 
 import router from '@/router';
-import { getPermissionStore, useUserStore } from '@/store';
+import { getPermissionStore, useUserLoginAndRegister, useUserStore } from '@/store';
 
 NProgress.configure({ showSpinner: false });
 
@@ -22,12 +22,20 @@ router.beforeEach(async (to, from, next) => {
       return;
     }
     try {
-      await userStore.getUserInfo();
+      // await userStore.getUserInfo();
 
       if (!permissionStore.isRoutesInitialized) {
         await permissionStore.buildAsyncRoutes();
       }
       if (router.hasRoute(to.name)) {
+        const hasDeniedRoute = to.matched.some((route) => {
+          return !permissionStore.canAccessPermission(route.meta?.permission as string | string[] | undefined);
+        });
+        if (hasDeniedRoute) {
+          MessagePlugin.warning('暂无访问权限');
+          next(`/`);
+          return;
+        }
         next();
       } else {
         next(`/`);
@@ -58,8 +66,9 @@ router.afterEach((to) => {
   if (to.path === '/login') {
     const userStore = useUserStore();
     const permissionStore = getPermissionStore();
-
+    const userLoginAndRegisterStore = useUserLoginAndRegister();
     userStore.logout();
+    userLoginAndRegisterStore.logout();
     permissionStore.restoreRoutes();
   }
   NProgress.done();

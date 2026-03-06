@@ -2,7 +2,7 @@
   <div class="verify-row">
     <t-input
       :model-value="modelValue"
-      placeholder="输入 138****8888 收验证码"
+      :placeholder="`输入 ${userStore.userInfo.phone?.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')} 接收的验证码`"
       inputmode="numeric"
       @input="handleInput"
     />
@@ -13,7 +13,8 @@
 </template>
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from 'vue';
-
+import { useUserStore } from '@/store/modules/user';
+const userStore = useUserStore();
 defineOptions({
   name: 'PayVerifyCodeInput',
 });

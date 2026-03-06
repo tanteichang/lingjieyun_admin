@@ -8,31 +8,10 @@
     label-width="0"
     @submit="onSubmit"
   >
-    <t-form-item name="name">
-      <t-input v-model="formData.name" :maxlength="11" size="large" placeholder="请输入您的企业名称">
-        <template #prefix-icon>
-          <t-icon name="user" />
-        </template>
-      </t-input>
-    </t-form-item>
-    <t-form-item name="credit_code">
-      <t-input v-model="formData.credit_code" type="text" size="large" placeholder="请输入您的企业信用代码">
-        <template #prefix-icon>
-          <t-icon name="mail" />
-        </template>
-      </t-input>
-    </t-form-item>
     <t-form-item name="mobile">
-      <t-input v-model="formData.mobile" type="text" size="large" placeholder="请输入您的企业电话">
+      <t-input v-model="formData.mobile" type="text" size="large" placeholder="请输入您的手机号">
         <template #prefix-icon>
-          <t-icon name="mail" />
-        </template>
-      </t-input>
-    </t-form-item>
-    <t-form-item name="address">
-      <t-input v-model="formData.address" type="text" size="large" placeholder="请输入您的企业地址">
-        <template #prefix-icon>
-          <t-icon name="mail" />
+          <t-icon name="mobile" />
         </template>
       </t-input>
     </t-form-item>
@@ -52,21 +31,22 @@
         </template>
       </t-input>
     </t-form-item>
-    <t-form-item name="admin_mobile">
-      <t-input v-model="formData.admin_mobile" type="text" size="large" placeholder="请输入您的管理员电话">
+    <t-form-item name="confirm_password">
+      <t-input
+        v-model="formData.confirm_password"
+        size="large"
+        :type="showConfirmPsw ? 'text' : 'password'"
+        clearable
+        placeholder="请再次输入登录密码"
+      >
         <template #prefix-icon>
-          <t-icon name="mail" />
+          <t-icon name="lock-on" />
+        </template>
+        <template #suffix-icon>
+          <t-icon :name="showConfirmPsw ? 'browse' : 'browse-off'" @click="showConfirmPsw = !showConfirmPsw" />
         </template>
       </t-input>
     </t-form-item>
-    <t-form-item name="admin_username">
-      <t-input v-model="formData.admin_username" type="text" size="large" placeholder="请输入您的管理员用户名">
-        <template #prefix-icon>
-          <t-icon name="mail" />
-        </template>
-      </t-input>
-    </t-form-item>
-
     <t-form-item class="verification-code" name="sms_code">
       <t-input v-model="formData.sms_code" size="large" placeholder="请输入验证码" />
       <t-button
@@ -98,29 +78,32 @@
 import type { FormRule, SubmitContext } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-import { register, sendSmsCode } from '@/api/auth';
-import type { RegisterPayload } from '@/api/model/auth';
+import { useUserLoginAndRegister } from '@/store/modules/user';
+
+const router = useRouter();
+const userLoginAndRegisterStore = useUserLoginAndRegister();
+
+import { register, sendSmsCode } from '@/api/enterprise/auth';
+import type { RegisterPayload } from '@/api/model/enterprise/auth';
 import { useCounter } from '@/hooks';
 
-const INITIAL_DATA: RegisterPayload = {
-  name: '',
-  credit_code: '',
+interface RegisterFormData extends RegisterPayload {
+  confirm_password: string;
+}
+
+const INITIAL_DATA: RegisterFormData = {
   mobile: '',
-  address: '',
-  business_license: '',
   password: '',
-  admin_mobile: '',
-  admin_username: '',
+  confirm_password: '',
   sms_code: '',
 };
 
 const FORM_RULES: Record<string, FormRule[]> = {
-  name: [{ required: true, message: '企业名称必填', type: 'error' }],
-  credit_code: [{ required: true, message: '企业信用代码必填', type: 'error' }],
-  mobile: [{ required: true, message: '企业电话必填', type: 'error' }],
+  mobile: [{ required: true, message: '手机号必填', type: 'error' }],
   password: [{ required: true, message: '密码必填', type: 'error' }],
-  admin_mobile: [{ required: true, message: '管理员电话必填', type: 'error' }],
+  confirm_password: [{ required: true, message: '请再次输入登录密码', type: 'error' }],
   sms_code: [{ required: true, message: '验证码必填', type: 'error' }],
 };
 
@@ -132,19 +115,32 @@ const formData = ref({ ...INITIAL_DATA });
 const checked = ref(true);
 
 const showPsw = ref(false);
+const showConfirmPsw = ref(false);
 
 const [countDown, handleCounter] = useCounter(60);
 
 const onSubmit = (ctx: SubmitContext) => {
   if (ctx.validateResult === true) {
+    if (formData.value.password !== formData.value.confirm_password) {
+      MessagePlugin.error('两次输入的登录密码不一致');
+      return;
+    }
     if (!checked.value) {
       MessagePlugin.error('请同意TDesign服务协议和TDesign 隐私声明');
       return;
     }
-    register(formData.value).then((res) => {
+    const payload: RegisterPayload = {
+      mobile: formData.value.mobile,
+      password: formData.value.password,
+      sms_code: formData.value.sms_code,
+    };
+    register(payload).then((res) => {
       console.log(res);
       if (res.code === 200) {
         MessagePlugin.success(res.msg);
+        userLoginAndRegisterStore.setAdminId(res.data.admin_id);
+        userLoginAndRegisterStore.setPhone(res.data.mobile);
+        router.push({ name: 'enterpriseRegisterEntry' });
       } else {
         MessagePlugin.error(res.msg || '注册失败');
       }
@@ -158,7 +154,7 @@ const switchType = (val: string) => {
 };
 
 const validateMobile = () => {
-  if (!formData.value.admin_mobile) {
+  if (!formData.value.mobile) {
     MessagePlugin.error('请输入管理员电话');
     return false;
   }
@@ -166,7 +162,7 @@ const validateMobile = () => {
 };
 
 const sendVerificationCode = () => {
-  sendSmsCode({ mobile: formData.value.admin_mobile, type: 'register' }).then((res) => {
+  sendSmsCode({ mobile: formData.value.mobile, type: 'register' }).then((res) => {
     console.log(res);
     if (res.code === 200) {
       MessagePlugin.success('验证码发送成功');

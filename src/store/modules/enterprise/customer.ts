@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import type { Customer } from '@/api/model/customer';
+import type { Customer } from '@/api/model/enterprise/customer';
 
 export const useCustomerStore = defineStore('_enterprise_customer_list', {
   state: () => ({

@@ -4,6 +4,7 @@ import type { LocationQueryRaw, RouteRecordName } from 'vue-router';
 export interface RouteMeta {
   title?: string | Record<string, string>;
   icon?: string;
+  permission?: string | string[];
   expanded?: boolean;
   orderNo?: number;
   hidden?: boolean;
@@ -30,11 +31,6 @@ export interface MenuRoute {
 }
 
 export type ModeType = 'dark' | 'light';
-
-export interface UserInfo {
-  name: string;
-  roles: string[];
-}
 
 export interface NotificationItem {
   id: string;
@@ -66,4 +62,10 @@ export interface TTabRemoveOptions {
   value: TabValue;
   index: number;
   e: MouseEvent;
+}
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    permission?: string | string[];
+  }
 }

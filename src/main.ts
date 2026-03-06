@@ -2,11 +2,11 @@
 import { createApp } from 'vue';
 import TDesign from 'tdesign-vue-next';
 import formCreate from '@form-create/tdesign';
-
 import App from './App.vue';
 import router from './router';
 import { store } from './store';
 import i18n from './locales';
+import { setupPermissionDirective } from './directives/permission';
 
 import 'tdesign-vue-next/es/style/index.css';
 import '@/style/index.less';
@@ -19,5 +19,6 @@ app.use(formCreate);
 app.use(store);
 app.use(router);
 app.use(i18n);
+setupPermissionDirective(app);
 
 app.mount('#app');

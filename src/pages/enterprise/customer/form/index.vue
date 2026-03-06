@@ -14,8 +14,8 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { createCustomer, updateCustomer } from '@/api/customer';
-import type { CreateCustomerPayload } from '@/api/model/customer';
+import { createCustomer, updateCustomer } from '@/api/enterprise/customer';
+import type { CreateCustomerPayload } from '@/api/model/enterprise/customer';
 import { useCustomerStore } from '@/store/modules/enterprise/customer';
 
 import { INITIAL_DATA } from './constants';
@@ -50,6 +50,7 @@ onMounted(() => {
   console.log('isEdit', isEdit.value);
   if (isEdit.value) {
     const data = useCustomerStore().getCustomer(route.query.id as string);
+    console.log('data', data);
     formData.value = { ...data };
   }
 });

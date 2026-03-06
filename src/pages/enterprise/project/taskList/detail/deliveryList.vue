@@ -60,10 +60,10 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { getDeliveryList, reviewDelivery } from '@/api/delivery';
+import { getDeliveryList, reviewDelivery } from '@/api/enterprise/delivery';
 import type { Row } from '@/api/model/common';
-import type { DeliveryItem, DeliveryListPayload } from '@/api/model/delivery';
-import { DeliveryStatus, DeliverySubmitStatus } from '@/api/model/delivery';
+import type { DeliveryItem, DeliveryListPayload } from '@/api/model/enterprise/delivery';
+import { DeliveryStatus, DeliverySubmitStatus } from '@/api/model/enterprise/delivery';
 import type { TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import type { FileViewerItem } from '@/components/file-viewer/index.vue';
@@ -117,6 +117,20 @@ const submitStatusTag: Record<DeliverySubmitStatus, { label: string; theme: stri
 const formConfig = {
   formItem: [
     {
+      label: '姓名',
+      name: 'keyword_name',
+      type: 'input',
+      placeholder: '请输入姓名',
+      span: 6,
+    },
+    {
+      label: '手机号码',
+      name: 'keyword_mobile',
+      type: 'input',
+      placeholder: '请输入手机号码',
+      span: 6,
+    },
+    {
       label: '提交状态',
       name: 'submit_status',
       type: 'select',
@@ -132,17 +146,16 @@ const formConfig = {
     submit_status: null,
     date_range: '',
     keyword_mobile: '',
-    project_id: route.query.taskID,
+    project_id: route.query.id,
   },
 };
 
 const tableConfig: TableConfig<DeliveryRow, keyof DeliveryRow> = {
   tableItem: [
-    { title: '#', colKey: 'index', width: 70, align: 'center', fixed: 'left' },
     { title: '姓名', colKey: 'user_name', width: 140, align: 'center' },
+    { title: '手机号码', colKey: 'user_mobile', width: 150, align: 'center' },
     { title: '提交类型', colKey: 'submit_type_text', width: 120, align: 'center' },
     { title: '提交状态', colKey: 'submit_status', width: 120, align: 'center' },
-    { title: '提交次数', colKey: 'submit_count', width: 100, align: 'center' },
     { title: '提交时间', colKey: 'created_at', width: 180, align: 'center' },
     { title: '操作', colKey: 'op', width: 160, align: 'center', fixed: 'right' },
   ],

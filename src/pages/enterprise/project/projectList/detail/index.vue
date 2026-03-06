@@ -65,15 +65,14 @@
         <t-tab-panel key="tasks" :label="`任务列表 (${taskTotal || 0})`" value="tasks" :destroy-on-hide="false">
           <task-list @update:total="updateTaskTotal" />
         </t-tab-panel>
-        <t-tab-panel
+        <!-- <t-tab-panel
           key="members"
           :label="`项目成员 (${memberTotal || '-'}人)`"
           value="members"
           :destroy-on-hide="false"
         >
-          <!-- 成员列表 -->
           <member-list @update:total="updateMemberTotal" />
-        </t-tab-panel>
+        </t-tab-panel> -->
 
         <t-tab-panel key="logs" :label="`操作日志 (${logTotal || 0})`" value="logs" :destroy-on-hide="false">
           <!-- 日志列表 -->
@@ -88,8 +87,8 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-import type { ProjectItem } from '@/api/model/projectModel';
-import { PROJECT_STATUS_TAG, ProjectStatus } from '@/api/model/projectModel';
+import type { ProjectItem } from '@/api/model/enterprise/projectModel';
+import { PROJECT_STATUS_TAG, ProjectStatus } from '@/api/model/enterprise/projectModel';
 import { useProjectStore } from '@/store/modules/enterprise/project';
 
 const projectStore = useProjectStore();
@@ -144,247 +143,9 @@ const taskSearch = ref({
   taskStatus: '',
 });
 
-// 任务状态选项
-const taskStatusOptions = [
-  { label: '全部', value: '' },
-  { label: '进行中', value: 'processing' },
-  { label: '已完成', value: 'completed' },
-  { label: '已暂停', value: 'paused' },
-];
-
-// 任务列表数据
-const taskList = ref([
-  {
-    id: 1,
-    taskCode: 'XM487',
-    taskName: '贵港市政务平台APP项目',
-    taskType: '软件研发',
-    settlementMethod: '自由结算',
-    status: 'processing',
-    statusText: '进行中',
-    memberCount: 2,
-  },
-  {
-    id: 2,
-    taskCode: 'XM487',
-    taskName: '贵港市政务平台APP项目',
-    taskType: '软件研发',
-    settlementMethod: '自由结算',
-    status: 'processing',
-    statusText: '进行中',
-    memberCount: 2,
-  },
-  {
-    id: 3,
-    taskCode: 'XM487',
-    taskName: '贵港市政务平台APP项目',
-    taskType: '软件研发',
-    settlementMethod: '自由结算',
-    status: 'processing',
-    statusText: '进行中',
-    memberCount: 2,
-  },
-]);
-
-// 项目成员列表
-const memberList = ref([
-  {
-    id: 1,
-    name: '张三',
-    role: '项目经理',
-    joinDate: '2025-12-28',
-    status: 'active',
-  },
-  {
-    id: 2,
-    name: '李四',
-    role: '前端开发',
-    joinDate: '2025-12-28',
-    status: 'active',
-  },
-  {
-    id: 3,
-    name: '王五',
-    role: '后端开发',
-    joinDate: '2025-12-29',
-    status: 'active',
-  },
-  {
-    id: 4,
-    name: '赵六',
-    role: '测试工程师',
-    joinDate: '2025-12-30',
-    status: 'active',
-  },
-  {
-    id: 5,
-    name: '钱七',
-    role: 'UI设计师',
-    joinDate: '2026-01-01',
-    status: 'active',
-  },
-]);
-
-// 操作日志
-const operationLogs = ref([
-  {
-    id: 1,
-    operator: '管理员',
-    action: '创建项目',
-    time: '2025-12-28 10:00:00',
-    description: '创建了贵港市政务平台APP项目',
-  },
-  {
-    id: 2,
-    operator: '张三',
-    action: '更新项目信息',
-    time: '2025-12-28 14:30:00',
-    description: '更新了项目描述和时间安排',
-  },
-  {
-    id: 3,
-    operator: '李四',
-    action: '添加成员',
-    time: '2025-12-29 09:15:00',
-    description: '添加了王五为后端开发工程师',
-  },
-]);
-
-// 任务列表列配置
-const taskColumns = [
-  {
-    title: '序号',
-    colKey: 'index',
-    width: 60,
-    align: 'center' as const,
-    render: (h: any, params: any) => h('span', params.index + 1),
-  },
-  {
-    title: '任务编号',
-    colKey: 'taskCode',
-    width: 100,
-  },
-  {
-    title: '任务名称',
-    colKey: 'taskName',
-    minWidth: 200,
-  },
-  {
-    title: '任务类型',
-    colKey: 'taskType',
-    width: 120,
-  },
-  {
-    title: '结算方式',
-    colKey: 'settlementMethod',
-    width: 120,
-  },
-  {
-    title: '任务状态',
-    colKey: 'status',
-    width: 100,
-    align: 'center' as const,
-  },
-  {
-    title: '成员数量',
-    colKey: 'memberCount',
-    width: 100,
-    align: 'center' as const,
-  },
-  {
-    title: '操作',
-    colKey: 'operation',
-    width: 80,
-    align: 'center' as const,
-  },
-];
-
-// 成员列表列配置
-const memberColumns = [
-  {
-    title: '头像',
-    colKey: 'avatar',
-    width: 80,
-    align: 'center' as const,
-  },
-  {
-    title: '姓名',
-    colKey: 'name',
-    width: 120,
-  },
-  {
-    title: '角色',
-    colKey: 'role',
-    width: 150,
-  },
-  {
-    title: '加入时间',
-    colKey: 'joinDate',
-    width: 150,
-  },
-  {
-    title: '状态',
-    colKey: 'status',
-    width: 100,
-    align: 'center' as const,
-    render: (h: any, params: any) => {
-      return h('span', params.row.status === 'active' ? '活跃' : '已退出');
-    },
-  },
-];
-
-// 日志列表列配置
-const logColumns = [
-  {
-    title: '操作人',
-    colKey: 'operator',
-    width: 120,
-  },
-  {
-    title: '操作类型',
-    colKey: 'action',
-    width: 120,
-  },
-  {
-    title: '操作时间',
-    colKey: 'time',
-    width: 180,
-  },
-  {
-    title: '操作描述',
-    colKey: 'description',
-    minWidth: 300,
-  },
-];
-
 // 处理标签页切换
 const handleTabChange = (value: string | number) => {
   currentTab.value = String(value);
-};
-
-// 处理任务搜索
-const handleTaskSearch = () => {
-  console.log('搜索任务:', taskSearch.value);
-  // 这里可以实现实际的搜索逻辑
-};
-
-// 重置任务搜索
-const resetTaskSearch = () => {
-  taskSearch.value = {
-    taskName: '',
-    taskStatus: '',
-  };
-};
-
-// 发布任务
-const publishTask = () => {
-  MessagePlugin.info('发布任务功能开发中');
-};
-
-// 查看任务详情
-const viewTaskDetail = (taskId: number) => {
-  console.log('查看任务详情:', taskId);
-  MessagePlugin.info('查看任务详情功能开发中');
 };
 
 // 页面加载时获取数据

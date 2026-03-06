@@ -20,8 +20,14 @@
         {{ record.project?.name || '-' }}
       </template>
       <template #op="{ record }">
-        <t-button theme="primary" variant="text">交付物明细</t-button>
-        <t-button theme="primary" variant="text" @click="handleUpload(record)">上传交付物</t-button>
+        <t-button theme="primary" variant="text" @click="handleDetail(record)">交付物明细</t-button>
+        <t-button
+          v-if="record.delivery_mode !== DeliveryMode.MINI_APP"
+          theme="primary"
+          variant="text"
+          @click="handleUpload(record)"
+          >上传交付物</t-button
+        >
       </template>
     </common-table>
   </t-card>
@@ -30,20 +36,24 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { getDeliveryUploadList } from '@/api/delivery';
+import { getDeliveryUploadList } from '@/api/enterprise/delivery';
 import type { Row } from '@/api/model/common';
-import type { DeliveryUploadItem, DeliveryUploadListPayload } from '@/api/model/delivery';
+import type { DeliveryUploadItem, DeliveryUploadListPayload } from '@/api/model/enterprise/delivery';
+import { DeliveryMode, DeliveryStatus, DeliveryStatusOptions } from '@/api/model/enterprise/delivery';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
 import { useSettingStore } from '@/store';
+import { useDeliveryStore } from '@/store/modules/enterprise/delivery';
+import { enumToOptions } from '@/utils/type';
 
 defineOptions({
   name: 'DeliveryUpload',
 });
 
 const router = useRouter();
+const deliveryStore = useDeliveryStore();
 
 type DeliveryUploadListQuery = DeliveryUploadListPayload;
 
@@ -60,7 +70,7 @@ const formConfig: FormConfig<DeliveryUploadListQuery, keyof DeliveryUploadListQu
       placeholder: '请选择交付状态',
       span: 6,
       props: {
-        options: [],
+        options: enumToOptions(DeliveryStatus, DeliveryStatusOptions),
       },
     },
   ],
@@ -82,7 +92,7 @@ const tableConfig: TableConfig<DeliveryUploadRow, keyof DeliveryUploadRow> = {
     { title: '交付模式', colKey: 'delivery_mode_text', width: 140, align: 'center' },
     { title: '交付物上传更新时间', colKey: 'delivery_upload_time', width: 180, align: 'center' },
     { title: '状态', colKey: 'status', width: 140, align: 'center' },
-    { title: '操作', colKey: 'op', width: 120, align: 'center', fixed: 'right' },
+    { title: '操作', colKey: 'op', width: 100, align: 'left', fixed: 'right' },
   ],
 };
 
@@ -99,6 +109,7 @@ const tableHook = useCommonTable<DeliveryUploadListQuery, DeliveryUploadRow>({
   fetcher: async (params) => {
     const { data } = await getDeliveryUploadList(params);
     const list = data.list || [];
+    deliveryStore.setDeliveries(list);
     return {
       list,
       total: data.total ?? list.length,
@@ -115,7 +126,15 @@ const handleUpload = (record: DeliveryUploadRow) => {
   router.push({
     name: 'DeliveryUploadDetail',
     query: {
-      task_id: record.id,
+      id: record.id,
+    },
+  });
+};
+const handleDetail = (record: DeliveryUploadRow) => {
+  router.push({
+    name: 'DeliveryDetail',
+    query: {
+      id: record.id,
     },
   });
 };

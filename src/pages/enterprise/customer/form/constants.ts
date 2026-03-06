@@ -1,4 +1,4 @@
-import type { CreateCustomerPayload } from '@/api/model/customer';
+import type { CreateCustomerPayload } from '@/api/model/enterprise/customer';
 
 export const INITIAL_DATA: CreateCustomerPayload = {
   name: '',

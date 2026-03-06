@@ -29,6 +29,11 @@ const defaultRouterList: Array<RouteRecordRaw> = [
     component: () => import('@/pages/enterprise/login/enterprise.vue'),
   },
   {
+    path: '/enterprise-register/join',
+    name: 'enterpriseJoin',
+    component: () => import('@/pages/enterprise/login/enterprise-join.vue'),
+  },
+  {
     path: '/',
     redirect: '/dashboard/base',
   },
@@ -49,7 +54,6 @@ export const homepageRouterList: Array<RouteRecordRaw> = Array.isArray(homepageR
 export const fixedRouterList: Array<RouteRecordRaw> = mapModuleRouterList(fixedModules);
 
 export const allRoutes = [...homepageRouterList, ...fixedRouterList, ...defaultRouterList];
-
 // 固定路由模块转换为路由
 export function mapModuleRouterList(modules: Record<string, unknown>): Array<RouteRecordRaw> {
   const routerList: Array<RouteRecordRaw> = [];

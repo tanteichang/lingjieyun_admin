@@ -133,7 +133,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 
-import { getPurchaseList } from '@/api/detail';
+import { getPurchaseList } from '@/api/enterprise/detail';
 import { t } from '@/locales';
 
 import Product from './components/Product.vue';

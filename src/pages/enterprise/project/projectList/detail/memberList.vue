@@ -39,8 +39,8 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 
-import type { TaskMemberListQuery } from '@/api/model/taskModel';
-import { getTaskMemberList } from '@/api/task';
+import type { TaskMemberListQuery } from '@/api/model/enterprise/taskModel';
+import { getTaskMemberList } from '@/api/enterprise/task';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';

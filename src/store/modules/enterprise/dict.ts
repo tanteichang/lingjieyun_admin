@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 
-import { getEducation, getExperience, getInvoiceType, getJob, getProjectType, getSalary } from '@/api/dict';
-import type { Education, Experience, InvoiceType, Job, ProjectType, Salary } from '@/api/model/dict';
+import { getEducation, getExperience, getInvoiceType, getJob, getProjectType, getSalary } from '@/api/enterprise/dict';
+import type { Education, Experience, InvoiceType, Job, ProjectType, Salary } from '@/api/model/enterprise/dict';
 
 export const useDictStore = defineStore('_enterprise_dict', {
   state: () => ({

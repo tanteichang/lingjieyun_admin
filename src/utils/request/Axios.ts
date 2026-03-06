@@ -194,13 +194,17 @@ export class VAxios {
   /**
    * 上传文件封装
    * @param key 文件所属的key
-   * @param file 文件
+   * @param file 文件或文件数组
    * @param config 请求配置
    * @param options
    */
-  upload<T = any>(key: string, file: File, config: AxiosRequestConfig, options?: RequestOptions): Promise<T> {
+  upload<T = any>(key: string, file: File | File[], config: AxiosRequestConfig, options?: RequestOptions): Promise<T> {
     const params: FormData = config.params ?? new FormData();
-    params.append(key, file);
+    if (Array.isArray(file)) {
+      file.forEach((item) => params.append(key, item));
+    } else {
+      params.append(key, file);
+    }
 
     return this.request(
       {

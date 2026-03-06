@@ -9,7 +9,14 @@
         <div class="action-desc">涉及资金变动、提现等敏感操作时需要验证。</div>
       </div>
     </div>
-    <t-link theme="primary" class="action-link" hover="color" @click="handleOpenPayDialog">管理支付密码</t-link>
+    <t-link
+      :disabled="!permissionStore.isSuperAdmin"
+      theme="primary"
+      class="action-link"
+      hover="color"
+      @click="handleOpenPayDialog"
+      >{{ permissionStore.isSuperAdmin ? '管理支付密码' : '仅限超级管理员操作' }}</t-link
+    >
 
     <t-dialog
       v-model:visible="payDialogVisible"
@@ -67,12 +74,16 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue';
 
-import PayPasswordInput from './PayPasswordInput.vue';
+import PayPasswordInput from '@/components/PayPasswordInput.vue';
+import { usePermissionStore } from '@/store/modules/permission';
+
 import PayVerifyCodeInput from './PayVerifyCodeInput.vue';
 
 defineOptions({
   name: 'PayPasswordSection',
 });
+
+const permissionStore = usePermissionStore();
 
 const PASSWORD_LENGTH = 6;
 

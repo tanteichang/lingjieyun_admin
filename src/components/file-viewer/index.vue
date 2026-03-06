@@ -13,10 +13,8 @@
               <t-link
                 class="file-viewer-download"
                 theme="primary"
-                :href="file.url"
-                target="_blank"
-                :download="file.downloadName"
                 hover="color"
+                @click="handleDownload(file.url, file.downloadName)"
               >
                 下载
               </t-link>
@@ -28,11 +26,9 @@
               <div class="file-viewer-name" :title="file.name">{{ file.name }}</div>
               <t-link
                 class="file-viewer-download"
-                :href="file.url"
                 theme="primary"
-                target="_blank"
-                :download="file.downloadName"
                 hover="color"
+                @click="handleDownload(file.url, file.downloadName)"
               >
                 下载
               </t-link>
@@ -52,11 +48,9 @@
             </div>
             <t-link
               class="file-viewer-download"
-              :href="file.url"
               theme="primary"
-              target="_blank"
-              :download="file.downloadName"
               hover="color"
+              @click="handleDownload(file.url, file.downloadName)"
             >
               下载
             </t-link>
@@ -68,6 +62,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import { saveAs } from 'file-saver';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 
@@ -131,6 +126,19 @@ const openImage = (index: number) => {
   previewIndex.value = index;
   previewVisible.value = true;
 };
+
+const handleDownload = async (url: string, fileName: string) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('download failed');
+    }
+    const blob = await response.blob();
+    saveAs(blob, fileName);
+  } catch {
+    saveAs(url, fileName);
+  }
+};
 </script>
 <style lang="less" scoped>
 @import '@/style/index.less';
@@ -176,7 +184,10 @@ const openImage = (index: number) => {
     padding: 12px;
     background: var(--td-bg-color-container);
     box-shadow: var(--td-shadow-1);
-    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    transition:
+      box-shadow 0.2s ease,
+      transform 0.2s ease,
+      border-color 0.2s ease;
     display: inline-block;
     width: 100%;
     margin: 0 0 16px;

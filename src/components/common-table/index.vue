@@ -22,6 +22,14 @@
                   class="form-item-content"
                   v-bind="item.props"
                 />
+                <t-tree-select
+                  v-else-if="item.type === 'treeSelect'"
+                  v-model="form[item.name]"
+                  :placeholder="item.placeholder"
+                  clearable
+                  class="form-item-content"
+                  v-bind="item.props"
+                />
                 <t-date-picker
                   v-else-if="item.type === 'date'"
                   v-model="form[item.name]"
@@ -45,8 +53,12 @@
         </t-col>
         <t-col :span="2">
           <t-space size="small">
-            <t-button theme="primary" type="submit">查询</t-button>
-            <t-button variant="base" theme="default" type="reset">重置</t-button>
+            <t-button theme="primary" type="submit">{{
+              props.formConfig.formItem.length > 0 ? '查询' : '刷新'
+            }}</t-button>
+            <t-button v-if="props.formConfig.formItem.length" variant="base" theme="default" type="reset"
+              >重置</t-button
+            >
           </t-space>
         </t-col>
       </t-row>
@@ -103,7 +115,7 @@ export interface FormConfig<T, K extends keyof T = keyof T> {
     /** 表单项宽度 */
     span?: number;
     /** 表单项类型 */
-    type: 'input' | 'select' | 'date' | 'date-range';
+    type: 'input' | 'select' | 'treeSelect' | 'date' | 'date-range';
     /** 表单项占位符 */
     placeholder?: string;
     /** 传递给渲染组件的额外属性 */
@@ -148,6 +160,8 @@ const props = withDefaults(
     tableConfig: TableConfig<RowType>;
     /** 是否在挂载时自动触发查询 */
     autoSearch?: boolean;
+    /** 是否自动增加序号列（#__index） */
+    autoAddIndex?: boolean;
     /** 表格选择类型：single | multiple */
     selectionType?: SelectionType;
     /** 行 key */
@@ -171,6 +185,7 @@ const props = withDefaults(
       }) as PaginationProps,
     dropdownOptions: () => [],
     autoSearch: true,
+    autoAddIndex: true,
     rowKey: 'id',
     selectedRowKeys: () => [],
   },
@@ -297,7 +312,7 @@ const columnsWithIndex = computed(() => {
       fixed: 'left',
     });
   }
-  if (!hasIndex) {
+  if (props.autoAddIndex && !hasIndex) {
     prefixColumns.push(indexColumn);
   }
   return [...prefixColumns, ...baseColumns];

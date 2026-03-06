@@ -47,10 +47,10 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
+import { getTaskApplyList, reviewTaskApply } from '@/api/enterprise/task';
 import type { Row } from '@/api/model/common';
-import type { TaskApplyItem, TaskApplyQuery } from '@/api/model/taskModel';
-import { TaskApplyStatus } from '@/api/model/taskModel';
-import { getTaskApplyList, reviewTaskApply } from '@/api/task';
+import type { TaskApplyItem, TaskApplyQuery } from '@/api/model/enterprise/taskModel';
+import { TaskApplyStatus } from '@/api/model/enterprise/taskModel';
 import type { TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
@@ -107,7 +107,7 @@ const formConfig = {
     },
   ],
   formData: {
-    product_id: Number(route.query.taskID),
+    product_id: Number(route.query.id),
     page: 1,
     limit: 10,
   },

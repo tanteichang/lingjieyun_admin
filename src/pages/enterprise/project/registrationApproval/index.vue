@@ -55,9 +55,9 @@
 import { computed, reactive, ref } from 'vue';
 
 import type { Row } from '@/api/model/common';
-import type { TaskApplyItem, TaskApplyQuery } from '@/api/model/taskModel';
-import { TaskApplyStatus } from '@/api/model/taskModel';
-import { getTaskApplyList, reviewTaskApply } from '@/api/task';
+import type { TaskApplyItem, TaskApplyQuery } from '@/api/model/enterprise/taskModel';
+import { TaskApplyStatus } from '@/api/model/enterprise/taskModel';
+import { getTaskApplyList, reviewTaskApply } from '@/api/enterprise/task';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';

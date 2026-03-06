@@ -91,7 +91,7 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { getList } from '@/api/list';
+import { getList } from '@/api/enterprise/list';
 import Trend from '@/components/trend/index.vue';
 import { prefix } from '@/config/global';
 import { CONTRACT_PAYMENT_TYPES, CONTRACT_STATUS, CONTRACT_TYPES } from '@/constants';

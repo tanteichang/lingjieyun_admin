@@ -1,8 +1,8 @@
 <template>
-  <t-form :data="formData" :rules="rules" class="cert-form" label-align="top" @submit="handleSubmit">
+  <t-form ref="formRef" :data="formData" :rules="rules" class="cert-form" label-align="top" @submit="handleSubmit">
     <div class="section-title">企业资质信息</div>
 
-    <t-form-item label="营业执照照片" name="licenseImage">
+    <t-form-item label="营业执照照片" name="_licenseImage">
       <div class="upload-block">
         <div class="form-tip">
           <t-icon name="info-circle-filled" />
@@ -10,7 +10,13 @@
         </div>
         <div class="upload-line">
           <div class="upload-box">
-            <t-upload theme="image" accept=".png,.jpeg,.jpg" :size-limit="5 * 1024"></t-upload>
+            <auto-upload
+              v-model="formData._licenseImage"
+              theme="image"
+              accept=".png,.jpeg,.jpg"
+              :auto-upload="true"
+              :size-limit="{ size: 5, unit: 'MB' }"
+            />
           </div>
           <div class="preview-box">
             <img class="preview-license" src="@/assets/login/BusinessLicense.png" alt="营业执照示例" />
@@ -24,96 +30,277 @@
       </div>
     </t-form-item>
 
-    <t-form-item label="企业注册名称" name="companyName">
+    <t-form-item label="企业注册名称" name="name">
       <t-input
-        v-model="formData.companyName"
+        v-model="formData.name"
         placeholder="请填写营业执照上的全称，仅支持中国大陆工商局或市场监督管理局登记的企业"
       />
     </t-form-item>
 
-    <t-form-item label="企业所属行业" name="industry">
-      <t-select v-model="formData.industry" placeholder="请选择所属行业" :options="industryOptions" />
+    <t-form-item label="统一社会信用代码" name="credit_code">
+      <t-input v-model="formData.credit_code" placeholder="请填写统一社会信用代码" />
+    </t-form-item>
+
+    <t-form-item label="企业所属行业" name="industry_id">
+      <t-select v-model="formData.industry_id" placeholder="请选择所属行业" :options="industryOptions" />
+    </t-form-item>
+
+    <t-form-item label="企业联系电话" name="mobile">
+      <t-input v-model="formData.mobile" placeholder="请填写电话号码" />
+    </t-form-item>
+
+    <t-form-item label="企业联系邮箱" name="email">
+      <t-input v-model="formData.email" placeholder="请填写邮箱" />
     </t-form-item>
 
     <div class="section-title section-gap">法定代表人</div>
+
+    <t-form-item :label="`当前用户 ${userSessionStore.phone} 是否为法人`" name="is_legal_admin">
+      <t-radio-group v-model="formData.is_legal_admin">
+        <t-radio :value="1">是</t-radio>
+        <t-radio :value="0">否</t-radio>
+      </t-radio-group>
+    </t-form-item>
+
     <div class="form-tip">
       <t-icon name="info-circle-filled" />
       <span>请上传法人的身份证</span>
     </div>
 
     <div class="id-upload-line">
-      <div class="upload-box">
-        <t-icon name="add" />
-        <span>身份证人像面照片</span>
+      <div class="id-upload-line__item">
+        <t-form-item label="法人身份证人像面照片" name="legal_person_id_front">
+          <div class="upload-box">
+            <auto-upload
+              v-model="formData._idCardFrontImage"
+              theme="image"
+              accept=".png,.jpeg,.jpg"
+              :auto-upload="true"
+              :size-limit="{ size: 5, unit: 'MB' }"
+            />
+            <span>身份证人像面照片</span>
+          </div>
+        </t-form-item>
       </div>
-      <div class="upload-box">
-        <t-icon name="add" />
-        <span>身份证国徽面照片</span>
+      <div class="id-upload-line__item">
+        <t-form-item label="法人身份证国徽面照片" name="legal_person_id_back">
+          <div class="upload-box">
+            <auto-upload
+              v-model="formData._idCardBackImage"
+              theme="image"
+              accept=".png,.jpeg,.jpg"
+              :auto-upload="true"
+              :size-limit="{ size: 5, unit: 'MB' }"
+            />
+            <span>身份证国徽面照片</span>
+          </div>
+        </t-form-item>
       </div>
     </div>
 
-    <t-form-item label="法人姓名" name="legalName">
-      <t-input v-model="formData.legalName" placeholder="请填写法人姓名" />
+    <t-form-item label="法人姓名" name="legal_person_name">
+      <t-input v-model="formData.legal_person_name" placeholder="请填写法人姓名" />
     </t-form-item>
 
-    <t-form-item label="联系电话" name="phone">
-      <t-input v-model="formData.phone" placeholder="请填写电话号码" />
+    <t-form-item label="法人身份证号" name="legal_person_id_no">
+      <t-input v-model="formData.legal_person_id_no" placeholder="请填写法人身份证号" />
     </t-form-item>
 
-    <t-form-item label="是否为管理员" name="isAdmin">
-      <t-radio-group v-model="formData.isAdmin">
-        <t-radio :value="true">是</t-radio>
-        <t-radio :value="false">否</t-radio>
-      </t-radio-group>
+    <t-form-item label="法人联系电话" name="legal_person_phone">
+      <t-input
+        v-model="formData.legal_person_phone"
+        :disabled="formData.is_legal_admin === 1"
+        placeholder="请填写电话号码"
+      />
     </t-form-item>
 
-    <div class="submit-wrap">
-      <t-button theme="primary" type="submit" class="submit-btn">提交</t-button>
+    <div v-if="formData.is_legal_admin === 0">
+      <div class="section-title section-gap">超级管理员</div>
+      <div class="form-tip">
+        <t-icon name="info-circle-filled" />
+        <span>请上传超级管理员的身份证</span>
+      </div>
+
+      <div class="id-upload-line">
+        <div class="id-upload-line__item">
+          <t-form-item label="超级管理员身份证人像面照片" name="super_admin_id_front">
+            <div class="upload-box">
+              <auto-upload
+                v-model="formData._superAdminIdCardFrontImage"
+                theme="image"
+                accept=".png,.jpeg,.jpg"
+                :auto-upload="true"
+                :size-limit="{ size: 5, unit: 'MB' }"
+              />
+              <span>身份证人像面照片</span>
+            </div>
+          </t-form-item>
+        </div>
+        <div class="id-upload-line__item">
+          <t-form-item label="超级管理员身份证国徽面照片" name="super_admin_id_back">
+            <div class="upload-box">
+              <auto-upload
+                v-model="formData._superAdminIdCardBackImage"
+                theme="image"
+                accept=".png,.jpeg,.jpg"
+                :auto-upload="true"
+                :size-limit="{ size: 5, unit: 'MB' }"
+              />
+              <span>身份证国徽面照片</span>
+            </div>
+          </t-form-item>
+        </div>
+      </div>
+
+      <t-form-item label="超级管理员姓名" name="super_admin_name">
+        <t-input v-model="formData.super_admin_name" placeholder="请填写超级管理员姓名" />
+      </t-form-item>
+
+      <t-form-item label="超级管理员身份证号" name="super_admin_id_no">
+        <t-input v-model="formData.super_admin_id_no" placeholder="请填写超级管理员身份证号" />
+      </t-form-item>
+
+      <t-form-item label="超级管理员联系电话" name="super_admin_phone">
+        <t-input
+          v-model="formData.super_admin_phone"
+          :disabled="formData.is_legal_admin === 0"
+          placeholder="请填写电话号码"
+        />
+      </t-form-item>
     </div>
   </t-form>
 </template>
-
 <script setup lang="ts">
 import type { FormRule, SubmitContext } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { reactive } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
+
+import AutoUpload from '@/components/auto-upload/index.vue';
+import { useDictStore } from '@/store/modules/enterprise/dict';
+import { useUserSession } from '@/store/modules/user';
+import { CREDIT_CODE_PATTERN, EMAIL_PATTERN, MOBILE_PATTERN } from '@/utils/pattern';
 
 defineOptions({
   name: 'EnterpriseCertForm',
 });
 
+export interface EnterpriseCertFormExpose {
+  validateAndGetData: () => Promise<Record<string, any> | null>;
+}
+
+const dictStore = useDictStore();
+const userSessionStore = useUserSession();
+const formRef = ref<any>(null);
+
 const formData = reactive({
-  licenseImage: 'mock-license',
-  companyName: '',
+  _licenseImage: [],
+  _idCardFrontImage: [],
+  _idCardBackImage: [],
+  _superAdminIdCardFrontImage: [],
+  _superAdminIdCardBackImage: [],
+  admin_id: '',
+  name: '',
+  credit_code: '',
+  business_license: '',
+  industry_id: '',
   industry: '',
-  legalName: '',
-  phone: '',
-  isAdmin: true,
+  is_legal_admin: 1,
+  legal_person_name: '',
+  legal_person_id_no: '',
+  legal_person_id_front: '',
+  legal_person_id_back: '',
+  legal_person_phone: userSessionStore.phone,
+  mobile: '',
+  email: '',
+  super_admin_name: '',
+  super_admin_id_front: '',
+  super_admin_id_back: '',
+  super_admin_phone: userSessionStore.phone,
+  super_admin_id_no: '',
 });
 
-const industryOptions = [
-  { label: '软件开发', value: 'software' },
-  { label: '互联网服务', value: 'internet' },
-  { label: '人工智能', value: 'ai' },
-];
+const industryOptions = dictStore.getProjectTypeOptions;
+const currentUserPhone = computed(() => userSessionStore.phone || '');
+
+watch(
+  [() => formData.is_legal_admin, currentUserPhone],
+  ([isLegalAdmin, phone]) => {
+    if (!phone) return;
+    if (isLegalAdmin === 1) {
+      formData.legal_person_phone = phone;
+    } else {
+      formData.super_admin_phone = phone;
+      if (formData.legal_person_phone === phone) {
+        formData.legal_person_phone = '';
+      }
+    }
+  },
+  { immediate: true },
+);
 
 const rules: Record<string, FormRule[]> = {
-  licenseImage: [{ required: true, message: '请上传营业执照照片', type: 'error' }],
-  companyName: [{ required: true, message: '请输入企业注册名称', type: 'error' }],
-  industry: [{ required: true, message: '请选择企业所属行业', type: 'error' }],
-  legalName: [{ required: true, message: '请输入法人姓名', type: 'error' }],
-  phone: [
+  _licenseImage: [
+    {
+      required: true,
+      message: '请上传营业执照照片',
+      type: 'error',
+      validator: (val) => Array.isArray(val) && val.length > 0,
+    },
+  ],
+  name: [{ required: true, message: '请输入企业注册名称', type: 'error' }],
+  credit_code: [
+    { required: true, message: '请输入统一社会信用代码', type: 'error' },
+    { pattern: CREDIT_CODE_PATTERN, message: '请输入正确的统一社会信用代码', type: 'error' },
+  ],
+  industry_id: [{ required: true, message: '请选择企业所属行业', type: 'error' }],
+  mobile: [{ required: true, message: '请输入联系电话', type: 'error' }],
+  email: [
+    { required: true, message: '请输入联系邮箱', type: 'error' },
+    { pattern: EMAIL_PATTERN, message: '请输入正确的邮箱格式', type: 'error' },
+  ],
+  // legal_person_id_front: [{ required: true, message: '请上传法人身份证人像面照片', type: 'error' }],
+  // legal_person_id_back: [{ required: true, message: '请上传法人身份证国徽面照片', type: 'error' }],
+  legal_person_name: [{ required: true, message: '请输入法人姓名', type: 'error' }],
+  legal_person_phone: [
     { required: true, message: '请输入联系电话', type: 'error' },
-    { pattern: /^1\d{10}$/, message: '请输入正确的手机号', type: 'error' },
+    { pattern: MOBILE_PATTERN, message: '请输入正确的手机号', type: 'error' },
+  ],
+  is_legal_admin: [{ required: true, message: '请选择法人是否为管理员', type: 'error' }],
+  // super_admin_id_front: [{ required: true, message: '请上传超级管理员身份证人像面照片', type: 'error' }],
+  // super_admin_id_back: [{ required: true, message: '请上传超级管理员身份证国徽面照片', type: 'error' }],
+  super_admin_name: [{ required: true, message: '请输入超级管理员姓名', type: 'error' }],
+  super_admin_phone: [
+    { required: true, message: '请输入联系电话', type: 'error' },
+    { pattern: MOBILE_PATTERN, message: '请输入正确的手机号', type: 'error' },
   ],
 };
 
 const handleSubmit = (ctx: SubmitContext) => {
+  // formData.business_license = formData._licenseImage[0].url;
+  console.log(formData);
   if (ctx.validateResult !== true) return;
   MessagePlugin.success('提交成功，等待审批');
 };
-</script>
 
+const validateAndGetData = async () => {
+  const result = await formRef.value?.validate?.();
+  if (result !== true) {
+    return null;
+  }
+  return {
+    ...formData,
+    business_license: formData._licenseImage[0].url,
+    legal_person_id_front: formData._idCardFrontImage[0].url,
+    legal_person_id_back: formData._idCardBackImage[0].url,
+    super_admin_id_front: formData._superAdminIdCardFrontImage[0].url,
+    super_admin_id_back: formData._superAdminIdCardBackImage[0].url,
+  };
+};
+
+defineExpose<EnterpriseCertFormExpose>({
+  validateAndGetData,
+});
+</script>
 <style lang="less" scoped>
 .cert-form {
   :deep(.t-form__item) {
@@ -223,8 +410,13 @@ const handleSubmit = (ctx: SubmitContext) => {
 
 .id-upload-line {
   display: flex;
-  gap: 40px;
+  gap: 24px;
   margin-bottom: 20px;
+}
+
+.id-upload-line__item {
+  flex: 1;
+  min-width: 0;
 }
 
 .submit-wrap {
@@ -238,10 +430,18 @@ const handleSubmit = (ctx: SubmitContext) => {
 }
 
 @media (max-width: 980px) {
-  .upload-line,
+  .upload-line {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
   .id-upload-line {
     flex-wrap: wrap;
     gap: 12px;
+  }
+
+  .id-upload-line__item {
+    flex: 1 1 100%;
   }
 
   .section-title {

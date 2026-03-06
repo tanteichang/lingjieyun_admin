@@ -65,7 +65,7 @@ import { SearchIcon } from 'tdesign-icons-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, onMounted, ref } from 'vue';
 
-import { getCardList } from '@/api/list';
+import { getCardList } from '@/api/enterprise/list';
 import type { CardProductType } from '@/components/product-card/index.vue';
 import ProductCard from '@/components/product-card/index.vue';
 import { t } from '@/locales';

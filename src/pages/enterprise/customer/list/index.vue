@@ -13,6 +13,7 @@
     >
       <template #toolbar>
         <t-button theme="primary" @click="handleCreate">新增企业</t-button>
+        <t-button theme="primary" @click="handleBatchImport">批量导入</t-button>
       </template>
       <template #status="{ record }">
         <t-tag :theme="statusTag[(record as CustomerRow).status]?.theme" variant="light">
@@ -21,6 +22,7 @@
       </template>
       <template #op="{ record }">
         <t-space>
+          <t-link theme="primary" hover="color" @click="handleDetail(record as CustomerRow)">详情</t-link>
           <t-link theme="primary" hover="color" @click="handleEdit(record as CustomerRow)">编辑</t-link>
           <t-popconfirm theme="danger" content="确认删除该企业吗" @confirm="handleDelete(record as CustomerRow)">
             <t-link theme="danger">删除</t-link>
@@ -28,21 +30,41 @@
         </t-space>
       </template>
     </common-table>
+    <customer-detail-dialog
+      v-model:visible="detailDialogVisible"
+      :loading="detailLoading"
+      :detail="currentDetail"
+      :status-tag="statusTag"
+    />
+    <batch-import-dialog
+      v-model:visible="batchImportVisible"
+      title="导入客户"
+      upload-text="点击批量导入客户文件"
+      template-button-text="下载模板"
+      tip-text="* 请先下载模板录入客户清单，再导入"
+      confirm-text="确认导入"
+      :confirm-loading="batchImportLoading"
+      @download-template="handleDownloadTemplate"
+      @confirm="handleConfirmBatchImport"
+    />
   </t-card>
 </template>
 <script setup lang="ts">
 import type { DropdownOption } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { deleteCustomer, getCustomerList } from '@/api/customer';
+import { deleteCustomer, getCustomerDetail, getCustomerList } from '@/api/enterprise/customer';
 import type { Row } from '@/api/model/common';
-import type { Customer } from '@/api/model/customer';
+import type { Customer, CustomerDetail } from '@/api/model/enterprise/customer';
+import type { BatchImportConfirmPayload } from '@/components/batch-import-dialog/index.vue';
+import BatchImportDialog from '@/components/batch-import-dialog/index.vue';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
+import CustomerDetailDialog from '@/pages/enterprise/customer/components/CustomerDetailDialog.vue';
 import { useSettingStore } from '@/store';
 import { useCustomerStore } from '@/store/modules/enterprise/customer';
 
@@ -76,6 +98,11 @@ const statusTag: Record<CustomerStatus, { label: string; theme: DropdownOption['
 };
 
 const customerStatusOptions = statusTabs.slice(1);
+const detailDialogVisible = ref(false);
+const detailLoading = ref(false);
+const currentDetail = ref<CustomerDetail | null>(null);
+const batchImportVisible = ref(false);
+const batchImportLoading = ref(false);
 
 const defaultQuery: CustomerQuery = {
   page: 1,
@@ -135,18 +162,25 @@ const tableHook = useCommonTable<CustomerQuery, CustomerRow>({
   autoSearch: true,
 });
 
-const {
-  data: tableData,
-  loading,
-  pagination,
-  search: handleSearch,
-  reset: handleReset,
-  handlePageChange,
-  query,
-} = tableHook;
+const { data: tableData, loading, pagination, search: handleSearch, reset: handleReset, handlePageChange } = tableHook;
 
 const handleEdit = (row: CustomerRow) => {
   router.push({ name: 'CustomerForm', query: { id: row.id } });
+};
+
+const handleDetail = async (row: CustomerRow) => {
+  detailDialogVisible.value = true;
+  detailLoading.value = true;
+  currentDetail.value = null;
+  try {
+    const response = await getCustomerDetail(row.id);
+    currentDetail.value = response.data;
+  } catch {
+    detailDialogVisible.value = false;
+    MessagePlugin.error(`获取客户 ${row.name} 详情失败`);
+  } finally {
+    detailLoading.value = false;
+  }
 };
 
 const handleDelete = (row: CustomerRow) => {
@@ -158,6 +192,28 @@ const handleDelete = (row: CustomerRow) => {
 
 const handleCreate = () => {
   router.push({ name: 'CustomerForm' });
+};
+const handleBatchImport = () => {
+  batchImportVisible.value = true;
+};
+
+const handleDownloadTemplate = () => {
+  MessagePlugin.info('请接入客户模板下载地址');
+};
+
+const handleConfirmBatchImport = async (payload: BatchImportConfirmPayload) => {
+  try {
+    batchImportLoading.value = true;
+    console.log('batch import payload:', payload);
+    MessagePlugin.success('导入任务已提交');
+    console.log(payload.sourceUrl);
+    batchImportVisible.value = false;
+    handleSearch();
+  } catch {
+    MessagePlugin.error('批量导入失败');
+  } finally {
+    batchImportLoading.value = false;
+  }
 };
 </script>
 <style lang="less" scoped>

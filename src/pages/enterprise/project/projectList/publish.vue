@@ -7,10 +7,10 @@ import type { SubmitContext } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, onMounted, ref } from 'vue';
 
-import { getCustomerList } from '@/api/customer';
-import { getEnterpriseInfo } from '@/api/enterprise';
-import type { ProjectCreatePayload } from '@/api/model/projectModel';
-import { createProject } from '@/api/project';
+import { getCustomerList } from '@/api/enterprise/customer';
+import { getEnterpriseInfo } from '@/api/enterprise/enterprise';
+import { createProject } from '@/api/enterprise/project';
+import type { ProjectCreatePayload } from '@/api/model/enterprise/projectModel';
 import { useDictStore } from '@/store/modules/enterprise/dict';
 
 import { INITIAL_DATA } from './constants';

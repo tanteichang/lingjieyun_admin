@@ -2,20 +2,33 @@
   <t-card class="head-card" :bordered="false">
     <div class="head-wrap">
       <div class="head-left">
-        <div class="logo-wrap">
-          <div class="company-logo">
-            <span class="logo-line line-1" />
-            <span class="logo-line line-2" />
-            <span class="logo-line line-3" />
+        <div class="logo-panel">
+          <div class="logo-wrap">
+            <div v-if="!showLogoUploader" class="company-logo">
+              <img :src="logo" alt="公司logo" class="company-logo-img" />
+            </div>
+            <auto-upload
+              v-else
+              v-model="logoFiles"
+              class="logo-upload"
+              theme="image"
+              accept=".png,.jpeg,.jpg"
+              :max="1"
+              :auto-upload="true"
+            />
+            <button v-if="!showLogoUploader" class="logo-camera" type="button" @click="handleOpenUploader">
+              <t-icon name="camera" style="cursor: pointer" />
+            </button>
           </div>
-          <button class="logo-camera" type="button">
-            <t-icon name="camera" />
-          </button>
+          <div v-if="showLogoUploader" class="logo-actions">
+            <t-button size="small" theme="primary" @click="handleSaveLogo">保存</t-button>
+            <t-button size="small" variant="outline" @click="handleCancelLogo">取消</t-button>
+          </div>
         </div>
 
         <div class="company-meta">
           <div class="company-name">新际网络科技有限公司</div>
-          <div class="company-code">统一社会信用代码: 91110108MA00</div>
+          <div class="company-code">统一社会信用代码: {{ creditCode }}</div>
           <div class="meta-tags">
             <span class="meta-tag">
               <t-icon name="location" />
@@ -23,7 +36,7 @@
             </span>
             <span class="meta-tag">
               <t-icon name="user" />
-              郭先生（法人）
+              {{ legalPersonInfo.name }}（法人）
             </span>
           </div>
         </div>
@@ -34,9 +47,43 @@
   </t-card>
 </template>
 <script setup lang="ts">
+import type { UploadFile } from 'tdesign-vue-next';
+import { ref } from 'vue';
+
+import type { EnterpriseLegalPersonInfo } from '@/api/model/enterprise/profile';
+import AutoUpload from '@/components/auto-upload/index.vue';
+
 defineOptions({
   name: 'ProfileHeadCard',
 });
+
+const props = defineProps<{
+  logo: string | null;
+  legalPersonInfo: EnterpriseLegalPersonInfo;
+  creditCode: string;
+}>();
+
+const emit = defineEmits<{
+  'save-logo': [url: string];
+}>();
+const showLogoUploader = ref(false);
+const logoFiles = ref<UploadFile[]>([]);
+
+const handleOpenUploader = () => {
+  showLogoUploader.value = true;
+};
+
+const handleSaveLogo = () => {
+  const selected = logoFiles.value[0] || null;
+  console.log(selected);
+  emit('save-logo', selected.url);
+  showLogoUploader.value = false;
+};
+
+const handleCancelLogo = () => {
+  logoFiles.value = [];
+  showLogoUploader.value = false;
+};
 </script>
 <style lang="less" scoped>
 .head-card {
@@ -60,9 +107,16 @@ defineOptions({
   align-items: center;
 }
 
+.logo-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
 .logo-wrap {
-  width: 170px;
-  height: 116px;
+  width: 144px;
+  height: 144px;
   border: 1px solid #dce5f4;
   border-radius: 16px;
   display: flex;
@@ -72,13 +126,48 @@ defineOptions({
 }
 
 .company-logo {
-  width: 84px;
-  height: 84px;
+  width: 112px;
+  height: 112px;
   border-radius: 12px;
-  background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+}
+.company-logo-img {
+  width: 112px;
+  height: 112px;
+  object-fit: cover;
+}
+
+.logo-upload {
+  width: 112px;
+  height: 112px;
+
+  :deep(.t-upload) {
+    width: 112px;
+    height: 112px;
+  }
+
+  :deep(.t-upload__flow-op) {
+    width: 112px;
+    height: 112px;
+  }
+
+  :deep(.t-upload__card) {
+    width: 112px;
+    height: 112px;
+    margin: 0;
+  }
+
+  :deep(.t-upload__single-display) {
+    width: 112px;
+    height: 112px;
+  }
+}
+
+.logo-actions {
+  display: flex;
   gap: 8px;
 }
 

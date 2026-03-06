@@ -40,9 +40,9 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 import type { Row } from '@/api/model/common';
-import type { TalentPoolItem, TalentPoolListQuery } from '@/api/model/talentpool';
-import { TalentAuthStatus, TalentChannel, TalentSignStatus } from '@/api/model/talentpool';
-import { getList } from '@/api/talentpool';
+import type { TalentPoolItem, TalentPoolListQuery } from '@/api/model/enterprise/talentpool';
+import { TalentAuthStatus, TalentChannel, TalentSignStatus } from '@/api/model/enterprise/talentpool';
+import { getList } from '@/api/enterprise/talentpool';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
@@ -151,7 +151,7 @@ const tableConfig: TableConfig<TalentRow, keyof TalentRow> = {
     { title: '签约状态', colKey: 'sign_status_text', width: 120, align: 'center' },
     { title: '加入时间', colKey: 'join_time', width: 160, align: 'center' },
     { title: '签约日期', colKey: 'sign_date', width: 160, align: 'center' },
-    { title: '操作', colKey: 'op', width: 120, align: 'center' },
+    { title: '操作', colKey: 'op', width: 120, align: 'left', fixed: 'right' },
   ],
 };
 

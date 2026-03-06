@@ -38,15 +38,16 @@
 import { computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { getTaskList } from '@/api/enterprise/task';
 import type { Row } from '@/api/model/common';
-import type { TaskItem, TaskQuery } from '@/api/model/taskModel';
-import { TASK_STATUS_TAG, TaskStatus } from '@/api/model/taskModel';
-import { getTaskList } from '@/api/task';
+import type { TaskItem, TaskQuery } from '@/api/model/enterprise/taskModel';
+import { TASK_STATUS_TAG, TaskStatus } from '@/api/model/enterprise/taskModel';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
-import { useSettingStore, useTaskStore } from '@/store';
+import { useSettingStore } from '@/store';
+import { useTaskStore } from '@/store/modules/enterprise/task';
 
 defineOptions({
   name: 'TaskList',
@@ -87,11 +88,11 @@ const formConfig: FormConfig<TaskQuery, keyof TaskQuery> = {
       props: {
         clearable: true,
         options: [
-          { label: '未发布', value: TaskStatus.UNRELEASED },
-          { label: '进行中', value: TaskStatus.IN_PROGRESS },
-          { label: '已暂停', value: TaskStatus.PAUSED },
-          { label: '已完成', value: TaskStatus.COMPLETED },
-          { label: '已终止', value: TaskStatus.TERMINATED },
+          { label: '未发布', value: TaskStatus.unpublished },
+          { label: '进行中', value: TaskStatus.ongoing },
+          { label: '已暂停', value: TaskStatus.paused },
+          { label: '已完成', value: TaskStatus.completed },
+          { label: '已终止', value: TaskStatus.terminated },
         ],
       },
       span: 6,
@@ -105,7 +106,7 @@ const formConfig: FormConfig<TaskQuery, keyof TaskQuery> = {
 
 const tableConfig: TableConfig<TaskRow, keyof TaskRow> = {
   tableItem: [
-    { title: '#', colKey: 'id', width: 80, align: 'center' as const, fixed: 'left' },
+    { title: 'ID', colKey: 'id', width: 80, align: 'center' as const, fixed: 'left' },
     { title: '任务编号', colKey: 'task_no', width: 120, align: 'center' as const },
     { title: '任务名称', colKey: 'name', minWidth: 240, ellipsis: true },
     // { title: '任务类型', colKey: 'type', width: 120, align: 'center' as const },
@@ -159,7 +160,7 @@ watch(
 );
 
 const handleView = (row: TaskRow) => {
-  router.push({ name: 'TaskDetail', query: { taskID: row.id } });
+  router.push({ name: 'TaskDetail', query: { id: row.id } });
 };
 
 const handleCreate = () => {

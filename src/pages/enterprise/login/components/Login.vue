@@ -23,7 +23,7 @@
           size="large"
           :type="showPsw ? 'text' : 'password'"
           clearable
-          :placeholder="`${t('pages.login.input.password')}：admin`"
+          placeholder="请输入登录密码"
         >
           <template #prefix-icon>
             <t-icon name="lock-on" />
@@ -87,13 +87,19 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { login } from '@/api/auth';
-import type { LoginPayload } from '@/api/model/auth';
+import { getAdminDetail } from '@/api/enterprise/admin';
+import { login } from '@/api/enterprise/auth';
+import { getEnterpriseInfo } from '@/api/enterprise/enterprise';
+import type { LoginPayload } from '@/api/model/enterprise/auth';
 import { useCounter } from '@/hooks';
 import { t } from '@/locales';
-import { useUserStore } from '@/store';
+import { useUserLoginAndRegister, useUserStore } from '@/store';
+import { usePermissionStore } from '@/store/modules/permission';
+import { UserStatus } from '@/store/modules/user';
 
 const userStore = useUserStore();
+const userLoginAndRegister = useUserLoginAndRegister();
+const permissionStore = usePermissionStore();
 
 const INITIAL_DATA: LoginPayload = {
   mobile: '',
@@ -160,11 +166,70 @@ const onSubmit = async (ctx: SubmitContext) => {
           localStorage.removeItem('rememberedAccount');
         }
 
+        if (res.data.need_enterprise_info) {
+          // 注册账号，需要新建或加入企业
+          userLoginAndRegister.setAdminId(res.data.admin_id);
+          userLoginAndRegister.setPhone(formData.value.mobile);
+          userLoginAndRegister.setStatus(UserStatus.NotDo);
+          router.push({ name: 'enterpriseRegisterEntry' });
+          return;
+        } else if (res.data.enterprise && res.data.enterprise.audit_status === 0) {
+          // 申请了新建企业，企业审核中
+          userLoginAndRegister.setAdminId(res.data.enterprise.id);
+          userLoginAndRegister.setPhone(formData.value.mobile);
+          userLoginAndRegister.setStatus(UserStatus.CreatePending);
+          router.push({ name: 'enterpriseRegister' });
+          return;
+        } else if (res.data.agreement && res.data.agreement.sign_status === 0) {
+          // 申请了新建企业, 审核通过待签约
+          userLoginAndRegister.setAdminId(res.data.admin_id);
+          userLoginAndRegister.setPhone(formData.value.mobile);
+          userLoginAndRegister.setStatus(UserStatus.CreateSignPending);
+          userStore.setToken(res.data.token);
+          router.push({ name: 'enterpriseRegister' });
+          return;
+        } else if (res.data.pending_join_apply) {
+          // 申请了加入企业，企业审核中
+          userLoginAndRegister.setAdminId(res.data.admin_id);
+          userLoginAndRegister.setPhone(formData.value.mobile);
+          userLoginAndRegister.setStatus(UserStatus.JoinPending);
+          userLoginAndRegister.setPendingJoinApply(true);
+          router.push({ name: 'enterpriseJoin' });
+          return;
+        }
+        userStore.updateUserInfo({
+          enterprise_id: res.data.enterprise_id,
+          enterprise_name: res.data.enterprise_name,
+        });
+
         userStore.setToken(res.data.token);
+        const enterpriseRes = await getEnterpriseInfo();
+        if (enterpriseRes.code === 200) {
+          userStore.updateEnterpriseInfo(enterpriseRes.data.enterprise);
+          userStore.updateUserInfo({
+            phone: enterpriseRes.data.admin.mobile,
+            security_level: enterpriseRes.data.admin.security_level,
+            security_level_text: enterpriseRes.data.admin.security_level_text,
+            has_pay_password: enterpriseRes.data.admin.has_pay_password,
+          });
+
+          const adminDetailRes = await getAdminDetail({ admin_id: enterpriseRes.data.admin.id });
+          if (adminDetailRes.code === 200) {
+            userStore.updateUserInfo({
+              admin_id: enterpriseRes.data.admin.id,
+              admin_type: adminDetailRes.data.admin_type,
+            });
+            permissionStore.setPermissionCodes(adminDetailRes.data.rules || []);
+            permissionStore.setAdminType(adminDetailRes.data.admin_type);
+            // 权限更新后重新初始化菜单，避免首次登录菜单未按权限过滤
+            permissionStore.isRoutesInitialized = false;
+          }
+        }
+
         MessagePlugin.success('登录成功');
         const redirect = route.query.redirect as string;
         const redirectUrl = redirect ? decodeURIComponent(redirect) : '/dashboard';
-        router.push(redirectUrl);
+        await router.push(redirectUrl);
       } else {
         MessagePlugin.error(res.msg || '登录失败');
       }

@@ -48,7 +48,7 @@
         </t-space>
       </template>
       <template #toolbar>
-        <t-button theme="primary" @click="handleCreate">发布项目</t-button>
+        <t-button v-permission="'enterprisetask/publish'" theme="primary" @click="handleCreate">发布项目</t-button>
       </template>
     </common-table>
     <t-dialog
@@ -71,10 +71,10 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { getProjectList, pauseProject, resumeProject, terminateProject } from '@/api/enterprise/project';
 import type { Row } from '@/api/model/common';
-import type { ProjectItem, ProjectQuery } from '@/api/model/projectModel';
-import { PROJECT_STATUS_TAG, ProjectStatus } from '@/api/model/projectModel';
-import { getProjectList, pauseProject, resumeProject, terminateProject } from '@/api/project';
+import type { ProjectItem, ProjectQuery } from '@/api/model/enterprise/projectModel';
+import { PROJECT_STATUS_TAG, ProjectStatus } from '@/api/model/enterprise/projectModel';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
@@ -185,17 +185,17 @@ const formConfig = computed<FormConfig<ProjectQuery, keyof ProjectQuery>>(() => 
 }));
 const tableConfig: TableConfig<ProjectRow, keyof ProjectRow> = {
   tableItem: [
-    { title: '#', colKey: 'id', width: 80, fixed: 'left' },
+    { title: 'ID', colKey: 'id', width: 80, fixed: 'left' },
     { title: '项目编号', colKey: 'task_no', width: 140 },
     { title: '项目名称', colKey: 'name', minWidth: 240, ellipsis: true },
     { title: '发票类型', colKey: 'invoice_type_name', width: 140 },
     { title: '所属企业', colKey: 'enterprise_name', minWidth: 220, ellipsis: true },
     { title: '项目时间', colKey: 'projectTime', width: 200 },
     { title: '任务数量', colKey: 'task_count', width: 120, align: 'center' },
-    { title: '项目状态', colKey: 'project_status', width: 120, align: 'center' },
+    { title: '项目状态', colKey: 'project_status', width: 120 },
     { title: '所需人员', colKey: 'required_personnel', width: 120, align: 'center' },
     { title: '成员数量', colKey: 'task_count', width: 120, align: 'center' },
-    { title: '操作', colKey: 'op', width: 150, align: 'center', fixed: 'right' },
+    { title: '操作', colKey: 'op', width: 150, fixed: 'right' },
   ],
 };
 

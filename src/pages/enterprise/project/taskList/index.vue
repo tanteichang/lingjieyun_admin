@@ -23,34 +23,55 @@
       <template #project="{ record }">
         {{ record.project?.name || '-' }}
       </template>
-      <template #status="{ record }">
-        <t-tag :theme="statusTag[(record as TaskRow).status]?.theme" variant="light">
-          {{ statusTag[(record as TaskRow).status]?.label || '-' }}
+      <template #task_status="{ record }">
+        <t-tag :theme="statusTag[(record as TaskRow).task_status]?.theme" variant="light">
+          {{ statusTag[(record as TaskRow).task_status]?.label || '-' }}
         </t-tag>
       </template>
       <template #op="{ record }">
         <t-space>
           <t-link theme="primary" hover="color" @click="handleDetail(record as TaskRow)">详情</t-link>
           <t-link
-            v-if="(record as TaskRow).status === 'processing'"
-            theme="danger"
+            v-if="(record as TaskRow).task_status === TaskStatus.ongoing"
             hover="color"
             @click="handlePause(record as TaskRow)"
           >
             暂停
           </t-link>
           <t-link
-            v-else-if="(record as TaskRow).status === 'paused'"
+            v-if="(record as TaskRow).task_status === TaskStatus.paused"
             theme="primary"
             hover="color"
             @click="handleResume(record as TaskRow)"
           >
             恢复
           </t-link>
-          <t-link theme="danger" hover="color" @click="handleTerminate(record as TaskRow)">终止</t-link>
+          <t-link
+            v-if="
+              (record as TaskRow).task_status === TaskStatus.ongoing ||
+              (record as TaskRow).task_status === TaskStatus.paused ||
+              (record as TaskRow).task_status === TaskStatus.pending
+            "
+            theme="danger"
+            hover="color"
+            @click="handleTerminate(record as TaskRow)"
+            >终止</t-link
+          >
         </t-space>
       </template>
     </common-table>
+    <t-dialog
+      v-model:visible="actionDialogVisible"
+      :header="`确认${currentActionLabel}`"
+      :confirm-btn="{
+        content: `确认${currentActionLabel}`,
+        theme: currentActionType === 'terminate' ? 'danger' : 'primary',
+      }"
+      cancel-btn="取消"
+      @confirm="handleConfirmAction"
+    >
+      <p>确认{{ currentActionLabel }}任务「{{ currentActionRow?.name || '-' }}」吗？</p>
+    </t-dialog>
   </t-card>
 </template>
 <script setup lang="ts">
@@ -59,23 +80,31 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { getTaskList, pauseTask, resumeTask, terminateTask } from '@/api/enterprise/task';
 import type { Row } from '@/api/model/common';
-import type { Status_Counts, TaskItem, TaskQuery } from '@/api/model/taskModel';
-import { TaskStatus } from '@/api/model/taskModel';
-import { getTaskList } from '@/api/task';
+import type { Status_Counts, TaskItem, TaskQuery } from '@/api/model/enterprise/taskModel';
+import { TASK_STATUS_OPTIONS, TaskStatus } from '@/api/model/enterprise/taskModel';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
 import { useSettingStore } from '@/store';
+import { useDictStore } from '@/store/modules/enterprise/dict';
+import { useTaskStore } from '@/store/modules/enterprise/task';
+import { enumToOptions } from '@/utils/type';
 
 defineOptions({
   name: 'TaskList',
 });
 
+const taskStore = useTaskStore();
+const dictStore = useDictStore();
 const router = useRouter();
 
 type TaskRow = TaskItem & Row;
+type TaskActionType = 'pause' | 'resume' | 'terminate';
+
+console.log(enumToOptions(TaskStatus, TASK_STATUS_OPTIONS));
 
 const statusTabs: Array<{ label: string; value: keyof Status_Counts }> = [
   { label: '全部', value: 'all' },
@@ -94,14 +123,6 @@ const statusTag: Record<TaskStatus, { label: string; theme: TdTagProps['theme'] 
   [TaskStatus.unpublished]: { label: '未发布', theme: 'primary' },
 };
 
-const taskTypeOptions = [
-  { label: '软件开发', value: 'dev' },
-  { label: '测试验证', value: 'qa' },
-  { label: '设计/UI', value: 'design' },
-];
-
-const taskStatusOptions = statusTabs.slice(1);
-
 const defaultQuery: TaskQuery = {
   page: 1,
   limit: 10,
@@ -109,21 +130,21 @@ const defaultQuery: TaskQuery = {
 
 const formConfig: FormConfig<TaskRow, keyof TaskRow> = {
   formItem: [
-    { label: '任务名称', name: 'name', type: 'input', placeholder: '请输入任务名称', span: 6 },
+    { label: '任务名称', name: 'task_name', type: 'input', placeholder: '请输入任务名称', span: 6 },
     {
       label: '任务类型',
-      name: 'type',
-      type: 'select',
+      name: 'job_id',
+      type: 'treeSelect',
       placeholder: '请选择任务类型',
-      options: taskTypeOptions,
+      props: { data: dictStore.getJobOptions },
       span: 6,
     },
     {
       label: '任务状态',
-      name: 'status',
+      name: 'task_status',
       type: 'select',
       placeholder: '请选择任务状态',
-      options: taskStatusOptions,
+      props: { options: enumToOptions(TaskStatus, TASK_STATUS_OPTIONS) },
       span: 6,
     },
     { label: '所属项目', name: 'project', type: 'input', placeholder: '请输入项目名称', span: 6 },
@@ -134,20 +155,23 @@ const formConfig: FormConfig<TaskRow, keyof TaskRow> = {
 const tableConfig: TableConfig<TaskRow, keyof TaskRow> = {
   tableItem: [
     { title: 'ID', colKey: 'id', width: 70, align: 'center', fixed: 'left' },
-    { title: '任务编号', colKey: 'task_no', width: 120, align: 'center' },
+    { title: '任务编号', colKey: 'task_no', width: 120 },
     { title: '任务名称', colKey: 'name', minWidth: 180, ellipsis: true },
-    { title: '任务类型', colKey: 'project', width: 140 },
-    { title: '所属项目', colKey: 'project', minWidth: 200, ellipsis: true },
+    // { title: '任务类型', colKey: 'project', width: 140 },
+    { title: '所属项目', colKey: 'project', width: 200 },
     { title: '招募方式', colKey: 'recruitment_type_text', width: 120 },
-    { title: '任务时间', colKey: 'task_time', width: 180 },
+    { title: '任务时间', colKey: 'task_time', width: 200 },
     { title: '任务状态', colKey: 'task_status', width: 110, align: 'center' },
     { title: '所需人员', colKey: 'required_personnel', width: 100, align: 'center' },
     { title: '成员数量', colKey: 'member_count', width: 100, align: 'center' },
-    { title: '操作', colKey: 'op', width: 180, align: 'center', fixed: 'right' },
+    { title: '操作', colKey: 'op', width: 180, fixed: 'right' },
   ],
 };
 
 const currentStatus = ref<string>(statusTabs[0].value);
+const actionDialogVisible = ref(false);
+const currentActionType = ref<TaskActionType>('pause');
+const currentActionRow = ref<TaskRow | null>(null);
 const tabCounts = reactive<Record<keyof Status_Counts, number>>({
   all: 0,
   unpublished: 0,
@@ -169,6 +193,7 @@ const headerAffixedTop = computed(
 const tableHook = useCommonTable<TaskQuery, TaskRow>({
   fetcher: async (params) => {
     const { data } = await getTaskList(params);
+    taskStore.setTasks(data.list);
     tabCounts.all = data.total || 0;
     Object.keys(data.status_counts).forEach((key) => {
       const typedKey = key as keyof Status_Counts;
@@ -215,17 +240,60 @@ const handleTabChange = (value: keyof Status_Counts) => {
 };
 
 const handleDetail = (row: TaskRow) => {
-  MessagePlugin.info(`查看任务 ${row.name}`);
   router.push({ name: 'TaskDetail', query: { id: row.id } });
 };
 const handlePause = (row: TaskRow) => {
-  MessagePlugin.warning(`暂停任务 ${row.name}`);
+  openActionConfirm('pause', row);
 };
 const handleResume = (row: TaskRow) => {
-  MessagePlugin.success(`恢复任务 ${row.name}`);
+  openActionConfirm('resume', row);
 };
 const handleTerminate = (row: TaskRow) => {
-  MessagePlugin.error(`终止任务 ${row.name}`);
+  openActionConfirm('terminate', row);
+};
+
+const currentActionLabel = computed(() => {
+  const actionLabelMap: Record<TaskActionType, string> = {
+    pause: '暂停',
+    resume: '恢复',
+    terminate: '终止',
+  };
+  return actionLabelMap[currentActionType.value];
+});
+
+const openActionConfirm = (action: TaskActionType, row: TaskRow) => {
+  currentActionType.value = action;
+  currentActionRow.value = row;
+  actionDialogVisible.value = true;
+};
+
+const handleConfirmAction = async () => {
+  const row = currentActionRow.value;
+  if (!row) return;
+  try {
+    let code = -1;
+    let msg = '';
+    if (currentActionType.value === 'pause') {
+      ({ code, msg } = await pauseTask({ id: row.id }));
+      console.log('暂停任务:', row);
+    } else if (currentActionType.value === 'resume') {
+      ({ code, msg } = await resumeTask({ id: row.id }));
+      console.log('恢复任务:', row);
+    } else if (currentActionType.value === 'terminate') {
+      ({ code, msg } = await terminateTask({ id: row.id }));
+      console.log('终止任务:', row);
+    }
+    console.log('code:', code);
+    if (code === 200) {
+      MessagePlugin.success(`${currentActionLabel.value}任务 ${row.name} 成功`);
+    } else {
+      MessagePlugin.error(`${currentActionLabel.value}任务 ${row.name} 失败 \n ${msg}`);
+    }
+    actionDialogVisible.value = false;
+    handleSearch();
+  } catch {
+    MessagePlugin.error(`${currentActionLabel.value}任务 ${row.name} 失败`);
+  }
 };
 </script>
 <style lang="less" scoped>

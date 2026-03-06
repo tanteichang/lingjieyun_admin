@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import type { ProjectItem } from '@/api/model/projectModel';
+import type { ProjectItem } from '@/api/model/enterprise/projectModel';
 
 export const useProjectStore = defineStore('_enterprise_project_list', {
   state: () => ({

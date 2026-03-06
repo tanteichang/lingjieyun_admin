@@ -1,10 +1,5 @@
-import {
-  AcceptancePeriodType,
-  AcceptanceType,
-  DeliveryMode,
-  RecruitmentType,
-  SettlementType,
-} from '@/api/model/taskModel';
+import { DeliveryMode } from '@/api/model/enterprise/delivery';
+import { AcceptancePeriodType, AcceptanceType, RecruitmentType, SettlementType } from '@/api/model/enterprise/taskModel';
 
 export const settlementOptions: { label: string; value: SettlementType }[] = [
   { label: '按次', value: SettlementType.PER_TIME },

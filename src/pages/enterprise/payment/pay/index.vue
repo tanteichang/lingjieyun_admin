@@ -31,7 +31,12 @@
         <template #op="{ record }">
           <t-space size="small">
             <t-link theme="primary" hover="color">详情</t-link>
-            <t-link v-if="(record as PaymentBillRow).billStatus === '待支付'" theme="primary" hover="color">
+            <t-link
+              v-if="(record as PaymentBillRow).billStatus === '待支付'"
+              theme="primary"
+              hover="color"
+              @click="handleOpenConfirmDialog(record as PaymentBillRow)"
+            >
               确认发放
             </t-link>
             <t-link v-else theme="default" hover="color">导出</t-link>
@@ -39,6 +44,7 @@
         </template>
       </common-table>
     </div>
+    <confirm-issue-dialog v-model:visible="confirmDialogVisible" :record="currentRecord" />
   </t-card>
 </template>
 <script setup lang="ts">
@@ -48,6 +54,7 @@ import type { FormConfig, TableConfig } from '@/components/common-table/index.vu
 import CommonTable from '@/components/common-table/index.vue';
 import { useCommonTable } from '@/hooks/useCommonTable';
 
+import ConfirmIssueDialog from './component/ConfirmIssueDialog.vue';
 import type { BillStatus, PaymentBillRow, PaymentPayQuery } from './mock';
 import { defaultQuery, enterpriseOptions, fullList, projectOptions, statusOptions, taskOptions } from './mock';
 
@@ -56,6 +63,8 @@ defineOptions({
 });
 
 const activeStatus = ref<'全部' | BillStatus>('全部');
+const confirmDialogVisible = ref(false);
+const currentRecord = ref<PaymentBillRow | null>(null);
 
 const currentQuery = reactive<PaymentPayQuery>({ ...defaultQuery });
 
@@ -112,7 +121,7 @@ const tableConfig: TableConfig<PaymentBillRow, keyof PaymentBillRow> = {
     { title: '导入金额', colKey: 'importAmount', width: 100, align: 'right' },
     { title: '发放金额', colKey: 'issueAmount', width: 100, align: 'right' },
     { title: '服务费', colKey: 'serviceFee', width: 90, align: 'right' },
-    { title: '补缴服务费', colKey: 'subsidyServiceFee', width: 100, align: 'right' },
+
     { title: '个税', colKey: 'personalTax', width: 80, align: 'center' },
     { title: '增值税及附加', colKey: 'vatAndAdditional', width: 110, align: 'center' },
     { title: '合计费用', colKey: 'totalCost', width: 100, align: 'right' },
@@ -211,6 +220,11 @@ const handleSearch = (payload: Partial<PaymentPayQuery>) => {
 
 const handleReset = () => {
   reset();
+};
+
+const handleOpenConfirmDialog = (record: PaymentBillRow) => {
+  currentRecord.value = record;
+  confirmDialogVisible.value = true;
 };
 </script>
 <style lang="less" scoped>

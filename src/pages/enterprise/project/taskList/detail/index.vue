@@ -34,7 +34,7 @@
       </div>
     </t-card>
 
-    <t-collapse :expand-icon="true" :borderless="true">
+    <t-collapse :expand-icon="true" :borderless="true" class="detail-collapse">
       <t-collapse-panel value="0" header="任务描述">
         <div class="desc-text" v-html="taskInfo?.desc"></div>
       </t-collapse-panel>
@@ -46,9 +46,9 @@
     <t-card :bordered="false" class="tabs-card">
       <t-tabs v-model="currentTab">
         <t-tab-panel :label="`任务成员 (${memberTotal})`" value="members">
-          <memberList @update:total="handleUpdateMemberTotal" />
+          <memberList :task-name="taskInfo?.name" @update:total="handleUpdateMemberTotal" />
         </t-tab-panel>
-        <t-tab-panel value="apply">
+        <t-tab-panel value="apply" :destroy-on-hide="false">
           <template #label>
             <t-badge :count="applyPending" :offset="[0, 0]">
               <span>报名审批&nbsp;&nbsp;</span>
@@ -56,7 +56,7 @@
           </template>
           <registrationList @update:pending="handleUpdatePending" />
         </t-tab-panel>
-        <t-tab-panel value="delivery">
+        <t-tab-panel value="delivery" :destroy-on-hide="false">
           <template #label>
             <t-badge :count="deliveryPending" :offset="[0, 0]">
               <span>交付物审核&nbsp;&nbsp;</span>
@@ -65,7 +65,7 @@
           <deliveryList @update:pending="handleUpdateDelivery" />
         </t-tab-panel>
         <t-tab-panel label="交付物上传" value="upload">
-          <div>sdf</div>
+          <deliverUpload :show-basic-info="false" mode="switch" />
         </t-tab-panel>
       </t-tabs>
     </t-card>
@@ -75,7 +75,7 @@
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { TASK_STATUS_TAG } from '@/api/model/taskModel';
+import { TASK_STATUS_TAG } from '@/api/model/enterprise/taskModel';
 
 defineOptions({
   name: 'TaskDetail',
@@ -83,8 +83,9 @@ defineOptions({
 
 const route = useRoute();
 
-import type { TaskItem } from '@/api/model/taskModel';
-import { useTaskStore } from '@/store';
+import type { TaskItem } from '@/api/model/enterprise/taskModel';
+import deliverUpload from '@/pages/enterprise/project/deliveryUpload/uploadDetail.vue';
+import { useTaskStore } from '@/store/modules/enterprise/task';
 
 import deliveryList from './deliveryList.vue';
 import memberList from './memberList.vue';
@@ -101,11 +102,10 @@ const applyPending = ref(0);
 const deliveryPending = ref(0);
 
 onMounted(() => {
-  const taskID = route.query.taskID as string;
+  const taskID = route.query.id as string;
   const task = taskStore.getTask(taskID);
   if (task) {
     taskInfo.value = task;
-    console.log(taskInfo.value);
   }
 });
 
@@ -124,7 +124,6 @@ const handleUpdateDelivery = (pending: number) => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: var(--td-comp-paddingLR-xxl);
 }
 
 .section-title {
@@ -166,6 +165,11 @@ const handleUpdateDelivery = (pending: number) => {
   margin: 0 0 12px;
   color: #333;
   line-height: 1.6;
+}
+
+.detail-collapse {
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .filter-bar {

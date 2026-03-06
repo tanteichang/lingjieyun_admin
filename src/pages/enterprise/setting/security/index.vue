@@ -17,11 +17,11 @@
         <div class="overview-content">
           <div class="level-row">
             <span>您的账户安全级别：</span>
-            <span class="level-value">较高</span>
+            <span class="level-value">{{ securityLevelText }}</span>
           </div>
           <div class="desc">我们全天候守护您的账户资产与个人信息。定期更新密码是保障安全的最佳实践。</div>
-          <div class="score-row">安全评分： 85/100</div>
-          <t-progress :percentage="85" :label="false" theme="line" />
+          <div class="score-row">安全评分： {{ securityScore }}/100</div>
+          <t-progress :percentage="securityScore" :label="false" theme="line" />
         </div>
       </div>
     </t-card>
@@ -35,12 +35,40 @@
   </div>
 </template>
 <script setup lang="ts">
+import { computed } from 'vue';
+
+import { useUserStore } from '@/store';
+
 import LoginPasswordSection from './components/LoginPasswordSection.vue';
 import PayPasswordSection from './components/PayPasswordSection.vue';
 
 defineOptions({
   name: 'SettingSecurity',
 });
+
+const userStore = useUserStore();
+
+const securityLevelMap: Record<number, string> = {
+  1: '很弱',
+  2: '比较弱',
+  3: '弱',
+  4: '一般',
+  5: '很好',
+  6: '较高',
+  7: '很高',
+  8: '非常高',
+};
+
+const securityLevel = computed(() => {
+  const level = Number(userStore.userInfo.security_level || 1);
+  return Math.min(Math.max(level, 1), 8);
+});
+
+const securityLevelText = computed(
+  () => userStore.userInfo.security_level_text || securityLevelMap[securityLevel.value],
+);
+
+const securityScore = computed(() => Math.round((securityLevel.value / 8) * 100));
 </script>
 <style lang="less" scoped>
 .security-page {

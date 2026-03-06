@@ -28,7 +28,10 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+
+import { getDetail } from '@/api/enterprise/talentpool';
 
 import ContractInfo from './components/ContractInfo.vue';
 import PaymentRecords from './components/PaymentRecords.vue';
@@ -39,6 +42,8 @@ import TaskInfo from './components/TaskInfo.vue';
 defineOptions({
   name: 'TalentDetail',
 });
+
+const route = useRoute();
 
 const activeTab = ref('profile');
 
@@ -111,6 +116,13 @@ const certificates = [
   'https://tdesign.gtimg.com/site/asset/empty.png',
   'https://tdesign.gtimg.com/site/asset/empty.png',
 ];
+
+onMounted(async () => {
+  const { data } = await getDetail({
+    talent_pool_id: Number(route.query.id),
+  });
+  console.log(data);
+});
 </script>
 <style lang="less" scoped>
 .talent-detail-page {
@@ -143,6 +155,5 @@ const certificates = [
   .page-wrap {
     grid-template-columns: 1fr;
   }
-
 }
 </style>

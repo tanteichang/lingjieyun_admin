@@ -20,7 +20,9 @@
       </div>
       <div class="doc-card">
         <div class="doc-title">营业执照</div>
-        <div class="license-image">营业执照示例</div>
+        <div class="license-image">
+          <img :src="props.industryRegistration.business_license" mode="scaleToFill" />
+        </div>
       </div>
     </div>
 
@@ -29,27 +31,45 @@
       <div class="left-fields">
         <div class="field-item">
           <div class="field-label">姓名</div>
-          <div class="field-value">张三</div>
+          <div class="field-value">{{ props.legalPersonInfo.name }}</div>
         </div>
         <div class="field-item">
           <div class="field-label">联系电话</div>
-          <div class="field-value">189685745477</div>
+          <div class="field-value">{{ props.legalPersonInfo.phone }}</div>
         </div>
       </div>
       <div class="doc-card">
         <div class="doc-title">身份证</div>
         <div class="id-images">
-          <div class="id-image">身份证正面</div>
-          <div class="id-image">身份证反面</div>
+          <div class="id-image">
+            <img :src="props.legalPersonInfo.id_card_front" mode="scaleToFill" />
+          </div>
+          <div class="id-image">
+            <img :src="props.legalPersonInfo.id_card_back" mode="scaleToFill" />
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
+import type { EnterpriseIndustryRegistration, EnterpriseLegalPersonInfo } from '@/api/model/enterprise/profile';
+
 defineOptions({
   name: 'ProfileVerifyInfo',
 });
+
+const props = defineProps({
+  legalPersonInfo: {
+    type: Object as () => EnterpriseLegalPersonInfo,
+    default: () => ({}),
+  },
+  industryRegistration: {
+    type: Object as () => EnterpriseIndustryRegistration,
+    default: () => ({}),
+  },
+});
+console.log(props.legalPersonInfo);
 </script>
 <style lang="less" scoped>
 .verify-info {
@@ -155,8 +175,6 @@ defineOptions({
   height: 114px;
   border-radius: 6px;
   border: 1px solid #cfd8eb;
-  background: linear-gradient(135deg, #dff0ff 0%, #f7fbff 100%);
-  color: #8f95a4;
   font-size: 13px;
   display: flex;
   align-items: center;

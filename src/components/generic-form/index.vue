@@ -69,7 +69,7 @@
 import type { FormRule, SubmitContext } from 'tdesign-vue-next';
 // 导入TDesign表单组件
 import { DatePicker, DateRangePicker, Input, RadioGroup, Select, Textarea, TreeSelect, Upload } from 'tdesign-vue-next';
-import { computed } from 'vue';
+import { computed, defineAsyncComponent } from 'vue';
 import { useRouter } from 'vue-router';
 
 import LngLatPicker from '../lngLatPicker/index.vue';
@@ -93,8 +93,9 @@ const emit = defineEmits<{
 
 const router = useRouter();
 
-import RichTextEditor from '@/components/rich-text-editor/index.vue';
 import { t } from '@/locales';
+
+const RichTextEditor = defineAsyncComponent(() => import('@/components/rich-text-editor/index.vue'));
 
 // 表单控件映射
 const formComponents = {
