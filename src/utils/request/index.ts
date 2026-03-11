@@ -236,13 +236,13 @@ export const postRequest: <T>(config: RequestConfig) => Promise<T> = (config) =>
       .post(config)
       .then((res) => {
         if (res.code !== Code.OK) {
-          config.showError && MessagePlugin.error(res.msg);
+          config.showError && MessagePlugin.error(res.msg, 10 * 1000);
           reject(res.msg);
         }
         resolve(res);
       })
       .catch((err) => {
-        config.showError && MessagePlugin.error(err);
+        config.showError && MessagePlugin.error(err, 10 * 1000);
         reject(err);
       });
   });

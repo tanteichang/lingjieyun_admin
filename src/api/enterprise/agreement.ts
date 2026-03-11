@@ -6,5 +6,5 @@ const Api = {
 };
 
 export function getSign(params: getSignPayload) {
-  return getRequest<getSignResponse>({ url: Api.getSign, params });
+  return getRequest<getSignResponse>({ url: Api.getSign, params, showError: true });
 }

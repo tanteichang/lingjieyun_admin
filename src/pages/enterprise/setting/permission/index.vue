@@ -7,7 +7,9 @@
       <t-tab-panel value="admin" label="管理员列表">
         <admin />
       </t-tab-panel>
-      <t-tab-panel value="apply" label="管理员申请"></t-tab-panel>
+      <t-tab-panel value="apply" label="管理员申请">
+        <apply />
+      </t-tab-panel>
     </t-tabs>
   </t-card>
 </template>
@@ -15,13 +17,14 @@
 import { ref } from 'vue';
 
 import Admin from './admin.vue';
+import Apply from './apply.vue';
 import Role from './role.vue';
 
 defineOptions({
   name: 'SettingPermission',
 });
 
-const activeTab = ref<'role' | 'admin'>('role');
+const activeTab = ref<'role' | 'admin' | 'apply'>('role');
 </script>
 <style lang="less" scoped>
 .permission-page {

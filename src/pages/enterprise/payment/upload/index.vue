@@ -18,13 +18,18 @@
           {{ TASK_STATUS_TAG[(record as SettlementRow).task_status].label || '-' }}
         </t-tag>
       </template>
-      <template #op>
-        <t-link theme="primary" hover="color">详情</t-link>
+      <template #op="{ record }">
+        <t-space>
+          <t-link>结算记录</t-link>
+          <t-link theme="primary" @click="handlePay(record)">结算</t-link>
+        </t-space>
       </template>
     </common-table>
   </div>
 </template>
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
+
 import { getSettlementList } from '@/api/enterprise/settlement';
 import type { Row } from '@/api/model/common';
 import type { Settlement, SettlementListPayload } from '@/api/model/enterprise/settlement';
@@ -40,21 +45,25 @@ defineOptions({
 type SettlementRow = Settlement & Row;
 
 const formConfig: FormConfig<SettlementListPayload, keyof SettlementListPayload> = {
-  formItem: [],
+  formItem: [{ label: '任务名称', name: 'task_name', type: 'input', span: 8, placeholder: '请输入任务名称' }],
   formData: {
     page: 1,
     limit: 20,
   },
 };
 
+const router = useRouter();
+
 const tableConfig: TableConfig<SettlementRow, keyof SettlementRow> = {
   tableItem: [
-    { title: 'task_no', colKey: 'task_no', width: 80, align: 'center' },
+    { title: '任务编号', colKey: 'task_no', minWidth: 120, align: 'center' },
     { title: '任务名称', colKey: 'task_title', minWidth: 120, align: 'center' },
+    { title: '发布时间', colKey: 'publish_time', minWidth: 120, align: 'center' },
+    { title: '任务类型', colKey: 'task_type_name', minWidth: 180, align: 'center' },
     { title: '所属项目', colKey: 'project_name', minWidth: 150, align: 'center' },
-    { title: '所属公司', colKey: 'customer_name', minWidth: 180, align: 'center' },
+    { title: '发票类型', colKey: 'invoice_type_name', minWidth: 180, align: 'center' },
     { title: '任务状态', colKey: 'task_status', minWidth: 220, align: 'center' },
-    { title: '操作', colKey: 'op', width: 100, align: 'left', fixed: 'right' },
+    { title: '操作', colKey: 'op', width: 200, align: 'left', fixed: 'right' },
   ],
 };
 
@@ -80,9 +89,18 @@ const handleSearch = (payload?: Partial<SettlementListPayload>) => {
 const handleReset = () => {
   reset();
 };
+const handlePay = (record: SettlementRow) => {
+  router.push({
+    name: 'PaymentDate',
+    query: {
+      id: record.id || '',
+    },
+  });
+};
 </script>
 <style scoped lang="less">
 .page-content {
   padding: 16px;
+  background: #fff;
 }
 </style>

@@ -41,7 +41,7 @@
                 <t-icon name="lock-on" size="28" />
               </div>
               <div class="pay-step-title">身份验证</div>
-              <div class="pay-step-desc">为了您的资金安全，请先验证手机号</div>
+              <div class="pay-step-desc">为了您的资金安全，请先验证超级管理员手机号</div>
 
               <pay-verify-code-input v-model="payVerifyCode" @get-code="handleGetVerifyCode" />
             </div>
@@ -52,9 +52,16 @@
 
           <template v-else>
             <div class="pay-step-wrap step-2">
-              <div class="pay-step-title">设置 6 位支付密码</div>
+              <div class="pay-step-title">
+                {{ needConfirmPassword ? '设置并确认 6 位支付密码' : '设置 6 位支付密码' }}
+              </div>
               <div class="pay-step-desc">仅支持数字，建议不要使用连续或重复数字</div>
+              <div class="password-label">{{ needConfirmPassword ? '支付密码' : '请输入支付密码' }}</div>
               <pay-password-input ref="payPasswordInputRef" v-model="payPasswordDigits" :length="PASSWORD_LENGTH" />
+              <template v-if="needConfirmPassword">
+                <div class="password-label">确认支付密码</div>
+                <pay-password-input v-model="payPasswordConfirmDigits" :length="PASSWORD_LENGTH" />
+              </template>
               <div v-if="shouldShowPasswordError" class="password-error">{{ payPasswordError }}</div>
             </div>
             <t-button
@@ -72,31 +79,49 @@
   </div>
 </template>
 <script setup lang="ts">
+import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, nextTick, ref } from 'vue';
-
+import { useUserStore } from '@/store';
+import { sendPayPasswordChangeSms, verifyPayPasswordSms, setOrChangePayPassword } from '@/api/enterprise/enterprise';
 import PayPasswordInput from '@/components/PayPasswordInput.vue';
 import { usePermissionStore } from '@/store/modules/permission';
 
 import PayVerifyCodeInput from './PayVerifyCodeInput.vue';
+const userStore = useUserStore();
 
 defineOptions({
   name: 'PayPasswordSection',
 });
+const props = withDefaults(
+  defineProps<{
+    needConfirmPassword?: boolean;
+  }>(),
+  {
+    needConfirmPassword: false,
+  },
+);
 
 const permissionStore = usePermissionStore();
 
 const PASSWORD_LENGTH = 6;
-
+const payPasswordToken = ref('');
 const payDialogVisible = ref(false);
 const payDialogStep = ref<1 | 2>(1);
 const payVerifyCode = ref('');
 const payPasswordDigits = ref(Array.from({ length: PASSWORD_LENGTH }, () => ''));
+const payPasswordConfirmDigits = ref(Array.from({ length: PASSWORD_LENGTH }, () => ''));
 const triedSubmit = ref(false);
 const payPasswordInputRef = ref<{ focusIndex: (index: number) => void } | null>(null);
 
 const payPasswordValue = computed(() => payPasswordDigits.value.join(''));
+const payPasswordConfirmValue = computed(() => payPasswordConfirmDigits.value.join(''));
+const needConfirmPassword = computed(() => !!props.needConfirmPassword);
 const isVerifyCodeValid = computed(() => /^\d{6}$/.test(payVerifyCode.value.trim()));
 const isPasswordComplete = computed(() => /^\d{6}$/.test(payPasswordValue.value));
+const isConfirmPasswordComplete = computed(() => {
+  if (!needConfirmPassword.value) return true;
+  return /^\d{6}$/.test(payPasswordConfirmValue.value);
+});
 
 const isSequentialPassword = (password: string) => {
   const asc = '01234567890123456789';
@@ -110,6 +135,9 @@ const payPasswordError = computed(() => {
   if (!isPasswordComplete.value) return '请输入 6 位数字支付密码';
   if (isSequentialPassword(payPasswordValue.value)) return '支付密码不能为连续数字';
   if (isRepeatPassword(payPasswordValue.value)) return '支付密码不能为重复数字';
+  if (needConfirmPassword.value && !isConfirmPasswordComplete.value) return '请再次输入 6 位数字支付密码';
+  if (needConfirmPassword.value && payPasswordValue.value !== payPasswordConfirmValue.value)
+    return '两次输入的支付密码不一致';
   return '';
 });
 
@@ -118,10 +146,15 @@ const canSubmitPayPassword = computed(() => !payPasswordError.value);
 
 const resetPayPasswordState = () => {
   payPasswordDigits.value = Array.from({ length: PASSWORD_LENGTH }, () => '');
+  payPasswordConfirmDigits.value = Array.from({ length: PASSWORD_LENGTH }, () => '');
   triedSubmit.value = false;
 };
 
-const handleGetVerifyCode = () => {};
+const handleGetVerifyCode = () => {
+  sendPayPasswordChangeSms().then((res) => {
+    MessagePlugin.success(res.msg);
+  });
+};
 
 const handleOpenPayDialog = () => {
   payDialogVisible.value = true;
@@ -139,14 +172,35 @@ const handleClosePayDialog = () => {
 
 const handleNextStep = () => {
   if (!isVerifyCodeValid.value) return;
-  payDialogStep.value = 2;
-  nextTick(() => payPasswordInputRef.value?.focusIndex(0));
+
+  verifyPayPasswordSms({ sms_code: String(payVerifyCode.value) }).then((res) => {
+    MessagePlugin.success(res.msg);
+    if (res.code === 200) {
+      payPasswordToken.value = res.data.pay_password_token;
+      payDialogStep.value = 2;
+      nextTick(() => payPasswordInputRef.value?.focusIndex(0));
+    } else {
+      MessagePlugin.error(res.msg);
+    }
+  });
 };
 
 const handleSubmitPayPassword = () => {
   triedSubmit.value = true;
   if (!canSubmitPayPassword.value) return;
-  handleClosePayDialog();
+
+  setOrChangePayPassword({
+    pay_password: payPasswordValue.value,
+    pay_password_token: payPasswordToken.value,
+  }).then((res) => {
+    MessagePlugin.success(res.msg);
+    if (res.code === 200) {
+      handleClosePayDialog();
+      userStore.updateUserInfo({ has_pay_password: true });
+    } else {
+      MessagePlugin.error(res.msg);
+    }
+  });
 };
 </script>
 <style lang="less" scoped>
@@ -281,6 +335,13 @@ const handleSubmitPayPassword = () => {
 
 .step-2 {
   padding-top: 34px;
+}
+
+.password-label {
+  margin: 14px 0 8px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--td-text-color-primary);
 }
 
 .password-error {

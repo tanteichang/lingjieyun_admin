@@ -1,9 +1,9 @@
 <template>
   <div class="verify-row">
-    <t-input
-      :model-value="modelValue"
-      :placeholder="`输入 ${userStore.userInfo.phone?.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')} 接收的验证码`"
-      inputmode="numeric"
+    <t-input-number
+      :model-value="innerValue"
+      theme="normal"
+      :placeholder="`输入 ${userStore.register_admin_mobile_masked?.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')} 接收的验证码`"
       @input="handleInput"
     />
     <t-button variant="base" theme="default" :disabled="countdown > 0" @click="handleGetCode">
@@ -12,24 +12,34 @@
   </div>
 </template>
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue';
+import { onBeforeUnmount, ref, watch } from 'vue';
+
 import { useUserStore } from '@/store/modules/user';
-const userStore = useUserStore();
+
 defineOptions({
   name: 'PayVerifyCodeInput',
 });
-
-defineProps<{
+const props = defineProps<{
   modelValue: string;
 }>();
-
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
   (e: 'get-code'): void;
 }>();
-
+const userStore = useUserStore();
 const countdown = ref(0);
+const innerValue = ref(props.modelValue || '');
 let countdownTimer: ReturnType<typeof setInterval> | null = null;
+
+watch(
+  () => props.modelValue,
+  (value) => {
+    const normalized = (value || '').replace(/\D/g, '').slice(0, 6);
+    if (normalized !== innerValue.value) {
+      innerValue.value = normalized;
+    }
+  },
+);
 
 const handleInput = (value: unknown) => {
   const normalized =
@@ -40,7 +50,9 @@ const handleInput = (value: unknown) => {
             (value as { e?: { target?: { value?: string } } })?.e?.target?.value ??
             '',
         );
-  emit('update:modelValue', normalized.replace(/\D/g, '').slice(0, 6));
+  const nextValue = normalized.replace(/\D/g, '').slice(0, 6);
+  innerValue.value = nextValue;
+  emit('update:modelValue', nextValue);
 };
 
 const clearCountdownTimer = () => {

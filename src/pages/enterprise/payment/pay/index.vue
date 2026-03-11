@@ -19,23 +19,24 @@
         :pagination="pagination"
         :form-config="formConfig"
         :table-config="tableConfig"
+        row-key="upload_id"
         @search="handleSearch"
         @reset="handleReset"
         @page-change="handlePageChange"
       >
         <template #billStatus="{ record }">
-          <t-tag :theme="statusTagTheme[(record as PaymentBillRow).billStatus]" variant="light">
-            {{ (record as PaymentBillRow).billStatus }}
+          <t-tag :theme="statusTagTheme[(record as BillListItem).payment_status_text]" variant="light">
+            {{ (record as BillListItem).payment_status_text }}
           </t-tag>
         </template>
         <template #op="{ record }">
           <t-space size="small">
-            <t-link theme="primary" hover="color">详情</t-link>
+            <t-link theme="primary" hover="color" @click="handleOpenDetail(record as BillListItem)">详情</t-link>
             <t-link
-              v-if="(record as PaymentBillRow).billStatus === '待支付'"
+              v-if="(record as BillListItem).payment_status === PaymentStatus.Pending"
               theme="primary"
               hover="color"
-              @click="handleOpenConfirmDialog(record as PaymentBillRow)"
+              @click="handleOpenConfirmDialog(record as BillListItem)"
             >
               确认发放
             </t-link>
@@ -44,101 +45,117 @@
         </template>
       </common-table>
     </div>
-    <confirm-issue-dialog v-model:visible="confirmDialogVisible" :record="currentRecord" />
+    <confirm-issue-dialog
+      v-model:visible="confirmDialogVisible"
+      :record="currentRecord"
+      @close-success="handleCloseSuccess"
+    />
   </t-card>
 </template>
 <script setup lang="ts">
+import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
+import { getBillList, sendDisburseCode } from '@/api/enterprise/bill';
+import type { BillListItem, BillTabCounts } from '@/api/model/enterprise/bill';
+import { PaymentStatus } from '@/api/model/enterprise/bill';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { useCommonTable } from '@/hooks/useCommonTable';
 
 import ConfirmIssueDialog from './component/ConfirmIssueDialog.vue';
-import type { BillStatus, PaymentBillRow, PaymentPayQuery } from './mock';
-import { defaultQuery, enterpriseOptions, fullList, projectOptions, statusOptions, taskOptions } from './mock';
 
 defineOptions({
   name: 'PaymentPay',
 });
 
-const activeStatus = ref<'全部' | BillStatus>('全部');
-const confirmDialogVisible = ref(false);
-const currentRecord = ref<PaymentBillRow | null>(null);
+type BillTabValue = 'all' | 'pending' | 'paying' | 'success' | 'partial' | 'fail' | 'closed';
+interface PaymentPayQuery {
+  dateRange: string;
+  payment_status: '' | PaymentStatus;
+  bill_no: string;
+}
+type PaymentBillTableRow = BillListItem & {
+  billStatus?: string;
+  op?: string;
+};
 
+const defaultQuery: PaymentPayQuery = {
+  dateRange: '',
+  payment_status: '',
+  bill_no: '',
+};
+
+const statusOptions = [
+  { label: '待支付', value: PaymentStatus.Pending },
+  { label: '支付中', value: PaymentStatus.Processing },
+  { label: '已支付', value: PaymentStatus.Paid },
+];
+
+const activeStatus = ref<BillTabValue>('all');
+const confirmDialogVisible = ref(false);
+const currentRecord = ref<BillListItem | null>(null);
+const router = useRouter();
 const currentQuery = reactive<PaymentPayQuery>({ ...defaultQuery });
+const tabCounts = ref<BillTabCounts>({
+  all: 0,
+  pending: 0,
+  paying: 0,
+  success: 0,
+  partial: 0,
+  fail: 0,
+  closed: 0,
+});
 
 const formConfig: FormConfig<PaymentPayQuery, keyof PaymentPayQuery> = {
   formItem: [
     { label: '时间筛选', name: 'dateRange', type: 'date-range', span: 4 },
     {
       label: '账单状态',
-      name: 'status',
+      name: 'payment_status',
       type: 'select',
-      placeholder: '请输入合同状态',
+      placeholder: '请选择账单状态',
       span: 4,
       props: { options: statusOptions },
     },
-    {
-      label: '所属企业',
-      name: 'enterprise',
-      type: 'select',
-      placeholder: '请输入合同编号',
-      span: 4,
-      props: { options: enterpriseOptions },
-    },
-    {
-      label: '所属项目',
-      name: 'project',
-      type: 'select',
-      placeholder: '请选择合同类型',
-      span: 4,
-      props: { options: projectOptions },
-    },
-    {
-      label: '所属任务',
-      name: 'task',
-      type: 'select',
-      placeholder: '请输入合同状态',
-      span: 4,
-      props: { options: taskOptions },
-    },
-    { label: '账单编号', name: 'billNo', type: 'input', placeholder: '请输入合同名称', span: 4 },
+    { label: '账单编号', name: 'bill_no', type: 'input', placeholder: '请输入账单编号', span: 4 },
   ],
   formData: { ...defaultQuery },
 };
 
-const tableConfig: TableConfig<PaymentBillRow, keyof PaymentBillRow> = {
+const tableConfig: TableConfig<PaymentBillTableRow, keyof PaymentBillTableRow> = {
   tableItem: [
-    { title: '创建时间', colKey: 'createTime', width: 130 },
-    { title: '结算单名称', colKey: 'settleName', width: 120 },
+    { title: '账单编号', colKey: 'bill_no', width: 170 },
+    { title: '创建时间', colKey: 'created_at', width: 160 },
+    { title: '结算单名称', colKey: 'settlement_name', width: 180, ellipsis: true },
     { title: '账单状态', colKey: 'billStatus', width: 100 },
-    { title: '所属企业', colKey: 'enterprise', width: 120, ellipsis: true },
-    { title: '所属项目', colKey: 'project', width: 120, ellipsis: true },
-    { title: '所属任务', colKey: 'task', width: 100 },
-    { title: '开票类型', colKey: 'invoiceType', width: 100 },
-    { title: '结算数量', colKey: 'settleCount', width: 80, align: 'center' },
-    { title: '导入金额', colKey: 'importAmount', width: 100, align: 'right' },
-    { title: '发放金额', colKey: 'issueAmount', width: 100, align: 'right' },
-    { title: '服务费', colKey: 'serviceFee', width: 90, align: 'right' },
+    { title: '所属企业', colKey: 'enterprise_name', width: 140, ellipsis: true },
+    { title: '所属项目', colKey: 'project_name', width: 140, ellipsis: true },
+    { title: '所属任务', colKey: 'task_name', width: 120, ellipsis: true },
+    { title: '开票类型', colKey: 'invoice_type', width: 100 },
+    { title: '结算数量', colKey: 'settlement_count', width: 100, align: 'center' },
+    { title: '导入金额', colKey: 'import_amount', width: 100, align: 'right' },
+    { title: '发放金额', colKey: 'distribution_amount', width: 100, align: 'right' },
+    { title: '服务费', colKey: 'service_fee', width: 90, align: 'right' },
+    { title: '个税', colKey: 'personal_tax', width: 80, align: 'center' },
+    { title: '增值税及附加', colKey: 'vat_and_surcharge', width: 110, align: 'center' },
+    { title: '合计费用', colKey: 'total_fee', width: 100, align: 'right' },
+    { title: '支付信息', colKey: 'payment_info', width: 100, align: 'center' },
 
-    { title: '个税', colKey: 'personalTax', width: 80, align: 'center' },
-    { title: '增值税及附加', colKey: 'vatAndAdditional', width: 110, align: 'center' },
-    { title: '合计费用', colKey: 'totalCost', width: 100, align: 'right' },
-    { title: '支付信息', colKey: 'paymentInfo', width: 90, align: 'center' },
-    { title: '账单编号', colKey: 'billNo', width: 100 },
-    { title: '支付成功数量', colKey: 'successCount', width: 100, align: 'center' },
-    { title: '支付成功金额', colKey: 'successAmount', width: 100, align: 'right' },
-    { title: '已支付服务费', colKey: 'paidServiceFee', width: 100, align: 'right' },
-    { title: '支付失败数量', colKey: 'failCount', width: 100, align: 'center' },
-    { title: '支付失败金额', colKey: 'failAmount', width: 100, align: 'right' },
+    { title: '支付成功数量', colKey: 'payment_success_count', width: 110, align: 'center' },
+    { title: '支付成功金额', colKey: 'payment_success_amount', width: 110, align: 'right' },
+    { title: '已支付服务费', colKey: 'paid_service_fee', width: 110, align: 'right' },
+    { title: '支付失败数量', colKey: 'payment_fail_count', width: 110, align: 'center' },
+    { title: '支付失败金额', colKey: 'payment_fail_amount', width: 110, align: 'right' },
     { title: '操作', colKey: 'op', width: 120, fixed: 'right' },
   ],
 };
 
-const statusTagTheme: Record<BillStatus, 'warning' | 'primary' | 'success' | 'danger' | 'default'> = {
+const statusTagTheme: Record<string, 'warning' | 'primary' | 'success' | 'danger' | 'default'> = {
   待支付: 'warning',
   支付中: 'primary',
+  已支付: 'success',
   支付成功: 'success',
   部分成功: 'primary',
   支付失败: 'danger',
@@ -146,55 +163,69 @@ const statusTagTheme: Record<BillStatus, 'warning' | 'primary' | 'success' | 'da
 };
 
 const statusTabs = computed(() => {
-  const count = (status: '全部' | BillStatus) =>
-    status === '全部' ? fullList.length : fullList.filter((item) => item.billStatus === status).length;
-
   return [
-    { label: '全部', value: '全部' as const, count: count('全部') },
-    { label: '待支付', value: '待支付' as const, count: count('待支付') },
-    { label: '支付中', value: '支付中' as const, count: count('支付中') },
-    { label: '支付成功', value: '支付成功' as const, count: count('支付成功') },
-    { label: '部分成功', value: '部分成功' as const, count: count('部分成功') },
-    { label: '支付失败', value: '支付失败' as const, count: count('支付失败') },
-    { label: '已关闭', value: '已关闭' as const, count: count('已关闭') },
+    { label: '全部', value: 'all' as const, count: tabCounts.value.all },
+    { label: '待支付', value: 'pending' as const, count: tabCounts.value.pending },
+    { label: '支付中', value: 'paying' as const, count: tabCounts.value.paying },
+    { label: '支付成功', value: 'success' as const, count: tabCounts.value.success },
+    { label: '部分成功', value: 'partial' as const, count: tabCounts.value.partial },
+    { label: '支付失败', value: 'fail' as const, count: tabCounts.value.fail },
+    { label: '已关闭', value: 'closed' as const, count: tabCounts.value.closed },
   ];
 });
 
-const filterData = (params: PaymentPayQuery) => {
-  return fullList.filter((item) => {
-    const matchTab = activeStatus.value === '全部' || item.billStatus === activeStatus.value;
-    const matchStatus = !params.status || item.billStatus === params.status;
-    const matchEnterprise = !params.enterprise || item.enterprise.includes(params.enterprise);
-    const matchProject = !params.project || item.project.includes(params.project);
-    const matchTask = !params.task || item.task.includes(params.task);
-    const matchBillNo = !params.billNo || item.billNo.includes(params.billNo.trim());
-    return matchTab && matchStatus && matchEnterprise && matchProject && matchTask && matchBillNo;
-  });
+const getTabPaymentStatus = (status: BillTabValue): PaymentStatus | undefined => {
+  if (status === 'pending') return PaymentStatus.Pending;
+  if (status === 'paying') return PaymentStatus.Processing;
+  if (status === 'success') return PaymentStatus.Paid;
+  return undefined;
 };
 
-const tableHook = useCommonTable<PaymentPayQuery, PaymentBillRow>({
+const parseDateRange = (range: string) => {
+  if (!range) return { start_date: undefined, end_date: undefined };
+  const [start, end] = range.split(' - ').map((item) => item.trim());
+  return {
+    start_date: start || undefined,
+    end_date: end || undefined,
+  };
+};
+
+const parsePaymentStatus = (value: unknown): PaymentStatus | '' => {
+  if (value === '' || value == null) return '';
+  const status = Number(value);
+  if (status === PaymentStatus.Pending || status === PaymentStatus.Processing || status === PaymentStatus.Paid) {
+    return status;
+  }
+  return '';
+};
+
+const tableHook = useCommonTable<PaymentPayQuery, PaymentBillTableRow>({
   fetcher: async (params) => {
     const queryParams: PaymentPayQuery = {
       dateRange: (params.dateRange as string) || '',
-      status: (params.status as PaymentPayQuery['status']) || '',
-      enterprise: params.enterprise || '',
-      project: params.project || '',
-      task: params.task || '',
-      billNo: params.billNo || '',
+      payment_status: parsePaymentStatus(params.payment_status),
+      bill_no: params.bill_no || '',
     };
     Object.assign(currentQuery, queryParams);
-
-    const filtered = filterData(queryParams);
-    const page = params.page || 1;
-    const limit = params.limit || 20;
-    const start = (page - 1) * limit;
+    const { start_date, end_date } = parseDateRange(queryParams.dateRange);
+    const tabStatus = getTabPaymentStatus(activeStatus.value);
+    const payment_status = tabStatus ?? (queryParams.payment_status === '' ? undefined : queryParams.payment_status);
+    const { data } = await getBillList({
+      page: params.page || 1,
+      limit: params.limit || 10,
+      start_date,
+      end_date,
+      payment_status,
+      bill_no: queryParams.bill_no?.trim() || undefined,
+    });
+    tabCounts.value = data.tab_counts;
 
     return {
-      list: filtered.slice(start, start + limit),
-      total: filtered.length,
+      list: data.list,
+      total: data.total,
     };
   },
-  defaultQuery,
+  defaultQuery: { ...defaultQuery },
   defaultPagination: {
     current: 1,
     pageSize: 10,
@@ -209,7 +240,7 @@ const tableHook = useCommonTable<PaymentPayQuery, PaymentBillRow>({
 
 const { data: tableData, loading, pagination, search, reset, handlePageChange } = tableHook;
 
-const handleStatusTabChange = (status: '全部' | BillStatus) => {
+const handleStatusTabChange = (status: BillTabValue) => {
   activeStatus.value = status;
   search({ ...currentQuery });
 };
@@ -219,12 +250,21 @@ const handleSearch = (payload: Partial<PaymentPayQuery>) => {
 };
 
 const handleReset = () => {
+  activeStatus.value = 'all';
   reset();
 };
 
-const handleOpenConfirmDialog = (record: PaymentBillRow) => {
+const handleOpenConfirmDialog = (record: BillListItem) => {
   currentRecord.value = record;
   confirmDialogVisible.value = true;
+};
+
+const handleOpenDetail = (record: BillListItem) => {
+  router.push({ name: 'PaymentPayDetail', query: { id: record.upload_id } });
+};
+
+const handleCloseSuccess = () => {
+  MessagePlugin.success('确认发放成功');
 };
 </script>
 <style lang="less" scoped>

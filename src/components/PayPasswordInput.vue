@@ -9,7 +9,7 @@
       placeholder=""
       maxlength="1"
       inputmode="numeric"
-      :value="digits[index]"
+      :value="digits[index] ? '*' : ''"
       @input="(event) => handleDigitInput(event, index)"
       @keydown="(event) => handleDigitKeydown(event, index)"
       @paste="(event) => handleDigitPaste(event, index)"
@@ -62,7 +62,7 @@ const handleDigitInput = (event: Event, index: number) => {
   const target = event.target as HTMLInputElement | null;
   const digit = sanitizeDigit(target?.value ?? '');
   updateDigitAt(index, digit);
-  if (target && target.value !== digit) target.value = digit;
+  if (target) target.value = digit ? '*' : '';
   if (digit && index < props.length - 1) focusIndex(index + 1);
 };
 

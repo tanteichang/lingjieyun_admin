@@ -19,14 +19,19 @@ export interface UserInfo {
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    token: 'main_token', // 默认token不走权限
+    token: '', // 默认token不走权限
     userInfo: {} as UserInfo,
     enterpriseInfo: {} as EnterpriseInfo,
+    register_admin_mobile_masked: '', // 注册管理员手机号掩码
   }),
   getters: {},
   actions: {
     setToken(token: string) {
       this.token = token;
+    },
+    shouldLogin() {
+      console.log('token', this.token);
+      return this.token === '';
     },
     updateUserInfo(userInfo: UserInfo) {
       this.userInfo = { ...this.userInfo, ...userInfo };
@@ -91,7 +96,7 @@ export const useUserStore = defineStore('user', {
     },
     storage: window.sessionStorage,
     key: 'user',
-    paths: ['token', 'userInfo', 'enterpriseInfo'],
+    paths: ['token', 'userInfo', 'enterpriseInfo', 'register_admin_mobile_masked'],
   },
 });
 

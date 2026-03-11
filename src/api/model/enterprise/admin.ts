@@ -1,4 +1,4 @@
-import type { ApiResponse, Pagination } from '../common';
+import type { ApiResponse, Pagination, Query } from '../common';
 
 export enum AdminStatus {
   disabled = 0, // 禁用
@@ -86,3 +86,47 @@ export interface AdminDetail {
 }
 
 export type AdminDetailResponse = ApiResponse<AdminDetail>;
+
+export enum AdminApplyStatus {
+  Pending = 0, // 待审核
+  Passed = 1, // 审核通过
+  Rejected = 2, // 审核拒绝
+}
+
+export interface AdminApplyUserInfo {
+  id: number; // 用户ID
+  username: string; // 用户名称
+  mobile: string; // 手机号
+  avatar: string | null; // 头像
+}
+
+export interface AdminApply {
+  id: number; // 申请ID
+  user_id: number; // 用户ID
+  admin_id: number; // 关联管理员ID
+  enterprise_id: number; // 企业ID
+  apply_status: AdminApplyStatus; // 申请状态
+  apply_remark: string; // 申请备注
+  audit_user_id: number; // 审核人ID
+  audit_time: string | null; // 审核时间
+  audit_remark: string; // 审核备注
+  created_at: string; // 申请时间
+  user_info: AdminApplyUserInfo; // 申请用户信息
+  apply_status_text: string; // 申请状态文本
+}
+
+export interface AdminApplyListPayload extends Query {}
+
+export type AdminApplyListResponse = ApiResponse<Pagination<AdminApply>>;
+
+export interface AdminApplyAuditPayload {
+  apply_id: number; // 申请ID
+  audit_status: AdminApplyStatus; // 申请状态
+  audit_remark: string; // 审核备注
+}
+
+export type AdminApplyAuditResponse = ApiResponse<{
+  apply_id: number; // 申请ID
+  apply_status: AdminApplyStatus; // 申请状态
+  apply_status_text: string; // 申请状态文本
+}>;

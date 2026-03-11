@@ -205,6 +205,7 @@ const onSubmit = async (ctx: SubmitContext) => {
         userStore.setToken(res.data.token);
         const enterpriseRes = await getEnterpriseInfo();
         if (enterpriseRes.code === 200) {
+          userStore.register_admin_mobile_masked = enterpriseRes.data.register_admin_mobile_masked;
           userStore.updateEnterpriseInfo(enterpriseRes.data.enterprise);
           userStore.updateUserInfo({
             phone: enterpriseRes.data.admin.mobile,
@@ -234,8 +235,7 @@ const onSubmit = async (ctx: SubmitContext) => {
         MessagePlugin.error(res.msg || '登录失败');
       }
     } catch (e) {
-      console.log(e);
-      MessagePlugin.error(e.message);
+      MessagePlugin.error(e);
     } finally {
       loading.value = false;
     }

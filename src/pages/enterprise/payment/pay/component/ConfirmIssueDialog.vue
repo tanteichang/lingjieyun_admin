@@ -5,6 +5,7 @@
     :header="false"
     :close-btn="false"
     :close-on-overlay-click="false"
+    :destroy-on-close="true"
     width="760px"
     class="confirm-issue-dialog"
     @close="handleClose"
@@ -14,14 +15,14 @@
       <div class="head">
         <div class="head-top">
           <t-space align="center">
-            <div class="title">{{ record?.settleName || '-' }}</div>
-            <t-tag theme="primary" variant="light">{{ record?.billStatus || '-' }}</t-tag>
+            <div class="title">{{ record?.settlement_name || '-' }}</div>
+            <t-tag theme="primary" variant="light">{{ record?.payment_status_text || '-' }}</t-tag>
           </t-space>
           <t-button variant="text" shape="square" class="close-btn" @click="handleClose">×</t-button>
         </div>
         <t-space direction="vertical" size="8px" class="meta-group">
-          <div class="meta">创建时间：{{ record?.createTime || '-' }}</div>
-          <div class="meta">所属任务：{{ record?.task || '-' }}</div>
+          <div class="meta">创建时间：{{ record?.created_at || '-' }}</div>
+          <div class="meta">所属任务：{{ record?.task_name || '-' }}</div>
         </t-space>
       </div>
 
@@ -29,14 +30,14 @@
         <t-row align="middle" justify="space-between" class="amount-row">
           <t-col :span="17">
             <div class="label">实付总金额</div>
-            <div class="amount">¥ {{ record?.issueAmount || '0.00' }}</div>
+            <div class="amount">¥ {{ record?.order_amount || '0.00' }}</div>
           </t-col>
           <t-col :span="1" class="divider-col">
             <div class="divider"></div>
           </t-col>
           <t-col :span="6">
             <div class="label">发放人数</div>
-            <div class="count">{{ record?.settleCount || 0 }} 人</div>
+            <div class="count">{{ record?.settlement_count || 0 }} 人</div>
           </t-col>
         </t-row>
       </div>
@@ -59,15 +60,14 @@
           </t-form-item>
 
           <t-form-item label="手机验证码">
-            <div class="code-line">
-              <t-input v-model="form.code" placeholder="验证码" />
-              <t-button :disabled="!hasPayPassword" variant="outline" theme="primary" class="send-btn"
-                >获取验证码</t-button
-              >
-            </div>
+            <pay-verify-code-input v-model="form.code" @get-code="handleSendCode" />
           </t-form-item>
-          <div v-if="!hasSendSMS" class="mobile">验证码将会发送至绑定的超级管理员手机：138****5678</div>
-          <div v-else class="mobile">验证码已发送至绑定的超级管理员手机：138****5678</div>
+          <div v-if="!hasSendSMS" class="mobile">
+            验证码将会发送至绑定的超级管理员手机：{{ userStore.register_admin_mobile_masked }}
+          </div>
+          <div v-else class="mobile">
+            验证码已发送至绑定的超级管理员手机：{{ userStore.register_admin_mobile_masked }}
+          </div>
         </t-form>
       </div>
 
@@ -75,42 +75,122 @@
         安全提示：请确认发放清单无误。大额支付涉及企业资产安全，支付确认后将进入银行处理流水，不可撤回。
       </t-alert>
 
-      <t-button :disabled="!hasPayPassword" theme="primary" class="confirm-btn" block>确认授权并发放</t-button>
+      <t-button :disabled="!hasPayPassword" theme="primary" class="confirm-btn" block @click="handleConfirm"
+        >确认授权并发放</t-button
+      >
     </div>
   </t-dialog>
 </template>
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+import { MessagePlugin } from 'tdesign-vue-next';
+import { computed, reactive, ref, watch } from 'vue';
 
+import { confirmDisburse, createPayment, sendDisburseCode } from '@/api/enterprise/bill';
+import type { BillListItem } from '@/api/model/enterprise/bill';
 import PayPasswordInput from '@/components/PayPasswordInput.vue';
+import PayVerifyCodeInput from '@/pages/enterprise/setting/security/components/PayVerifyCodeInput.vue';
 import { useUserStore } from '@/store';
 
-defineProps<{
+const props = defineProps<{
   visible: boolean;
-  record?: PaymentBillRow | null;
+  record?: BillListItem | null;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void;
+  (e: 'close-success'): void;
+  (e: 'close-fail'): void;
 }>();
 
 const userStore = useUserStore();
-
-import type { PaymentBillRow } from '../mock';
+const createEmptyPasswordDigits = () => Array.from({ length: 6 }, () => '');
 
 const form = reactive({
-  passwordDigits: Array.from({ length: 6 }, () => ''),
+  passwordDigits: createEmptyPasswordDigits(),
   code: '',
 });
 const hasSendSMS = ref(false);
 
 const hasPayPassword = computed(() => userStore.userInfo.has_pay_password);
 
+const resetForm = () => {
+  hasSendSMS.value = false;
+  form.passwordDigits = createEmptyPasswordDigits();
+  form.code = '';
+};
+
 const handleClose = () => {
+  resetForm();
   emit('update:visible', false);
 };
 const handleVisibleChange = (value: boolean) => {
   emit('update:visible', value);
+};
+
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      resetForm();
+    }
+  },
+);
+
+const handleSendCode = () => {
+  if (!hasPayPassword.value) {
+    MessagePlugin.error('请先设置支付密码');
+    return;
+  }
+  if (!props.record) {
+    MessagePlugin.error('请先选择要发放的清单');
+    return;
+  }
+  sendDisburseCode({ upload_id: props.record.upload_id }).then((res) => {
+    if (res.code === 200) {
+      hasSendSMS.value = true;
+      MessagePlugin.success(res.msg);
+    } else {
+      MessagePlugin.error(res.msg);
+    }
+  });
+};
+const handleConfirm = () => {
+  if (!props.record) {
+    MessagePlugin.error('请先选择要发放的清单');
+    return;
+  }
+  if (!form.passwordDigits.join('')) {
+    MessagePlugin.error('请输入支付密码');
+    return;
+  }
+  if (!form.code) {
+    MessagePlugin.error('请输入验证码');
+    return;
+  }
+  confirmDisburse({
+    upload_id: props.record.upload_id,
+    pay_password: form.passwordDigits.join(''),
+    sms_code: form.code,
+  }).then((res) => {
+    if (res.code === 200) {
+      MessagePlugin.success(res.msg);
+      createPayment({
+        disburse_token: res.data.disburse_token,
+      }).then((res) => {
+        if (res.code === 200) {
+          MessagePlugin.success(res.msg);
+          emit('close-success');
+        } else {
+          MessagePlugin.error(res.msg);
+          emit('close-fail');
+        }
+      });
+
+      handleClose();
+    } else {
+      MessagePlugin.error(res.msg);
+    }
+  });
 };
 </script>
 <style scoped lang="less">

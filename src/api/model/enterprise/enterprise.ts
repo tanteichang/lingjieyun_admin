@@ -38,6 +38,7 @@ export interface AdminInfo {
 export interface EnterpriseInfoResult {
   enterprise: EnterpriseInfo;
   admin: AdminInfo;
+  register_admin_mobile_masked: string;
 }
 
 export type EnterpriseInfoResponse = ApiResponse<EnterpriseInfoResult>;
@@ -92,3 +93,24 @@ export interface CreateEnterprisePayload {
 }
 
 export type CreateEnterpriseResponse = ApiResponse<[]>;
+
+export interface SetOrChangePayPasswordPayload {
+  pay_password: string;
+  pay_password_token: string;
+}
+
+export type SetOrChangePayPasswordResponse = ApiResponse<[]>;
+
+export type SendPayPasswordChangeSmsResponse = ApiResponse<{
+  code: number;
+  message: string;
+}>;
+
+export interface VerifyPayPasswordSmsPayload {
+  sms_code: string;
+}
+
+export type VerifyPayPasswordSmsResponse = ApiResponse<{
+  pay_password_token: string;
+  expire_seconds: number;
+}>;

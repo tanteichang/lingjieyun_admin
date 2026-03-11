@@ -20,7 +20,7 @@
           <!-- 搜索框 -->
           <search v-if="layout !== 'side'" :layout="layout" />
           <!-- 全局通知 -->
-          <notice />
+          <!-- <notice /> -->
 
           <t-dropdown :min-column-width="120" trigger="click">
             <template #dropdown>

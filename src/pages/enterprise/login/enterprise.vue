@@ -83,7 +83,7 @@ import { useRouter } from 'vue-router';
 
 import { getSign } from '@/api/enterprise/agreement';
 import { createEnterprise } from '@/api/enterprise/enterprise';
-import { UserStatus, useUserSession } from '@/store/modules/user';
+import { UserStatus, useUserLoginAndRegister } from '@/store/modules/user';
 
 import type { EnterpriseCertFormExpose } from './components/EnterpriseCertForm.vue';
 import EnterpriseCertForm from './components/EnterpriseCertForm.vue';
@@ -92,7 +92,7 @@ defineOptions({
   name: 'EnterpriseRegister',
 });
 
-const userSessionStore = useUserSession();
+const userSessionStore = useUserLoginAndRegister();
 
 const router = useRouter();
 const currentStep = ref(
@@ -111,9 +111,10 @@ const handleBack = () => {
 };
 
 const handleNextStep = async () => {
-  if (currentStep.value === 1) {
+  if (currentStep.value === 0) {
+    currentStep.value = 1;
+  } else if (currentStep.value === 1) {
     const certFormData = await enterpriseCertFormRef.value?.validateAndGetData();
-    console.log('certFormData:', certFormData);
     if (!certFormData) {
       MessagePlugin.warning('请先完善并通过企业认证信息校验');
       return;
@@ -142,21 +143,20 @@ const handleNextStep = async () => {
     });
     if (res.code === 200) {
       MessagePlugin.success('企业认证信息已提交');
-      currentStep.value = Math.min(currentStep.value + 1, 3);
+      currentStep.value = 2;
     } else {
       MessagePlugin.error(res.msg || '企业认证信息提交失败');
-      return;
     }
   } else if (currentStep.value === 3) {
     getSign({ agreement_type: 1 }).then((res) => {
       console.log(res);
       if (res.code === 200) {
         essSignUrl.value = res.data.ess_sign_url;
+      } else {
+        MessagePlugin.error(res.msg || '获取签约链接失败');
       }
     });
-    return;
   }
-  currentStep.value = Math.min(currentStep.value + 1, 4);
 };
 
 const handlePrevStep = () => {

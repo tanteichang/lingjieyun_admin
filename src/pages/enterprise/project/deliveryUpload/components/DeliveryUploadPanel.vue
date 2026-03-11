@@ -114,9 +114,16 @@
           <t-alert
             theme="warning"
             title="服务验收材料"
-            message="根据任务验收要求，提供完整的服务过程佐证材料，包括但不限于技术服务过程中的影音资 料、关键节点沟通记录、服务确认单、客户反馈意"
+            message="根据任务验收要求，提供完整的服务过程佐证材料，包括但不限于技术服务过程中的影音资料、关键节点沟通记录、服务确认单、客户反馈意"
           />
-          <auto-upload v-model="uploadFiles" :max="5" multiple />
+          <auto-upload v-model="uploadFiles" :max="5" multiple tips="最多上传5个文件">
+            <t-button
+              >选择文件
+              <template #icon>
+                <t-icon name="upload" />
+              </template>
+            </t-button>
+          </auto-upload>
         </t-space>
 
         <template #footer>
@@ -223,7 +230,7 @@ const tableConfig: TableConfig<DeliveryRow, keyof DeliveryRow> = {
     { title: '姓名', colKey: 'real_name', width: 100, align: 'left' },
     { title: '手机号', colKey: 'mobile', width: 150, align: 'left' },
     { title: '交付模式', colKey: 'delivery_mode', width: 150, align: 'center' },
-    { title: '交付日期', colKey: 'created_at', align: 'center' },
+    { title: '交付日期', colKey: 'plan_date', align: 'center' },
     { title: '交付状态', colKey: 'delivery_status_text', width: 200, align: 'center' },
     { title: '操作', colKey: 'op', width: 120, fixed: 'right' },
   ],

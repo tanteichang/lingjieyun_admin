@@ -177,7 +177,7 @@ import { computed, reactive, ref, watch } from 'vue';
 
 import AutoUpload from '@/components/auto-upload/index.vue';
 import { useDictStore } from '@/store/modules/enterprise/dict';
-import { useUserSession } from '@/store/modules/user';
+import { useUserLoginAndRegister } from '@/store/modules/user';
 import { CREDIT_CODE_PATTERN, EMAIL_PATTERN, MOBILE_PATTERN } from '@/utils/pattern';
 
 defineOptions({
@@ -189,7 +189,7 @@ export interface EnterpriseCertFormExpose {
 }
 
 const dictStore = useDictStore();
-const userSessionStore = useUserSession();
+const userSessionStore = useUserLoginAndRegister();
 const formRef = ref<any>(null);
 
 const formData = reactive({
@@ -261,6 +261,7 @@ const rules: Record<string, FormRule[]> = {
   // legal_person_id_front: [{ required: true, message: '请上传法人身份证人像面照片', type: 'error' }],
   // legal_person_id_back: [{ required: true, message: '请上传法人身份证国徽面照片', type: 'error' }],
   legal_person_name: [{ required: true, message: '请输入法人姓名', type: 'error' }],
+  legal_person_id_no: [{ required: true, message: '请输入法人身份证号', type: 'error' }],
   legal_person_phone: [
     { required: true, message: '请输入联系电话', type: 'error' },
     { pattern: MOBILE_PATTERN, message: '请输入正确的手机号', type: 'error' },
@@ -292,8 +293,8 @@ const validateAndGetData = async () => {
     business_license: formData._licenseImage[0].url,
     legal_person_id_front: formData._idCardFrontImage[0].url,
     legal_person_id_back: formData._idCardBackImage[0].url,
-    super_admin_id_front: formData._superAdminIdCardFrontImage[0].url,
-    super_admin_id_back: formData._superAdminIdCardBackImage[0].url,
+    super_admin_id_front: formData?._superAdminIdCardFrontImage[0]?.url || '',
+    super_admin_id_back: formData?._superAdminIdCardBackImage[0]?.url || '',
   };
 };
 

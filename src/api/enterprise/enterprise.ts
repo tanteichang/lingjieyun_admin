@@ -6,6 +6,11 @@ import type {
   JoinEnterpriseResponse,
   SearchEnterprisePayload,
   SearchEnterpriseResponse,
+  SendPayPasswordChangeSmsResponse,
+  SetOrChangePayPasswordPayload,
+  SetOrChangePayPasswordResponse,
+  VerifyPayPasswordSmsPayload,
+  VerifyPayPasswordSmsResponse,
 } from '@/api/model/enterprise/enterprise';
 import { postRequest, request } from '@/utils/request';
 
@@ -14,6 +19,9 @@ const Api = {
   SearchEnterprise: '/admin/enterprise/searchEnterprise',
   JoinEnterprise: '/admin/enterprise/applyJoinEnterprise',
   CreateEnterprise: '/admin/enterprise/submitEnterprise',
+  SetPayPasswordByToken: '/admin/enterprise/setPayPasswordByToken',
+  SendPayPasswordChangeSms: '/admin/enterprise/sendPayPasswordChangeSms',
+  VerifyPayPasswordSms: '/admin/enterprise/verifyPayPasswordSms',
 };
 
 export function getEnterpriseInfo() {
@@ -40,6 +48,34 @@ export function joinEnterprise(params: JoinEnterprisePayload) {
 export function createEnterprise(params: CreateEnterprisePayload) {
   return postRequest<CreateEnterpriseResponse>({
     url: Api.CreateEnterprise,
+    params,
+    showError: true,
+  });
+}
+/**
+ * 设置或修改支付密码
+ */
+export function setOrChangePayPassword(params: SetOrChangePayPasswordPayload) {
+  return postRequest<SetOrChangePayPasswordResponse>({
+    url: Api.SetPayPasswordByToken,
+    params,
+    showError: true,
+  });
+}
+
+export function sendPayPasswordChangeSms() {
+  return postRequest<SendPayPasswordChangeSmsResponse>({
+    url: Api.SendPayPasswordChangeSms,
+    showError: true,
+  });
+}
+
+/**
+ * 验证支付密码短信验证码
+ */
+export function verifyPayPasswordSms(params: VerifyPayPasswordSmsPayload) {
+  return postRequest<VerifyPayPasswordSmsResponse>({
+    url: Api.VerifyPayPasswordSms,
     params,
     showError: true,
   });

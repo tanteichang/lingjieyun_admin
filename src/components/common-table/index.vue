@@ -51,7 +51,7 @@
             </t-col>
           </t-row>
         </t-col>
-        <t-col :span="2">
+        <t-col :span="props.formConfig.formItem.length > 0 ? 2 : 4">
           <t-space size="small">
             <t-button theme="primary" type="submit">{{
               props.formConfig.formItem.length > 0 ? '查询' : '刷新'

@@ -78,13 +78,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import { SearchIcon } from 'tdesign-icons-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { joinEnterprise, searchEnterprise } from '@/api/enterprise/enterprise';
-import { useUserSession, useUserStore } from '@/store';
+import { useUserLoginAndRegister } from '@/store';
 
 defineOptions({
   name: 'EnterpriseJoin',
@@ -97,8 +96,7 @@ interface EnterpriseItem {
   address: string;
 }
 
-const userStore = useUserStore();
-const userSessionStore = useUserSession();
+const userSessionStore = useUserLoginAndRegister();
 
 const router = useRouter();
 const keyword = ref('');

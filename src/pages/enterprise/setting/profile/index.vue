@@ -4,6 +4,8 @@
       :logo="basicInfo?.logo"
       :legal-person-info="legalPersonInfo"
       :credit-code="basicInfo?.credit_code"
+      :company-name="basicInfo?.short_name"
+      :address="basicInfo?.address"
       @save-logo="handelSaveLogo"
     />
     <t-card class="content-card" :bordered="false">

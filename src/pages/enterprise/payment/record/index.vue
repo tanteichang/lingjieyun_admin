@@ -44,20 +44,19 @@
                 >支付中: <span class="summary-count">{{ summary.pending }}</span> 条</span
               >
               <span
-                >发放金额: <span class="summary-count">{{ summary.issueAmount }}</span> 元</span
-              >
-              <span
-                >个税: <span class="summary-count">{{ summary.personalTax }}</span> 元</span
-              >
-              <span
-                >合计金额: <span class="summary-count">{{ summary.totalAmount }}</span> 元</span
+                >支付金额: <span class="summary-count">{{ summary.paymentAmount }}</span> 元</span
               >
             </div>
           </div>
         </template>
-        <template #payResult="{ record }">
-          <t-tag :theme="resultTagTheme[(record as PaymentRecordRow).payResult]" variant="light">
-            {{ (record as PaymentRecordRow).payResult }}
+        <template #paymentStatusText="{ record }">
+          <t-tag :theme="resultTagTheme[(record as PaymentRecordRow).paymentStatusText]" variant="light">
+            {{ (record as PaymentRecordRow).paymentStatusText }}
+          </t-tag>
+        </template>
+        <template #receiveConfirmStatusText="{ record }">
+          <t-tag :theme="receiveConfirmTagTheme[(record as PaymentRecordRow).receiveConfirmStatusText]" variant="light">
+            {{ (record as PaymentRecordRow).receiveConfirmStatusText }}
           </t-tag>
         </template>
         <template #op>
@@ -70,76 +69,74 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
 
+import { getPaymentList } from '@/api/enterprise/payment';
+import type { PaymentListItem } from '@/api/model/enterprise/payment';
+import { PaymentStatus } from '@/api/model/enterprise/payment';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { useCommonTable } from '@/hooks/useCommonTable';
 
-import type { PaymentRecordQuery, PaymentRecordRow, PayResult } from './mock';
-import {
-  defaultQuery,
-  enterpriseOptions,
-  fullList,
-  nameOptions,
-  payResultOptions,
-  projectOptions,
-  taskOptions,
-} from './mock';
+type PayResult = '支付中' | '支付成功' | '支付失败';
+
+interface PaymentRecordQuery {
+  page: number;
+  limit: number;
+  payResult: '' | PayResult;
+}
+
+interface PaymentRecordRow {
+  id: number;
+  name: string;
+  payTime: string;
+  paymentStatus: PaymentStatus;
+  paymentStatusText: PayResult;
+  paymentAmount: string;
+  orderNo: string;
+  statementNo: string;
+  paymentChannel: string;
+  receiveConfirmStatusText: string;
+  createdAt: string;
+  remark: string;
+  op?: string;
+}
 
 defineOptions({
   name: 'PaymentRecord',
 });
 
+const defaultQuery: PaymentRecordQuery = {
+  page: 1,
+  limit: 10,
+  payResult: '',
+};
+
+const payResultOptions = [
+  { label: '支付中', value: '支付中' },
+  { label: '支付成功', value: '支付成功' },
+  { label: '支付失败', value: '支付失败' },
+];
+
 const activeStatus = ref<'全部' | PayResult>('全部');
 const currentQuery = reactive<PaymentRecordQuery>({ ...defaultQuery });
 const selectedRowKeys = ref<Array<string | number>>([]);
 const selectedRows = ref<PaymentRecordRow[]>([]);
-const filteredRows = ref<PaymentRecordRow[]>([...fullList]);
+const statusCounts = reactive<Record<'all' | PayResult, number>>({
+  all: 0,
+  支付中: 0,
+  支付成功: 0,
+  支付失败: 0,
+});
 
 const formConfig: FormConfig<PaymentRecordQuery, keyof PaymentRecordQuery> = {
   formItem: [
-    { label: '时间筛选', name: 'dateRange', type: 'date-range', span: 4 },
     {
       label: '账单状态',
       name: 'payResult',
       type: 'select',
-      placeholder: '请输入合同状态',
+      placeholder: '请选择账单状态',
       span: 4,
       props: { options: payResultOptions },
     },
-    {
-      label: '姓名',
-      name: 'name',
-      type: 'select',
-      placeholder: '请输入合同编号',
-      span: 4,
-      props: { options: nameOptions },
-    },
-    {
-      label: '所属企业',
-      name: 'enterprise',
-      type: 'select',
-      placeholder: '请选择合同类型',
-      span: 4,
-      props: { options: enterpriseOptions },
-    },
-    {
-      label: '所属项目',
-      name: 'project',
-      type: 'select',
-      placeholder: '请输入合同状态',
-      span: 4,
-      props: { options: projectOptions },
-    },
-    {
-      label: '所属任务',
-      name: 'task',
-      type: 'select',
-      placeholder: '请输入合同名称',
-      span: 4,
-      props: { options: taskOptions },
-    },
-    { label: '账单编号', name: 'billNo', type: 'input', placeholder: '请选择合同类型', span: 4 },
-    { label: '订单号', name: 'orderNo', type: 'input', placeholder: '请输入合同状态', span: 4 },
   ],
   formData: { ...defaultQuery },
 };
@@ -148,19 +145,13 @@ const tableConfig: TableConfig<PaymentRecordRow, keyof PaymentRecordRow> = {
   tableItem: [
     { title: '姓名', colKey: 'name', width: 90 },
     { title: '支付时间', colKey: 'payTime', width: 150 },
-    { title: '支付结果', colKey: 'payResult', width: 100 },
-    { title: '导入金额', colKey: 'importAmount', width: 100, align: 'right' },
-    { title: '发放金额', colKey: 'issueAmount', width: 100, align: 'right' },
-    { title: '手机号', colKey: 'phone', width: 110 },
-    { title: '身份证号', colKey: 'idCard', width: 120 },
-    { title: '银行卡账号', colKey: 'bankCard', width: 130 },
-    { title: '个税', colKey: 'personalTax', width: 90, align: 'right' },
-    { title: '所属项目', colKey: 'project', width: 120 },
-    { title: '所属任务', colKey: 'task', width: 100 },
-    { title: '所属企业', colKey: 'enterprise', width: 160, ellipsis: true },
-    { title: '账单编号', colKey: 'billNo', width: 120 },
-    { title: '订单号', colKey: 'orderNo', width: 120 },
-    { title: '支付渠道', colKey: 'channel', width: 100 },
+    { title: '支付结果', colKey: 'paymentStatusText', width: 100 },
+    { title: '支付金额', colKey: 'paymentAmount', width: 120, align: 'right' },
+    { title: '账单编号', colKey: 'statementNo', width: 150 },
+    { title: '订单号', colKey: 'orderNo', width: 150 },
+    { title: '支付渠道', colKey: 'paymentChannel', width: 120 },
+    { title: '收款确认状态', colKey: 'receiveConfirmStatusText', width: 130 },
+    { title: '创建时间', colKey: 'createdAt', width: 160 },
     { title: '备注', colKey: 'remark', width: 100 },
     { title: '操作', colKey: 'op', width: 80, fixed: 'right' },
   ],
@@ -172,64 +163,88 @@ const resultTagTheme: Record<PayResult, 'primary' | 'success' | 'danger'> = {
   支付失败: 'danger',
 };
 
-const statusTabs = computed(() => {
-  const count = (status: '全部' | PayResult) =>
-    status === '全部' ? fullList.length : fullList.filter((item) => item.payResult === status).length;
+const receiveConfirmTagTheme: Record<string, 'warning' | 'success' | 'danger' | 'default'> = {
+  待确认: 'warning',
+  已确认: 'success',
+  有异议: 'danger',
+  '-': 'default',
+};
 
+const statusTabs = computed(() => {
   return [
-    { label: '全部', value: '全部' as const, count: count('全部') },
-    { label: '支付中', value: '支付中' as const, count: count('支付中') },
-    { label: '支付成功', value: '支付成功' as const, count: count('支付成功') },
-    { label: '支付失败', value: '支付失败' as const, count: count('支付失败') },
+    { label: '全部', value: '全部' as const, count: statusCounts.all },
+    { label: '支付中', value: '支付中' as const, count: statusCounts.支付中 },
+    { label: '支付成功', value: '支付成功' as const, count: statusCounts.支付成功 },
+    { label: '支付失败', value: '支付失败' as const, count: statusCounts.支付失败 },
   ];
 });
 
-const filterData = (params: PaymentRecordQuery) => {
-  return fullList.filter((item) => {
-    const matchTab = activeStatus.value === '全部' || item.payResult === activeStatus.value;
-    const matchResult = !params.payResult || item.payResult === params.payResult;
-    const matchName = !params.name || item.name.includes(params.name);
-    const matchEnterprise = !params.enterprise || item.enterprise.includes(params.enterprise);
-    const matchProject = !params.project || item.project.includes(params.project);
-    const matchTask = !params.task || item.task.includes(params.task);
-    const matchBillNo = !params.billNo || item.billNo.includes(params.billNo.trim());
-    const matchOrderNo = !params.orderNo || item.orderNo.includes(params.orderNo.trim());
-    return (
-      matchTab &&
-      matchResult &&
-      matchName &&
-      matchEnterprise &&
-      matchProject &&
-      matchTask &&
-      matchBillNo &&
-      matchOrderNo
-    );
-  });
+const normalizePaymentStatus = (status: PaymentStatus): PayResult => {
+  if (status === PaymentStatus.Paid) return '支付成功';
+  if (status === PaymentStatus.Cancelled) return '支付失败';
+  return '支付中';
+};
+
+const getApiPaymentStatus = (status: '' | PayResult | '全部') => {
+  if (status === '支付成功') return PaymentStatus.Paid;
+  if (status === '支付失败') return PaymentStatus.Cancelled;
+  if (status === '支付中') return PaymentStatus.Paying;
+  return undefined;
+};
+
+const mapPaymentRow = (item: PaymentListItem): PaymentRecordRow => {
+  const paymentStatusText = normalizePaymentStatus(item.payment_status);
+  return {
+    id: item.id,
+    name: item.user_info?.username || '-',
+    payTime: item.payment_time || '-',
+    paymentStatus: item.payment_status,
+    paymentStatusText,
+    paymentAmount: item.payment_amount || '0.00',
+    orderNo: item.order_no || '-',
+    statementNo: item.statement_no || '-',
+    paymentChannel: item.payment_channel || '-',
+    receiveConfirmStatusText: item.receive_confirm_status_text || '-',
+    createdAt: item.created_at || '-',
+    remark: item.receive_dispute_remark || '-',
+  };
+};
+
+const refreshStatusCounts = async () => {
+  const [allRes, payingRes, paidRes, cancelledRes] = await Promise.all([
+    getPaymentList({ page: 1, limit: 1 }),
+    getPaymentList({ page: 1, limit: 1, payment_status: PaymentStatus.Paying }),
+    getPaymentList({ page: 1, limit: 1, payment_status: PaymentStatus.Paid }),
+    getPaymentList({ page: 1, limit: 1, payment_status: PaymentStatus.Cancelled }),
+  ]);
+
+  statusCounts.all = allRes.data?.total || 0;
+  statusCounts.支付中 = payingRes.data?.total || 0;
+  statusCounts.支付成功 = paidRes.data?.total || 0;
+  statusCounts.支付失败 = cancelledRes.data?.total || 0;
 };
 
 const tableHook = useCommonTable<PaymentRecordQuery, PaymentRecordRow>({
   fetcher: async (params) => {
     const queryParams: PaymentRecordQuery = {
-      dateRange: (params.dateRange as string) || '',
       payResult: (params.payResult as PaymentRecordQuery['payResult']) || '',
-      name: params.name || '',
-      enterprise: params.enterprise || '',
-      project: params.project || '',
-      task: params.task || '',
-      billNo: params.billNo || '',
-      orderNo: params.orderNo || '',
+      page: params.page || 1,
+      limit: params.limit || 10,
     };
     Object.assign(currentQuery, queryParams);
-
-    const filtered = filterData(queryParams);
-    filteredRows.value = filtered;
-    const page = params.page || 1;
-    const limit = params.limit || 20;
-    const start = (page - 1) * limit;
+    const payment_status = getApiPaymentStatus(
+      activeStatus.value === '全部' ? queryParams.payResult : activeStatus.value,
+    );
+    const response = await getPaymentList({
+      page: queryParams.page,
+      limit: queryParams.limit,
+      payment_status,
+    });
+    await refreshStatusCounts();
 
     return {
-      list: filtered.slice(start, start + limit),
-      total: filtered.length,
+      list: (response.data?.list || []).map(mapPaymentRow),
+      total: response.data?.total || 0,
     };
   },
   defaultQuery,
@@ -252,22 +267,17 @@ const summaryRows = computed(() => selectedRows.value);
 const summary = computed(() => {
   const rows = summaryRows.value;
   const total = rows.length;
-  const success = rows.filter((item) => item.payResult === '支付成功').length;
-  const failed = rows.filter((item) => item.payResult === '支付失败').length;
-  const pending = rows.filter((item) => item.payResult === '支付中').length;
-
-  const issueAmount = rows.reduce((sum, item) => sum + Number(item.issueAmount), 0).toFixed(2);
-  const personalTax = rows.reduce((sum, item) => sum + Number(item.personalTax), 0).toFixed(2);
-  const totalAmount = (Number(issueAmount) + Number(personalTax)).toFixed(2);
+  const success = rows.filter((item) => item.paymentStatusText === '支付成功').length;
+  const failed = rows.filter((item) => item.paymentStatusText === '支付失败').length;
+  const pending = rows.filter((item) => item.paymentStatusText === '支付中').length;
+  const paymentAmount = rows.reduce((sum, item) => sum + Number(item.paymentAmount || 0), 0).toFixed(2);
 
   return {
     total,
     success,
     failed,
     pending,
-    issueAmount,
-    personalTax,
-    totalAmount,
+    paymentAmount,
   };
 });
 

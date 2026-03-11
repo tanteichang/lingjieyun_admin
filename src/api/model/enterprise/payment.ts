@@ -14,9 +14,9 @@ export enum ReceiveConfirmStatus {
 }
 
 export interface PaymentListPayload {
-  product_id: number;
-  payment_status: PaymentStatus;
-  receive_confirm_status: ReceiveConfirmStatus;
+  product_id?: number;
+  payment_status?: PaymentStatus;
+  receive_confirm_status?: ReceiveConfirmStatus;
   page: number;
   limit: number;
 }

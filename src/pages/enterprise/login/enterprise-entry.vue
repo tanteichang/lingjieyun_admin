@@ -34,14 +34,14 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { useUserSession } from '@/store';
+import { useUserLoginAndRegister } from '@/store';
 
 defineOptions({
   name: 'EnterpriseRegisterEntry',
 });
 
 const router = useRouter();
-const userSessionStore = useUserSession();
+const userSessionStore = useUserLoginAndRegister();
 
 onMounted(() => {
   if (!userSessionStore.admin_id || !userSessionStore.phone) {

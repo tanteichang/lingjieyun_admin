@@ -27,12 +27,12 @@
         </div>
 
         <div class="company-meta">
-          <div class="company-name">新际网络科技有限公司</div>
+          <div class="company-name">{{ companyName }}</div>
           <div class="company-code">统一社会信用代码: {{ creditCode }}</div>
           <div class="meta-tags">
             <span class="meta-tag">
               <t-icon name="location" />
-              广州-番禺
+              {{ address?.province || '-' }}-{{ address?.city || '-' }}-{{ address?.district || '-' }}
             </span>
             <span class="meta-tag">
               <t-icon name="user" />
@@ -50,7 +50,7 @@
 import type { UploadFile } from 'tdesign-vue-next';
 import { ref } from 'vue';
 
-import type { EnterpriseLegalPersonInfo } from '@/api/model/enterprise/profile';
+import type { EnterpriseLegalPersonInfo, EnterpriseProfileAddress } from '@/api/model/enterprise/profile';
 import AutoUpload from '@/components/auto-upload/index.vue';
 
 defineOptions({
@@ -60,7 +60,9 @@ defineOptions({
 const props = defineProps<{
   logo: string | null;
   legalPersonInfo: EnterpriseLegalPersonInfo;
+  companyName: string;
   creditCode: string;
+  address: EnterpriseProfileAddress;
 }>();
 
 const emit = defineEmits<{

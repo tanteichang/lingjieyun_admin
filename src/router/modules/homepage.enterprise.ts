@@ -316,6 +316,34 @@ export default [
         },
       },
       {
+        path: 'date',
+        name: 'PaymentDate',
+        component: () => import('@/pages/enterprise/payment/upload/date.vue'),
+        meta: {
+          title: {
+            zh_CN: '结算单日期',
+            en_US: 'Payment Upload Date',
+          },
+          icon: 'upload-1',
+          hidden: true,
+          keepAlive: false,
+        },
+      },
+      {
+        path: 'detail',
+        name: 'PaymentDetail',
+        component: () => import('@/pages/enterprise/payment/upload/detail.vue'),
+        meta: {
+          title: {
+            zh_CN: '结算单详情',
+            en_US: 'Payment Upload Detail',
+          },
+          icon: 'upload-1',
+          hidden: true,
+          keepAlive: false,
+        },
+      },
+      {
         path: 'pay',
         name: 'PaymentPay',
         component: () => import('@/pages/enterprise/payment/pay/index.vue'),
@@ -325,6 +353,20 @@ export default [
             en_US: 'Payment Pay',
           },
           icon: 'creditcard',
+          keepAlive: false,
+        },
+      },
+      {
+        path: 'payDetail',
+        name: 'PaymentPayDetail',
+        component: () => import('@/pages/enterprise/payment/pay/detail.vue'),
+        meta: {
+          title: {
+            zh_CN: '账单支付详情',
+            en_US: 'Payment Pay Detail',
+          },
+          icon: 'creditcard',
+          hidden: true,
           keepAlive: false,
         },
       },

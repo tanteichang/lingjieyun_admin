@@ -251,9 +251,6 @@ const handleDialogCancel = () => {
   moreActionDialogVisible.value = false;
 };
 const handleDialogConfirm = (type: string) => {
-  console.log('handleDialogConfirm');
-  console.log(type);
-  console.log(moreActionRecord.value);
   let request = null;
   if (type === 'pause') {
     request = pauseProject;
