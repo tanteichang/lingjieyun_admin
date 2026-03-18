@@ -1,4 +1,4 @@
-import type { ApiResponse, Query, Pagination } from '../common';
+import type { ApiResponse, Pagination, Query } from '../common';
 
 export interface ProjectQuery extends Query {
   name?: string;
@@ -69,6 +69,8 @@ export interface ProjectItem {
   required_personnel: number; // 所需人员数量表
   direct_recruitment_count: number; // 定向招募人数
   free_recruitment_count: number; // 自由招募人数
+  customer_name: string; // 客户名称
+  pro_no: string; // 项目编号
 }
 
 // 分页返回结构

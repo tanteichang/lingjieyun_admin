@@ -146,7 +146,6 @@ const formConfig: FormConfig<RegistrationRow, keyof RegistrationRow | keyof type
 
 const tableConfig: TableConfig<RegistrationRow, keyof RegistrationRow> = {
   tableItem: [
-    { title: '#', colKey: 'index', width: 70, align: 'center', fixed: 'left' },
     { title: '姓名', colKey: 'user_info_real_name', width: 140, align: 'center' },
     { title: '手机号码', colKey: 'user_info_mobile', width: 150, align: 'center' },
     { title: '任务标题', colKey: 'task_title', minWidth: 200, ellipsis: true },

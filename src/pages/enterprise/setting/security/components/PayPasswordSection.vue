@@ -1,97 +1,97 @@
 <template>
-  <div class="action-item">
-    <div class="action-head">
-      <span class="icon-circle icon-pay">
+  <security-action-card
+    title="支付密码"
+    description="涉及资金变动、提现等敏感操作时需要验证，保障您的资金安全。"
+    :status-text="payPasswordStatusText"
+    :status-tone="payPasswordStatusTone"
+    icon-tone="blue"
+    :action-text="payPasswordActionText"
+    :action-disabled="!permissionStore.isSuperAdmin"
+    @action="handleOpenPayDialog"
+  >
+    <template #icon>
+      <span class="card-icon-symbol">
         <t-icon name="creditcard" />
       </span>
-      <div>
-        <div class="action-title">支付密码</div>
-        <div class="action-desc">涉及资金变动、提现等敏感操作时需要验证。</div>
-      </div>
-    </div>
-    <t-link
-      :disabled="!permissionStore.isSuperAdmin"
-      theme="primary"
-      class="action-link"
-      hover="color"
-      @click="handleOpenPayDialog"
-      >{{ permissionStore.isSuperAdmin ? '管理支付密码' : '仅限超级管理员操作' }}</t-link
-    >
+    </template>
 
-    <t-dialog
-      v-model:visible="payDialogVisible"
-      :footer="false"
-      :close-on-overlay-click="false"
-      :close-btn="false"
-      width="470px"
-      class="password-dialog"
-    >
-      <template #body>
-        <div class="password-modal pay-modal">
-          <div class="modal-head">
-            <div class="modal-title">支付密码管理</div>
-            <button class="modal-close" type="button" @click="handleClosePayDialog">
-              <t-icon name="close" size="22" />
-            </button>
-          </div>
-
-          <template v-if="payDialogStep === 1">
-            <div class="pay-step-wrap">
-              <div class="verify-icon">
-                <t-icon name="lock-on" size="28" />
-              </div>
-              <div class="pay-step-title">身份验证</div>
-              <div class="pay-step-desc">为了您的资金安全，请先验证超级管理员手机号</div>
-
-              <pay-verify-code-input v-model="payVerifyCode" @get-code="handleGetVerifyCode" />
-            </div>
-            <t-button theme="primary" block class="save-btn" :disabled="!isVerifyCodeValid" @click="handleNextStep"
-              >下一步</t-button
-            >
-          </template>
-
-          <template v-else>
-            <div class="pay-step-wrap step-2">
-              <div class="pay-step-title">
-                {{ needConfirmPassword ? '设置并确认 6 位支付密码' : '设置 6 位支付密码' }}
-              </div>
-              <div class="pay-step-desc">仅支持数字，建议不要使用连续或重复数字</div>
-              <div class="password-label">{{ needConfirmPassword ? '支付密码' : '请输入支付密码' }}</div>
-              <pay-password-input ref="payPasswordInputRef" v-model="payPasswordDigits" :length="PASSWORD_LENGTH" />
-              <template v-if="needConfirmPassword">
-                <div class="password-label">确认支付密码</div>
-                <pay-password-input v-model="payPasswordConfirmDigits" :length="PASSWORD_LENGTH" />
-              </template>
-              <div v-if="shouldShowPasswordError" class="password-error">{{ payPasswordError }}</div>
-            </div>
-            <t-button
-              theme="primary"
-              block
-              class="save-btn"
-              :disabled="!canSubmitPayPassword"
-              @click="handleSubmitPayPassword"
-              >确认修改</t-button
-            >
-          </template>
+    <template #append> </template>
+  </security-action-card>
+  <t-dialog
+    v-model:visible="payDialogVisible"
+    :footer="false"
+    :close-on-overlay-click="false"
+    :close-btn="false"
+    width="470px"
+    class="password-dialog"
+  >
+    <template #body>
+      <div class="password-modal pay-modal">
+        <div class="modal-head">
+          <div class="modal-title">支付密码管理</div>
+          <button class="modal-close" type="button" @click="handleClosePayDialog">
+            <t-icon name="close" size="22" />
+          </button>
         </div>
-      </template>
-    </t-dialog>
-  </div>
+
+        <template v-if="payDialogStep === 1">
+          <div class="pay-step-wrap">
+            <div class="verify-icon">
+              <t-icon name="lock-on" size="28" />
+            </div>
+            <div class="pay-step-title">身份验证</div>
+            <div class="pay-step-desc">为了您的资金安全，请先验证超级管理员手机号</div>
+
+            <pay-verify-code-input v-model="payVerifyCode" @get-code="handleGetVerifyCode" />
+          </div>
+          <t-button theme="primary" block class="save-btn" :disabled="!isVerifyCodeValid" @click="handleNextStep"
+            >下一步</t-button
+          >
+        </template>
+
+        <template v-else>
+          <div class="pay-step-wrap step-2">
+            <div class="pay-step-title">
+              {{ needConfirmPassword ? '设置并确认 6 位支付密码' : '设置 6 位支付密码' }}
+            </div>
+            <div class="pay-step-desc">仅支持数字，建议不要使用连续或重复数字</div>
+            <div class="password-label">{{ needConfirmPassword ? '支付密码' : '请输入支付密码' }}</div>
+            <pay-password-input ref="payPasswordInputRef" v-model="payPasswordDigits" :length="PASSWORD_LENGTH" />
+            <template v-if="needConfirmPassword">
+              <div class="password-label">确认支付密码</div>
+              <pay-password-input v-model="payPasswordConfirmDigits" :length="PASSWORD_LENGTH" />
+            </template>
+            <div v-if="shouldShowPasswordError" class="password-error">{{ payPasswordError }}</div>
+          </div>
+          <t-button
+            theme="primary"
+            block
+            class="save-btn"
+            :disabled="!canSubmitPayPassword"
+            @click="handleSubmitPayPassword"
+            >确认修改</t-button
+          >
+        </template>
+      </div>
+    </template>
+  </t-dialog>
 </template>
 <script setup lang="ts">
 import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, nextTick, ref } from 'vue';
-import { useUserStore } from '@/store';
-import { sendPayPasswordChangeSms, verifyPayPasswordSms, setOrChangePayPassword } from '@/api/enterprise/enterprise';
+
+import { sendPayPasswordChangeSms, setOrChangePayPassword, verifyPayPasswordSms } from '@/api/enterprise/enterprise';
 import PayPasswordInput from '@/components/PayPasswordInput.vue';
+import { useUserStore } from '@/store';
 import { usePermissionStore } from '@/store/modules/permission';
 
 import PayVerifyCodeInput from './PayVerifyCodeInput.vue';
-const userStore = useUserStore();
+import SecurityActionCard from './SecurityActionCard.vue';
 
 defineOptions({
   name: 'PayPasswordSection',
 });
+
 const props = withDefaults(
   defineProps<{
     needConfirmPassword?: boolean;
@@ -100,6 +100,8 @@ const props = withDefaults(
     needConfirmPassword: false,
   },
 );
+
+const userStore = useUserStore();
 
 const permissionStore = usePermissionStore();
 
@@ -116,6 +118,13 @@ const payPasswordInputRef = ref<{ focusIndex: (index: number) => void } | null>(
 const payPasswordValue = computed(() => payPasswordDigits.value.join(''));
 const payPasswordConfirmValue = computed(() => payPasswordConfirmDigits.value.join(''));
 const needConfirmPassword = computed(() => !!props.needConfirmPassword);
+const hasPayPassword = computed(() => !!userStore.userInfo.has_pay_password);
+const payPasswordStatusText = computed(() => (hasPayPassword.value ? '已设置' : '未设置'));
+const payPasswordStatusTone = computed(() => (hasPayPassword.value ? 'success' : 'warning'));
+const payPasswordActionText = computed(() => {
+  if (!permissionStore.isSuperAdmin) return '仅限超级管理员操作';
+  return hasPayPassword.value ? '修改支付密码' : '立即去设置';
+});
 const isVerifyCodeValid = computed(() => /^\d{6}$/.test(payVerifyCode.value.trim()));
 const isPasswordComplete = computed(() => /^\d{6}$/.test(payPasswordValue.value));
 const isConfirmPasswordComplete = computed(() => {
@@ -204,53 +213,15 @@ const handleSubmitPayPassword = () => {
 };
 </script>
 <style lang="less" scoped>
-.action-item {
-  background: #f8faff;
-  border-radius: 10px;
-  padding: 22px;
-  min-height: 220px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.action-head {
-  display: flex;
-  gap: 14px;
-}
-
-.icon-circle {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
+.card-icon-symbol {
+  color: #2f6eff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: 20px;
-  flex-shrink: 0;
 }
 
-.icon-pay {
-  background: #2f6eff;
-}
-
-.action-title {
-  font-size: 15px;
-  color: var(--td-text-color-primary);
-  font-weight: 600;
-}
-
-.action-desc {
-  margin-top: 10px;
-  font-size: 11px;
-  color: var(--td-text-color-secondary);
-  line-height: 1.6;
-}
-
-.action-link {
-  font-size: 14px;
-  font-weight: 600;
+.card-icon-symbol :deep(.t-icon) {
+  font-size: 34px;
 }
 
 .password-dialog {
@@ -282,7 +253,7 @@ const handleSubmitPayPassword = () => {
 }
 
 .modal-title {
-  font-size: 18px;
+  font-size: 16px;
   color: var(--td-text-color-primary);
   font-weight: 600;
 }
@@ -322,14 +293,14 @@ const handleSubmitPayPassword = () => {
 }
 
 .pay-step-title {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--td-text-color-primary);
   font-weight: 600;
 }
 
 .pay-step-desc {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--td-text-color-secondary);
 }
 
@@ -340,14 +311,14 @@ const handleSubmitPayPassword = () => {
 .password-label {
   margin: 14px 0 8px;
   text-align: left;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--td-text-color-primary);
 }
 
 .password-error {
   margin-top: 10px;
   min-height: 20px;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--td-error-color);
 }
 
@@ -355,20 +326,17 @@ const handleSubmitPayPassword = () => {
   margin: 10px 24px 24px;
   width: calc(100% - 48px);
   height: 40px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 @media (max-width: 1200px) {
-  .action-title,
-  .action-link,
   .modal-title,
   .pay-step-title {
-    font-size: 14px;
+    font-size: 13px;
   }
 
-  .action-desc,
   .pay-step-desc {
-    font-size: 11px;
+    font-size: 10px;
   }
 }
 </style>

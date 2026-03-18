@@ -75,12 +75,18 @@ export interface TaskProject {
 }
 
 export enum SettlementType {
-  PER_TIME = 1, // 按次
-  ORDER = 2, // 按单
-  DAILY = 3, // 按日
-  WEEKLY = 4, // 按周
-  MONTHLY = 5, // 按月
+  DAILY = 1, // 按日
+  PER_TIME = 2, // 按次
+  WEEKLY = 3, // 按周
+  MONTHLY = 4, // 按月
 }
+
+export const SETTLEMENT_TYPE_MAP: Record<SettlementType, string> = {
+  [SettlementType.DAILY]: '按日',
+  [SettlementType.PER_TIME]: '按次',
+  [SettlementType.WEEKLY]: '按周',
+  [SettlementType.MONTHLY]: '按月',
+};
 
 export enum AcceptancePeriodType {
   BY_DAY = 1, // 按日
@@ -128,6 +134,8 @@ export interface TaskItem {
   customer_info: TaskCustomerInfo;
   customer_id: number; // 客户ID
   delivery_mode: DeliveryMode; // 交付模式（1-小程序上传，2-系统批量上传，3-同时选择（无限制））
+  job_id: number; // 岗位要求ID
+  job_name: string; // 岗位要求名称
 }
 
 export interface Status_Counts {
@@ -150,13 +158,13 @@ export interface TaskPublishPayload {
   product_id?: number; // 任务ID（可选，如果提供则更新现有任务，否则创建新任务）
   product_no?: string; // 任务编号（可选，不提供则自动生成）
   name: string; // 任务名称
-  settlement_type: SettlementType; // 结算方式（必填，1-按次，2-按单，3-按日，4-按周，5-按月）
+  settlement_type: SettlementType; //
   commission: string; // 任务佣金（必填）
   start_time: string; // 开始时间（必填，格式：Y-m-d H:i:s）
   end_time: string; // 结束时间（必填，格式：Y-m-d H:i:s）
-  province?: string; // 省份（可选）
-  city?: string; // 城市（可选）
-  district?: string; // 区县（可选）
+  province_id?: number; // 省份（可选）
+  city_id?: number; // 城市（可选）
+  district_id?: number; // 区县（可选）
   detail_address?: string; // 详细地址（可选）
   longitude?: string; // 经度
   latitude?: string; // 纬度
@@ -176,6 +184,7 @@ export interface TaskPublishPayload {
   acceptance_start_date?: string; // 完结验收开始日期（可选，格式：Y-m-d，仅当`acceptance_type=1`时有效）
   acceptance_end_date?: string; // 完结验收结束日期（可选，格式：Y-m-d，仅当`acceptance_type=1`时有效）
   delivery_mode?: DeliveryMode; // 交付模式（可选，1-小程序上传，2-系统批量上传，3-同时选择（无限制），默认3）
+  label?: string; // 任务标签（可选）
 }
 
 export interface TaskPublishResponse extends ApiResponse<{ product_id: number; product_no: string }> {}

@@ -106,9 +106,8 @@ const formConfig: FormConfig<TaskQuery, keyof TaskQuery> = {
 
 const tableConfig: TableConfig<TaskRow, keyof TaskRow> = {
   tableItem: [
-    { title: 'ID', colKey: 'id', width: 80, align: 'center' as const, fixed: 'left' },
     { title: '任务编号', colKey: 'task_no', width: 120, align: 'center' as const },
-    { title: '任务名称', colKey: 'name', minWidth: 240, ellipsis: true },
+    { title: '任务名称', colKey: 'name', minWidth: 20, ellipsis: true },
     // { title: '任务类型', colKey: 'type', width: 120, align: 'center' as const },
     { title: '招募方式', colKey: 'recruitment_type_text', width: 120, align: 'center' as const },
     { title: '任务状态', colKey: 'task_status', width: 120, align: 'center' as const },

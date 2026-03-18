@@ -17,20 +17,25 @@
           <span class="label">任务时间</span
           ><span class="value">{{ taskInfo.start_time }} - {{ taskInfo.end_time }}</span>
         </div>
-        <div class="info-item"><span class="label">任务类型</span><span class="value">服务类</span></div>
+        <div class="info-item">
+          <span class="label">任务类型</span><span class="value">{{ taskInfo.job_name }}</span>
+        </div>
         <div class="info-item">
           <span class="label">所属项目</span><span class="value">{{ taskInfo.project.name }}</span>
         </div>
         <div class="info-item">
+          <span class="label">招募方式</span><span class="value">{{ taskInfo.recruitment_type_text }}</span>
+        </div>
+        <div class="info-item">
           <span class="label">佣金结算方式</span
           ><span class="value">
-            {{ taskInfo.commission }}
-            {{ taskInfo.commission_settlement_type_text }}
+            {{ commissionSettlementTypeText }}
           </span>
         </div>
-        <div class="info-item"><span class="label">发放时间要求</span><span class="value">按日</span></div>
-        <div class="info-item"><span class="label">自由招募人数</span><span class="value">0</span></div>
-        <div class="info-item"><span class="label">定向招募人数</span><span class="value">5</span></div>
+
+        <div class="info-item">
+          <span class="label">招募人数</span><span class="value">{{ taskInfo.required_personnel }}</span>
+        </div>
       </div>
     </t-card>
 
@@ -72,10 +77,10 @@
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { TASK_STATUS_TAG } from '@/api/model/enterprise/taskModel';
+import { SETTLEMENT_TYPE_MAP, TASK_STATUS_TAG } from '@/api/model/enterprise/taskModel';
 
 defineOptions({
   name: 'TaskDetail',
@@ -100,6 +105,13 @@ const currentTab = ref('members');
 const memberTotal = ref(0);
 const applyPending = ref(0);
 const deliveryPending = ref(0);
+
+const commissionSettlementTypeText = computed(() => {
+  if (taskInfo.value?.commission_max && taskInfo.value?.commission_min) {
+    return `${SETTLEMENT_TYPE_MAP[taskInfo.value.settlement_type]} / ${taskInfo.value.commission_min} - ${taskInfo.value.commission_max} 元/人`;
+  }
+  return `${SETTLEMENT_TYPE_MAP[taskInfo.value.settlement_type]} / ${taskInfo.value.commission} 元/人`;
+});
 
 onMounted(() => {
   const taskID = route.query.id as string;

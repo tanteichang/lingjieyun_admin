@@ -20,7 +20,7 @@ const Api = {
   Detail: '/admin/enterprise/bill/detail',
   SendDisburseCode: '/admin/enterprise/bill/sendDisburseCode',
   ConfirmDisburse: '/admin/enterprise/bill/confirmDisburse',
-  ReUploadSettlement: '/enterprise/bill/reuploadSettlement',
+  ReUploadSettlement: '/admin/enterprise/bill/reuploadSettlement',
   CreatePayment: '/admin/enterprise/bill/createPayment',
 };
 /**

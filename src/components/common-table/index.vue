@@ -73,18 +73,26 @@
         :data="data"
         :columns="columnsWithIndex"
         :row-key="rowKey"
+        :row-class-name="rowClassName"
         vertical-align="middle"
         :hover="true"
+        :expand-icon="false"
         :loading="loading"
         :pagination="pagination"
         :header-affixed-top="headerAffixedTop"
         :selected-row-keys="innerSelectedRowKeys"
+        :expanded-row-keys="innerExpandedRowKeys"
+        :expand-on-row-click="expandOnRowClick"
         table-layout="fixed"
         @select-change="handleSelectChange"
+        @expand-change="handleExpandChange"
         @page-change="(pageInfo) => $emit('page-change', pageInfo)"
       >
         <template v-for="slot in columnSlots" :key="slot.colKey" #[slot.colKey]="{ row }">
           <slot :name="slot.colKey" :record="row" />
+        </template>
+        <template v-if="$slots.expandedRow" #expandedRow="{ row }">
+          <slot name="expandedRow" :record="row" />
         </template>
       </t-table>
     </div>
@@ -168,6 +176,12 @@ const props = withDefaults(
     rowKey?: RowKey<RowType> | ((row: RowType) => number);
     /** 选中的行 key */
     selectedRowKeys?: Array<string | number>;
+    /** 展开的行 key */
+    expandedRowKeys?: Array<string | number>;
+    /** 点击整行展开 */
+    expandOnRowClick?: boolean;
+    /** 行 className */
+    rowClassName?: string | ((params: { row: RowType; rowIndex: number }) => string);
     selectionDisabled?: (param: { row: RowType; rowIndex: number }) => boolean;
   }>(),
   {
@@ -188,6 +202,8 @@ const props = withDefaults(
     autoAddIndex: true,
     rowKey: 'id',
     selectedRowKeys: () => [],
+    expandedRowKeys: () => [],
+    expandOnRowClick: false,
   },
 );
 
@@ -199,6 +215,8 @@ const emit = defineEmits([
   'create',
   'selection-change',
   'update:selectedRowKeys',
+  'expand-change',
+  'update:expandedRowKeys',
 ]);
 
 const createInitialForm = () =>
@@ -230,6 +248,8 @@ const columnSlots = computed(() => {
 });
 
 const rowKey = computed(() => props.rowKey ?? 'id');
+const expandOnRowClick = computed(() => props.expandOnRowClick ?? false);
+const rowClassName = computed(() => props.rowClassName);
 
 const parseDateRangeString = (value: string) => {
   const match = value.match(/^\s*(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})\s*$/);
@@ -264,12 +284,23 @@ const handleRangeChange = (name: NameType, value: any) => {
 };
 
 const innerSelectedRowKeys = ref<Array<string | number>>([...props.selectedRowKeys]);
+const innerExpandedRowKeys = ref<Array<string | number>>([...props.expandedRowKeys]);
 
 watch(
   () => props.selectedRowKeys,
   (next) => {
     if (next) {
       innerSelectedRowKeys.value = [...next];
+    }
+  },
+  { deep: true },
+);
+
+watch(
+  () => props.expandedRowKeys,
+  (next) => {
+    if (next) {
+      innerExpandedRowKeys.value = [...next];
     }
   },
   { deep: true },
@@ -286,6 +317,19 @@ const handleSelectChange = (
     selectedRowData: context?.selectedRowData || [],
     currentRowKey: context?.currentRowKey,
     type: context?.type,
+  });
+};
+
+const handleExpandChange = (
+  expandedRowKeys: Array<string | number>,
+  context: { expandedRowData?: RowType[]; currentRowData?: RowType },
+) => {
+  innerExpandedRowKeys.value = [...expandedRowKeys];
+  emit('update:expandedRowKeys', [...expandedRowKeys]);
+  emit('expand-change', {
+    expandedRowKeys: [...expandedRowKeys],
+    expandedRowData: context?.expandedRowData || [],
+    currentRowData: context?.currentRowData,
   });
 };
 

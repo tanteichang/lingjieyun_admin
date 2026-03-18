@@ -21,7 +21,9 @@
           <!-- <t-link theme="primary" hover="color">
             {{ (record as MemberRow).sign_status === SignStatus.Pending ? '通知签约' : null }}
           </t-link> -->
-          <t-link theme="danger" hover="color" @click="handleRemoveMember(record)">移出任务</t-link>
+          <t-popconfirm theme="danger" content="确认将该成员移出任务吗？" @confirm="handleRemoveMember(record)">
+            <t-link theme="danger" hover="color">移出任务</t-link>
+          </t-popconfirm>
         </t-space>
       </template>
     </common-table>
@@ -112,8 +114,7 @@ const formConfig = {
 
 const tableConfig: TableConfig<MemberRow, keyof MemberRow> = {
   tableItem: [
-    { title: 'ID', colKey: 'id', width: 70, align: 'center', fixed: 'left' },
-    { title: '姓名', colKey: 'talent_info_name', width: 120, align: 'center' },
+    { title: '姓名', colKey: 'talent_info_name', width: 100, align: 'center' },
     { title: '手机号码', colKey: 'talent_info_phone', width: 150, align: 'center' },
     { title: '入驻渠道', colKey: 'entry_channel', width: 120, align: 'center' },
     { title: '实名状态', colKey: 'realname_status_text', width: 120, align: 'center' },
@@ -187,12 +188,9 @@ const handleRemoveMember = (record: MemberRow) => {
     member_id: record.id,
   })
     .then((res) => {
-      console.log('remove member response', res);
       if (res.code === 200) {
         MessagePlugin.success(res.msg);
         handleSearch();
-      } else {
-        MessagePlugin.error(res.msg);
       }
     })
     .catch((err) => {

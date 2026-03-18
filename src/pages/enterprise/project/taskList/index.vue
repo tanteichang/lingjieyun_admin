@@ -154,9 +154,8 @@ const formConfig: FormConfig<TaskRow, keyof TaskRow> = {
 
 const tableConfig: TableConfig<TaskRow, keyof TaskRow> = {
   tableItem: [
-    { title: 'ID', colKey: 'id', width: 70, align: 'center', fixed: 'left' },
     { title: '任务编号', colKey: 'task_no', width: 120 },
-    { title: '任务名称', colKey: 'name', minWidth: 180, ellipsis: true },
+    { title: '任务名称', colKey: 'name', width: 200, ellipsis: true, fixed: 'left' },
     // { title: '任务类型', colKey: 'project', width: 140 },
     { title: '所属项目', colKey: 'project', width: 200 },
     { title: '招募方式', colKey: 'recruitment_type_text', width: 120 },

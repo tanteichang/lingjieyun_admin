@@ -94,9 +94,10 @@ export function createProject(data: ProjectCreatePayload) {
  * 更新项目
  */
 export function updateProject(data: ProjectUpdatePayload) {
-  return request.post<ProjectUpdateResponse>({
+  return postRequest<ProjectUpdateResponse>({
     url: Api.ProjectUpdate,
     data,
+    showError: true,
   });
 }
 
@@ -104,34 +105,37 @@ export function updateProject(data: ProjectUpdatePayload) {
  * 关闭项目
  */
 export function closeProject(data: ProjectClosePayload) {
-  return request.post<ProjectCloseResponse>({
+  return postRequest<ProjectCloseResponse>({
     url: Api.ProjectClose,
     data,
+    showError: true,
   });
 }
 /**
  * 暂停项目
  */
 export function pauseProject(data: ProjectPausePayload) {
-  return request.post<ProjectPauseResponse>({
+  return postRequest<ProjectPauseResponse>({
     url: Api.ProjectPause,
     data,
+    showError: true,
   });
 }
 /**
  * 终止项目
  */
 export function terminateProject(data: ProjectTerminatePayload) {
-  return request.post<ProjectTerminateResponse>({
+  return postRequest<ProjectTerminateResponse>({
     url: Api.ProjectTerminate,
     data,
+    showError: true,
   });
 }
 /**
  * 恢复项目
  */
 export function resumeProject(data: ProjectResumePayload) {
-  return request.post<ProjectResumeResponse>({
+  return postRequest<ProjectResumeResponse>({
     url: Api.ProjectResume,
     data,
   });

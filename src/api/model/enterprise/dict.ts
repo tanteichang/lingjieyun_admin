@@ -58,3 +58,20 @@ export interface Job {
   children?: Job[];
 }
 export type JobResponse = ApiResponse<Job[]>;
+
+// 城市树
+export interface CityTree {
+  id: number;
+  name: string;
+  level: number;
+  parent_id: number;
+  code: string;
+  type: string;
+  is_direct: number;
+  is_recommend: number;
+  status: number;
+  sort: number;
+  created_at: string;
+  children: CityTree[];
+}
+export type CityTreeResponse = ApiResponse<CityTree[]>;

@@ -15,45 +15,48 @@
         <t-step-item title="完成发布" />
       </t-steps>
 
-      <generic-form
-        v-if="currentStep === 0"
-        :form-data="formData"
-        :form-groups="formGroupsStep1"
-        label-align="left"
-        :label-width="96"
-        :container-width="940"
-        @submit="onSubmitStep1"
-        @reset="onReset"
-      >
-        <template #actions>
-          <t-button theme="primary" type="submit">下一步</t-button>
-          <t-button variant="base" theme="default" type="reset">取消</t-button>
-        </template>
-      </generic-form>
+      <keep-alive>
+        <generic-form
+          v-if="currentStep === 0"
+          :key="`publish-task-step-1-${formResetVersion}`"
+          :form-data="formData"
+          :form-groups="formGroupsStep1"
+          label-align="left"
+          :label-width="96"
+          :container-width="940"
+          @submit="onSubmitStep1"
+          @reset="onReset"
+        >
+          <template #actions>
+            <t-button theme="primary" type="submit">下一步</t-button>
+            <t-button variant="base" theme="default" type="reset">取消</t-button>
+          </template>
+        </generic-form>
 
-      <generic-form
-        v-else-if="currentStep === 1"
-        :form-data="formData"
-        :form-groups="formGroupsStep2"
-        label-align="left"
-        :label-width="96"
-        :container-width="940"
-        @submit="onSubmitStep2"
-        @reset="handlePrev"
-      >
-        <template #actions>
-          <t-button theme="primary" type="submit">提交</t-button>
-          <t-button variant="base" theme="default" type="reset">上一步</t-button>
-        </template>
-      </generic-form>
+        <generic-form
+          v-else-if="currentStep === 1"
+          :key="`publish-task-step-2-${formResetVersion}`"
+          :form-data="formData"
+          :form-groups="formGroupsStep2"
+          label-align="left"
+          :label-width="96"
+          :container-width="940"
+          @submit="onSubmitStep2"
+        >
+          <template #actions>
+            <t-button theme="primary" type="submit">提交</t-button>
+            <t-button variant="base" theme="default" @click="handlePrev">上一步</t-button>
+          </template>
+        </generic-form>
 
-      <div v-else class="finish-wrapper">
-        <t-alert theme="success" title="任务发布完成" message="平台审核预计需要1~2个工作日，请耐心等待" />
-        <div class="finish-actions">
-          <t-button theme="primary" @click="handleBack">返回项目详情</t-button>
-          <t-button variant="outline" @click="handleCreateAnother">继续发布</t-button>
+        <div v-else class="finish-wrapper">
+          <t-alert theme="success" title="任务发布完成" message="平台审核预计需要1~2个工作日，请耐心等待" />
+          <div class="finish-actions">
+            <t-button theme="primary" @click="handleBack">返回项目详情</t-button>
+            <t-button variant="outline" @click="handleCreateAnother">继续发布</t-button>
+          </div>
         </div>
-      </div>
+      </keep-alive>
     </t-card>
   </div>
 </template>
@@ -91,10 +94,10 @@ const dictStore = useDictStore();
 const router = useRouter();
 const route = useRoute();
 
-const currentStep = ref(1);
+const currentStep = ref(0);
 
 const projectInfo = computed(() => projectStore.getProject(route.query.projectID as string));
-const projectTypeOptions = computed(() => dictStore.getProjectTypeOptions);
+const jobTypeOptions = computed(() => dictStore.getJobOptions);
 
 type FormData = TaskPublishPayload & {
   _dateRange: string[];
@@ -102,15 +105,30 @@ type FormData = TaskPublishPayload & {
   _delivery_mode: number[];
   _provinceCityArea: ProvinceCityAreaValue;
   _lngLat: LngLatValue;
+  _label: string[];
 };
 
-const formData = ref<FormData>({
+const createInitialFormData = (): FormData => ({
   project_id: Number(route.query.projectID),
   name: '',
   settlement_type: null,
   commission: '',
   start_time: '',
   end_time: '',
+  detail_address: '',
+  commission_min: '',
+  commission_max: '',
+  required_personnel: null,
+  education_id: null,
+  experience_id: null,
+  job_id: null,
+  desc: '',
+  accept: '',
+  delivery_standard: '',
+  acceptance_type: null,
+  acceptance_period_type: null,
+  acceptance_start_date: '',
+  acceptance_end_date: '',
   _dateRange: [],
   _recruitment_type: [],
   _delivery_mode: [],
@@ -123,7 +141,11 @@ const formData = ref<FormData>({
     lng: '',
     lat: '',
   },
+  _label: [],
 });
+
+const formData = ref<FormData>(createInitialFormData());
+const formResetVersion = ref(0);
 
 const formGroupsStep1 = computed(() => [
   {
@@ -134,7 +156,7 @@ const formGroupsStep1 = computed(() => [
         label: '企业',
         type: 'input',
         span: 6,
-        props: { disabled: true, placeholder: projectInfo?.value.enterprise_name },
+        props: { disabled: true, placeholder: projectInfo?.value.customer_name || projectInfo?.value.enterprise_name },
       },
       {
         name: '_project',
@@ -152,12 +174,17 @@ const formGroupsStep1 = computed(() => [
         props: { placeholder: '请输入任务标题' },
       },
       {
-        name: 'type',
-        label: '任务类型',
-        type: 'select',
+        name: 'job_id',
+        label: '职位要求',
+        type: 'treeSelect',
         span: 6,
-        rules: [{ required: true, message: '请选择任务类型' }],
-        props: { options: projectTypeOptions.value, clearable: true, placeholder: '请选择任务类型' },
+        rules: [{ required: true, message: '请选择职位要求' }],
+        props: {
+          data: jobTypeOptions.value,
+          clearable: true,
+          filterable: true,
+          placeholder: '请选择职位要求，可搜索职位名称',
+        },
       },
       {
         name: '_dateRange',
@@ -249,7 +276,7 @@ const formGroupsStep1 = computed(() => [
         label: '验收周期',
         type: 'select',
         show: formData.value.acceptance_type === AcceptanceType.REGULAR,
-        span: 6,
+        span: 7,
         rules: [{ required: true, message: '请选择验收周期' }],
         props: { options: acceptancePeriodOptions, clearable: true, placeholder: '请选择验收周期' },
       },
@@ -260,7 +287,11 @@ const formGroupsStep1 = computed(() => [
         show: formData.value.acceptance_type === AcceptanceType.FINAL,
         span: 6,
         rules: [{ required: true, message: '请选择验收开始时间' }],
-        props: { format: 'YYYY-MM-DD', placeholder: '请选择验收开始时间' },
+        props: {
+          format: 'YYYY-MM-DD',
+          placeholder: '请选择验收开始时间',
+          disableDate: { before: formData.value._dateRange[0], after: formData.value._dateRange[1] },
+        },
       },
       {
         name: 'acceptance_end_date',
@@ -269,7 +300,11 @@ const formGroupsStep1 = computed(() => [
         show: formData.value.acceptance_type === AcceptanceType.FINAL,
         span: 6,
         rules: [{ required: true, message: '请选择验收结束时间' }],
-        props: { format: 'YYYY-MM-DD', placeholder: '请选择验收结束时间' },
+        props: {
+          format: 'YYYY-MM-DD',
+          placeholder: '请选择验收结束时间',
+          disableDate: { before: formData.value.acceptance_start_date, after: formData.value._dateRange[1] },
+        },
       },
       {
         name: '_delivery_mode',
@@ -291,7 +326,7 @@ const formGroupsStep2 = computed(() => [
         name: 'required_personnel',
         label: '所需人数',
         type: 'input',
-        span: 6,
+        span: 7,
         rules: [{ required: true, message: '请输入所需人数' }],
         props: { placeholder: '请输入人数', type: 'number', min: 1 },
       },
@@ -299,7 +334,7 @@ const formGroupsStep2 = computed(() => [
         name: 'education_id',
         label: '学历要求',
         type: 'select',
-        span: 6,
+        span: 7,
         rules: [{ required: false, message: '请选择学历要求' }],
         props: { options: dictStore.getEducationOptions, placeholder: '请选择学历' },
       },
@@ -307,17 +342,9 @@ const formGroupsStep2 = computed(() => [
         name: 'experience_id',
         label: '经验要求',
         type: 'select',
-        span: 6,
+        span: 7,
         rules: [{ required: false, message: '请选择经验要求' }],
         props: { options: dictStore.getExperienceOptions, placeholder: '请选择经验要求' },
-      },
-      {
-        name: 'job_id',
-        label: '岗位要求',
-        type: 'treeSelect',
-        span: 6,
-        rules: [{ required: false, message: '请选择岗位要求' }],
-        props: { options: dictStore.getJobOptions, placeholder: '请选择岗位要求', clearable: true },
       },
       {
         name: 'desc',
@@ -326,6 +353,14 @@ const formGroupsStep2 = computed(() => [
         span: 12,
         rules: [{ required: true, message: '请填写任务描述' }],
         props: { placeholder: '请填写任务描述', autosize: { minRows: 3, maxRows: 5 } },
+      },
+      {
+        name: '_label',
+        label: '任务标签',
+        type: 'tagInput',
+        span: 7,
+        rules: [{ required: false, message: '请输入任务标签' }],
+        props: { max: 5, placeholder: '输入完成后回车，最多输入5个标签' },
       },
       {
         name: 'accept',
@@ -353,15 +388,11 @@ const projectSubtitle = computed(() => {
 });
 
 const handleBack = () => {
-  currentStep.value = 0;
-  if (window.history.length > 1) {
-    router.back();
-  } else {
-    router.push({ name: 'ProjectDetail', query: route.query });
-  }
+  router.push({ name: 'ProjectDetail', query: route.query });
 };
 
 const onSubmitStep1 = (ctx: SubmitContext) => {
+  console.log(formData.value._provinceCityArea);
   if (ctx.validateResult === true) {
     currentStep.value = 1;
     MessagePlugin.success('已保存任务信息，继续填写任务要求');
@@ -377,17 +408,18 @@ const onSubmitStep2 = (ctx: SubmitContext) => {
       recruitment_type:
         formData.value._recruitment_type.length > 1 ? RecruitmentType.BOTH : formData.value._recruitment_type[0],
       delivery_mode: formData.value._delivery_mode.length > 1 ? DeliveryMode.BOTH : formData.value._delivery_mode[0],
-      province: formData.value._provinceCityArea.province,
-      city: formData.value._provinceCityArea.city,
-      district: formData.value._provinceCityArea.district,
+      province_id: formData.value._provinceCityArea.provinceId,
+      city_id: formData.value._provinceCityArea.cityId,
+      district_id: formData.value._provinceCityArea.districtId,
       longitude: formData.value._lngLat.lng,
       latitude: formData.value._lngLat.lat,
+      label: formData.value._label.join(','),
+      acceptance_period_type:
+        formData.value.acceptance_type === AcceptanceType.REGULAR ? formData.value.acceptance_period_type : null,
     };
-    console.log(payload);
     publishTask(payload).then((res) => {
       if (res.code === 200) {
         MessagePlugin.success('任务发布成功');
-        // handleBack();
         currentStep.value = 2;
       } else {
         MessagePlugin.error(res.msg || '任务发布失败');
@@ -406,34 +438,13 @@ const handlePrev = () => {
 };
 
 const handleCreateAnother = () => {
+  formData.value = createInitialFormData();
+  formResetVersion.value += 1;
   currentStep.value = 0;
-  formData.value = {
-    project: '',
-    title: '',
-    type: '',
-    startDate: '',
-    endDate: '',
-    province: '',
-    city: '',
-    district: '',
-    address: '',
-    settlementType: '',
-    settlementAmount: '',
-    recruitMode: [''],
-    acceptance: '',
-    deliveryMode: [''],
-    tags: [''],
-    requiredPeople: '',
-    education: '',
-    experience: '',
-    taskDescription: '',
-    acceptanceStandard: '',
-    deliveryRequirement: '',
-  };
 };
 watch(
   () => formData.value.city,
-  (newCity) => {
+  () => {
     formData.value.district = null;
   },
 );

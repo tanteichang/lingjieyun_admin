@@ -182,11 +182,10 @@ const handleJoin = () => {
     MessagePlugin.warning('请先选择企业');
     return;
   }
-  MessagePlugin.success(`已提交加入申请：${selected.name}`);
+
   selectedEnterpriseName.value = selected.name;
 
   const payload = {
-    admin_id: Number(userSessionStore.admin_id),
     enterprise_id: selected.id,
   };
   console.log(payload);

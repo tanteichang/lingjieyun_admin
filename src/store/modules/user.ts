@@ -29,10 +29,6 @@ export const useUserStore = defineStore('user', {
     setToken(token: string) {
       this.token = token;
     },
-    shouldLogin() {
-      console.log('token', this.token);
-      return this.token === '';
-    },
     updateUserInfo(userInfo: UserInfo) {
       this.userInfo = { ...this.userInfo, ...userInfo };
     },
@@ -105,6 +101,7 @@ export enum UserStatus {
   JoinPending = 1, // 加入企业审核中
   CreatePending = 2, // 创建企业审核中
   CreateSignPending = 3, // 创建企业通过，待签约
+  Joined = 4, // 已加入企业
 }
 
 /**

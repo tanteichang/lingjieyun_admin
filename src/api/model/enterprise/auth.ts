@@ -28,6 +28,9 @@ export interface LoginPayload {
 
 export interface LoginResult {
   token: string;
+  can_access_console: boolean;
+  rejected_join_apply?: boolean;
+  message?: string;
   enterprise_id: number;
   enterprise_name: string;
   enterprise?: {
@@ -57,3 +60,47 @@ export interface SendSmsCodePayload {
 }
 
 export type SendSmsCodeResponse = ApiResponse<[]>;
+
+export interface LoginByWeChatPayload {
+  code: string;
+}
+export type LoginByWeChatResponse = ApiResponse<LoginResult>;
+
+export type CaptchaResponse = ApiResponse<{
+  captcha_id: string;
+  captcha_image: string;
+  expire_seconds: number;
+  captcha_length: number;
+}>;
+
+export interface VerifyCaptchaPayload {
+  captcha_id: string;
+  captcha_code: string;
+}
+
+export type VerifyCaptchaResponse = ApiResponse<{
+  valid: boolean;
+}>;
+
+export interface ChangePasswordPayload {
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
+}
+export type ChangePasswordResponse = ApiResponse<[]>;
+
+export interface BindWeChatPayload {
+  code: string;
+  state: string;
+}
+
+export type BindWeChatResponse = ApiResponse<[]>;
+
+export interface ForgetPasswordPayload {
+  new_password: string;
+  confirm_password: string;
+  sms_code: string;
+  mobile: string;
+}
+
+export type ForgetPasswordResponse = ApiResponse<[]>;

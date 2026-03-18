@@ -1,11 +1,31 @@
 <template>
-  <generic-form title="发布项目" :form-data="formData" :form-groups="formGroups" @submit="onSubmit" @reset="onReset">
-  </generic-form>
+  <div class="publish-project-shell">
+    <t-card class="publish-project-page" :bordered="false">
+      <generic-form
+        v-if="!publishSuccess"
+        :key="`project-publish-${formResetVersion}`"
+        title="发布项目"
+        :form-data="formData"
+        :form-groups="formGroups"
+        @submit="onSubmit"
+        @reset="onReset"
+      />
+
+      <div v-else class="finish-wrapper">
+        <t-alert theme="success" title="项目发布完成" message="你可以继续创建新项目，或返回项目列表查看已发布项目。" />
+        <div class="finish-actions">
+          <t-button theme="primary" @click="handleCreateAnother">继续发布</t-button>
+          <t-button variant="outline" @click="handleBackToList">返回项目列表</t-button>
+        </div>
+      </div>
+    </t-card>
+  </div>
 </template>
 <script setup lang="ts">
 import type { SubmitContext } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { getCustomerList } from '@/api/enterprise/customer';
 import { getEnterpriseInfo } from '@/api/enterprise/enterprise';
@@ -22,17 +42,20 @@ defineOptions({
 import GenericForm from '@/components/generic-form/index.vue';
 
 const dictStore = useDictStore();
+const router = useRouter();
 
 type FormData = ProjectCreatePayload & {
   time_range: string[];
 };
 
-// 表单数据
-const formData = ref<FormData>({
+const createInitialFormData = (): FormData => ({
   ...INITIAL_DATA,
 });
 
-const enterpriseList = ref([]);
+// 表单数据
+const formData = ref<FormData>(createInitialFormData());
+const publishSuccess = ref(false);
+const formResetVersion = ref(0);
 
 // 计算项目类型选项
 const projectTypeOptions = computed(() => {
@@ -45,10 +68,7 @@ const invoiceTypeOptions = computed(() => {
 });
 
 const enterpriseOptions = computed(() => {
-  return enterpriseList.value.map((item) => ({
-    label: item.name,
-    value: item.id,
-  }));
+  return dictStore.getCustomerTypeOptions;
 });
 
 // 表单提交处理
@@ -56,7 +76,7 @@ const onSubmit = (ctx: SubmitContext) => {
   if (ctx.validateResult === true) {
     createProject({
       name: formData.value.name,
-      customer_id: formData.value.customer_id === 'self' ? null : formData.value.customer_id,
+      customer_id: formData.value.customer_id === 0 ? null : formData.value.customer_id,
       desc: formData.value.desc,
       invoice_type_id: formData.value.invoice_type_id,
       start_time: formData.value.time_range[0],
@@ -66,14 +86,24 @@ const onSubmit = (ctx: SubmitContext) => {
     })
       .then(() => {
         MessagePlugin.success('发布成功');
-        formData.value = { ...INITIAL_DATA };
+        publishSuccess.value = true;
       })
       .finally(() => {});
   }
 };
 
 const onReset = () => {
-  formData.value = { ...INITIAL_DATA };
+  formData.value = createInitialFormData();
+};
+
+const handleCreateAnother = () => {
+  publishSuccess.value = false;
+  formData.value = createInitialFormData();
+  formResetVersion.value += 1;
+};
+
+const handleBackToList = () => {
+  router.push({ name: 'ProjectList' });
 };
 
 // 表单分组配置
@@ -160,31 +190,28 @@ const formGroups = computed(() => [
   },
 ]);
 
-onMounted(() => {
-  // 并行获取项目类型和开票类型
-  Promise.all([getEnterpriseInfo(), getCustomerList()])
-    .then(([enterpriseRes, customerRes]) => {
-      enterpriseList.value = [
-        { id: 'self', name: enterpriseRes.data?.enterprise.name },
-        ...customerRes.data.map((item) => ({ id: item.id, name: item.full_name })),
-      ];
-    })
-    .catch((error) => {
-      console.error('获取数据失败:', error);
-      MessagePlugin.error('获取数据失败，请稍后重试');
-    });
-});
+onMounted(() => {});
 </script>
 <style lang="less" scoped>
-// 通用表单组件已经包含了基本样式，这里可以添加项目特定的样式
-.form-group {
-  margin-bottom: var(--td-comp-margin-xxl);
+.publish-project-shell {
+  padding: 16px;
+}
 
-  .form-group-title {
-    font: var(--td-font-title-medium);
-    font-weight: 400;
-    color: var(--td-text-color-primary);
-    margin: var(--td-comp-margin-xl) 0 var(--td-comp-margin-lg) 0;
-  }
+.finish-wrapper {
+  display: grid;
+  gap: 16px;
+  max-width: 720px;
+  min-height: 320px;
+  margin: 0 auto;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.finish-actions {
+  margin-top: 56px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
 }
 </style>

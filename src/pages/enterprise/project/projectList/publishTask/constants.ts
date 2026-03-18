@@ -1,13 +1,18 @@
 import { DeliveryMode } from '@/api/model/enterprise/delivery';
-import { AcceptancePeriodType, AcceptanceType, RecruitmentType, SettlementType } from '@/api/model/enterprise/taskModel';
+import {
+  AcceptancePeriodType,
+  AcceptanceType,
+  RecruitmentType,
+  SettlementType,
+} from '@/api/model/enterprise/taskModel';
 
 export const settlementOptions: { label: string; value: SettlementType }[] = [
   { label: '按次', value: SettlementType.PER_TIME },
-  { label: '按单', value: SettlementType.ORDER },
   { label: '按日', value: SettlementType.DAILY },
   { label: '按周', value: SettlementType.WEEKLY },
   { label: '按月', value: SettlementType.MONTHLY },
 ];
+
 export const recruitModeOptions: { label: string; value: RecruitmentType }[] = [
   { label: '自由招募', value: RecruitmentType.FREE },
   { label: '定向招募', value: RecruitmentType.DIRECTED },

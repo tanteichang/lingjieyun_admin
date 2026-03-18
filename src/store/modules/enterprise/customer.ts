@@ -22,6 +22,14 @@ export const useCustomerStore = defineStore('_enterprise_customer_list', {
     getCustomer(id: string): Customer | undefined {
       return this.customers[id];
     },
+    updateCustomer(id: number, customer: Customer) {
+      this.customers[id] = customer;
+    },
+    isEmpty() {
+      return Object.keys(this.customers).length === 0;
+    },
   },
-  persist: true,
+  persist: {
+    storage: window.sessionStorage,
+  },
 });

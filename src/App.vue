@@ -9,10 +9,8 @@ import { computed, onMounted } from 'vue';
 import { useLocale } from '@/locales/useLocale';
 import { useSettingStore } from '@/store';
 import { useDictStore } from '@/store/modules/enterprise/dict';
-import { useUserStore } from '@/store/modules/user';
 
 const store = useSettingStore();
-const userStore = useUserStore();
 const dictStore = useDictStore();
 
 const mode = computed(() => {
@@ -22,19 +20,15 @@ const mode = computed(() => {
 const { getComponentsLocale, locale } = useLocale();
 
 onMounted(() => {
-  // 检查是否需要登录
-  if (userStore.shouldLogin()) {
-    console.log('需要登录');
-    return;
-  }
-
   // 初始化字典数据
+  dictStore.fetchCustomerType();
   dictStore.fetchProjectType();
   dictStore.fetchInvoiceType();
   dictStore.fetchExperience();
   dictStore.fetchSalary();
   dictStore.fetchEducation();
   dictStore.fetchJob();
+  dictStore.fetchCityTree();
 });
 </script>
 <style lang="less" scoped>

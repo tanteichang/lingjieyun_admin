@@ -30,6 +30,7 @@
       <div class="actions-grid">
         <login-password-section />
         <pay-password-section />
+        <bind-wechat-section />
       </div>
     </t-card>
   </div>
@@ -39,6 +40,7 @@ import { computed } from 'vue';
 
 import { useUserStore } from '@/store';
 
+import BindWechatSection from './components/BindWechatSection.vue';
 import LoginPasswordSection from './components/LoginPasswordSection.vue';
 import PayPasswordSection from './components/PayPasswordSection.vue';
 
@@ -73,14 +75,22 @@ const securityScore = computed(() => Math.round((securityLevel.value / 8) * 100)
 <style lang="less" scoped>
 .security-page {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .section-title-card,
-.security-overview,
-.security-actions {
+.security-overview {
   :deep(.t-card__body) {
     padding: 24px;
+  }
+}
+
+.security-actions {
+  background: #f5f7fb;
+  border-radius: 20px;
+
+  :deep(.t-card__body) {
+    padding: 14px;
   }
 }
 
@@ -170,14 +180,26 @@ const securityScore = computed(() => Math.round((securityLevel.value / 8) * 100)
 
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 1320px) {
+  .actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 1200px) {
   .overview-wrap,
   .actions-grid {
     grid-template-columns: 1fr;
+  }
+
+  .security-actions {
+    :deep(.t-card__body) {
+      padding: 12px;
+    }
   }
 
   .section-title,

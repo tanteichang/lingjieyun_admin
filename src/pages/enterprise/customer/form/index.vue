@@ -27,7 +27,7 @@ defineOptions({
 const route = useRoute();
 const router = useRouter();
 
-const isEdit = ref(Boolean(route.query.id));
+const isEdit = ref(route.query.id !== undefined);
 
 import GenericForm from '@/components/generic-form/index.vue';
 
@@ -44,10 +44,8 @@ const formData = ref<CreateCustomerPayload>({
 
 const loading = ref(false);
 
-console.log('isEdit', isEdit.value);
-
 onMounted(() => {
-  console.log('isEdit', isEdit.value);
+  console.log('isEditxx', isEdit.value);
   if (isEdit.value) {
     const data = useCustomerStore().getCustomer(route.query.id as string);
     console.log('data', data);
@@ -64,7 +62,8 @@ const onSubmit = (ctx: SubmitContext) => {
     const payload = isEdit.value ? { id: Number(route.query.id), ...formData.value } : formData.value;
 
     Promise(payload)
-      .then(() => {
+      .then((res) => {
+        console.log('res', res);
         MessagePlugin.success(isEdit.value ? '更新客户成功' : '创建客户成功');
         onReset();
       })

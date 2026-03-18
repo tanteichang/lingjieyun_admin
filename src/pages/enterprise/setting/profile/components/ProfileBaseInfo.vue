@@ -58,11 +58,11 @@ const data = ref({});
 watch(
   () => props.formData,
   (formData) => {
-    console.log(formData);
     data.value = {
       ...formData,
       address_detail: formData.address?.address_detail || '',
     };
+    console.log(data.value);
   },
   { immediate: true, deep: true },
 );
@@ -147,16 +147,6 @@ const formGroups = computed(() => [
         },
       },
       {
-        name: 'address',
-        label: '企业地址',
-        rules: [{ required: true, message: '请选择企业地址' }],
-        type: 'provinceCityAreaPicker',
-        span: 6,
-        props: {
-          disabled: !isEditing.value,
-        },
-      },
-      {
         name: 'desc',
         label: '企业简介',
         rules: [{ required: true, message: '请输入企业简介' }],
@@ -170,6 +160,16 @@ const formGroups = computed(() => [
         },
       },
       {
+        name: 'address',
+        label: '企业地址',
+        rules: [{ required: true, message: '请选择企业地址' }],
+        type: 'provinceCityAreaPicker',
+        span: 7,
+        props: {
+          disabled: !isEditing.value,
+        },
+      },
+      {
         name: 'address_detail',
         label: '企业详细地址',
         rules: [{ required: true, message: '请输入企业详细地址' }],
@@ -178,6 +178,17 @@ const formGroups = computed(() => [
         props: {
           disabled: !isEditing.value,
           placeholder: '请输入企业详细地址',
+        },
+      },
+      {
+        name: '_lngLat',
+        label: '经纬度',
+        type: 'lngLatPicker',
+        span: 6,
+        rules: [{ required: true, message: '请选择经纬度' }],
+        props: {
+          disabled: !isEditing.value || !data.value.address_detail,
+          mapKeyword: `${data.value.address?.province || ''}${data.value.address?.city || ''}${data.value.address?.district || ''}${data.value.address_detail || ''}`,
         },
       },
       {

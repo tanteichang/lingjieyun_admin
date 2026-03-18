@@ -128,7 +128,6 @@ const formConfig: FormConfig<CustomerRow, keyof CustomerRow> = {
 
 const tableConfig: TableConfig<CustomerRow, keyof CustomerRow> = {
   tableItem: [
-    { title: '#', colKey: 'index', width: 70, align: 'center', fixed: 'left' },
     { title: '客户编号', colKey: 'customer_no', width: 140, align: 'center' },
     { title: '客户名称', colKey: 'name', minWidth: 200, ellipsis: true },
     { title: '客户全称', colKey: 'full_name', minWidth: 240, ellipsis: true },

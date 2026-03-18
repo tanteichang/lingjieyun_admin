@@ -16,6 +16,9 @@
       <template #projectTime="{ record }">
         <span>{{ (record as ProjectItem).start_time || '-' }}至{{ (record as ProjectItem).end_time || '-' }}</span>
       </template>
+      <template #customer_name="{ record }">
+        {{ (record as ProjectItem).customer_name || (record as ProjectItem).enterprise_name }}
+      </template>
       <template #project_status="{ record }">
         <t-tag
           :variant="PROJECT_STATUS_TAG[(record as ProjectItem).project_status].variant"
@@ -32,14 +35,11 @@
             </t-col>
             <t-col>
               <t-dropdown
-                :options="getDropdownOption((record as ProjectItem).project_status)"
+                :options="getDropdownOption(record as ProjectItem)"
                 trigger="click"
-                @click="() => handleMoreActionClick(record)"
+                @click="(dropdownItem) => handleMoreActionClick(dropdownItem, record)"
               >
-                <t-button
-                  variant="text"
-                  size="medium"
-                  :disabled="getDropdownOption((record as ProjectItem).project_status).length === 0"
+                <t-button variant="text" size="medium" :disabled="getDropdownOption(record as ProjectItem).length === 0"
                   >更多操作</t-button
                 >
               </t-dropdown>
@@ -60,6 +60,7 @@
       <p>
         确认执行
         <span class="text-warning">{{ dropdownOptions.find((item) => item.value === moreActionType)?.content }}</span>
+        <span> {{ moreActionRecord.name || '-' }}</span>
         操作吗?
       </p>
     </t-dialog>
@@ -97,15 +98,15 @@ type ProjectRow = ProjectItem & Row;
 
 const moreActionDialogVisible = ref(false);
 const moreActionType = ref('');
-const moreActionRecord = ref<ProjectRow>({} as ProjectRow);
+let moreActionRecord: ProjectRow = {} as ProjectRow;
 
 const projectTypeOptions = computed(() => dictStore.getProjectTypeOptions);
 
 const dropdownOptions: DropdownOption[] = [
-  { content: '发布任务', value: 'publish', onClick: () => moreActionClick('publish') },
-  { content: '暂停项目', value: 'pause', onClick: () => moreActionClick('pause') },
-  { content: '恢复项目', value: 'resume', onClick: () => moreActionClick('resume') },
-  { content: '终止项目', value: 'terminate', onClick: () => moreActionClick('terminate') },
+  { content: '发布任务', value: 'publish' },
+  { content: '暂停项目', value: 'pause' },
+  { content: '恢复项目', value: 'resume' },
+  { content: '终止项目', value: 'terminate' },
 ];
 
 /**
@@ -115,8 +116,8 @@ const dropdownOptions: DropdownOption[] = [
  * 4-已终止
  * 5-已完成
  */
-const getDropdownOption = (status: ProjectStatus) => {
-  switch (status) {
+const getDropdownOption = (record: ProjectRow) => {
+  switch (record.project_status) {
     case ProjectStatus.NotStarted:
       return dropdownOptions.filter((item) => item.value !== 'resume');
     case ProjectStatus.InProgress:
@@ -135,6 +136,10 @@ const getDropdownOption = (status: ProjectStatus) => {
 const moreActionClick = (type: string) => {
   moreActionType.value = type;
   moreActionDialogVisible.value = true;
+};
+
+const handlePublishTask = (record: ProjectRow) => {
+  router.push({ name: 'ProjectPublishTask', query: { projectID: record.id } });
 };
 
 const defaultQuery: ProjectQuery = {
@@ -177,7 +182,7 @@ const formConfig = computed<FormConfig<ProjectQuery, keyof ProjectQuery>>(() => 
       placeholder: '请选择所属企业',
       props: {
         clearable: true,
-        // options: projectStore.enterpriseOptions.value,
+        options: dictStore.getCustomerTypeOptions,
       },
     },
   ],
@@ -185,11 +190,10 @@ const formConfig = computed<FormConfig<ProjectQuery, keyof ProjectQuery>>(() => 
 }));
 const tableConfig: TableConfig<ProjectRow, keyof ProjectRow> = {
   tableItem: [
-    { title: 'ID', colKey: 'id', width: 80, fixed: 'left' },
-    { title: '项目编号', colKey: 'task_no', width: 140 },
+    { title: '项目编号', colKey: 'pro_no', width: 140 },
     { title: '项目名称', colKey: 'name', minWidth: 240, ellipsis: true },
     { title: '发票类型', colKey: 'invoice_type_name', width: 140 },
-    { title: '所属企业', colKey: 'enterprise_name', minWidth: 220, ellipsis: true },
+    { title: '所属企业', colKey: 'customer_name', minWidth: 220, ellipsis: true },
     { title: '项目时间', colKey: 'projectTime', width: 200 },
     { title: '任务数量', colKey: 'task_count', width: 120, align: 'center' },
     { title: '项目状态', colKey: 'project_status', width: 120 },
@@ -243,8 +247,13 @@ const handleCreate = () => {
   router.push({ name: 'ProjectPublish' });
 };
 
-const handleMoreActionClick = (record: ProjectRow) => {
-  moreActionRecord.value = record;
+const handleMoreActionClick = (dropdownItem: DropdownOption, record: ProjectRow) => {
+  moreActionRecord = record;
+  if (dropdownItem.value === 'publish') {
+    handlePublishTask(record);
+  } else {
+    moreActionClick(dropdownItem.value as string);
+  }
 };
 
 const handleDialogCancel = () => {
@@ -260,7 +269,7 @@ const handleDialogConfirm = (type: string) => {
     request = terminateProject;
   }
   if (!request) return;
-  request({ id: moreActionRecord.value.id })
+  request({ id: moreActionRecord.id })
     .then(() => {
       MessagePlugin.success('操作成功');
       tableHook.search();

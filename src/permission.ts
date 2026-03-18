@@ -5,25 +5,25 @@ import { MessagePlugin } from 'tdesign-vue-next';
 
 import router from '@/router';
 import { getPermissionStore, useUserLoginAndRegister, useUserStore } from '@/store';
+import { UserStatus } from '@/store/modules/user';
 
 NProgress.configure({ showSpinner: false });
 
 router.beforeEach(async (to, from, next) => {
   NProgress.start();
-
+  const userLoginAndRegisterStore = useUserLoginAndRegister();
   const permissionStore = getPermissionStore();
   const { whiteListRouters } = permissionStore;
 
   const userStore = useUserStore();
 
-  if (userStore.token !== '') {
+  // 登录状态且加入了企业
+  if (userStore.token !== '' && userLoginAndRegisterStore.status === UserStatus.Joined) {
     if (to.path === '/login') {
       next();
       return;
     }
     try {
-      // await userStore.getUserInfo();
-
       if (!permissionStore.isRoutesInitialized) {
         await permissionStore.buildAsyncRoutes();
       }
@@ -66,8 +66,8 @@ router.afterEach((to) => {
   if (to.path === '/login') {
     const userStore = useUserStore();
     const permissionStore = getPermissionStore();
-    const userLoginAndRegisterStore = useUserLoginAndRegister();
     userStore.logout();
+    const userLoginAndRegisterStore = useUserLoginAndRegister();
     userLoginAndRegisterStore.logout();
     permissionStore.restoreRoutes();
   }

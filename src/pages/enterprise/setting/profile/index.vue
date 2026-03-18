@@ -16,13 +16,16 @@
         <t-tab-panel value="verify" label="认证信息">
           <profile-verify-info :legal-person-info="legalPersonInfo" :industry-registration="industryRegistration" />
         </t-tab-panel>
+        <t-tab-panel value="benefits" label="账号绑定">
+          <account-bind-info />
+        </t-tab-panel>
       </t-tabs>
     </t-card>
   </div>
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-
+import { useRoute } from 'vue-router';
 import { getProfileDetail, saveProfile } from '@/api/enterprise/profile';
 import type {
   EnterpriseIndustryRegistration,
@@ -34,17 +37,19 @@ import type {
 import ProfileBaseInfo from './components/ProfileBaseInfo.vue';
 import ProfileHeadCard from './components/ProfileHeadCard.vue';
 import ProfileVerifyInfo from './components/ProfileVerifyInfo.vue';
+import AccountBindInfo from './components/AccountBindInfo.vue';
 
 defineOptions({
   name: 'SettingProfile',
 });
+const route = useRoute();
 
 const basicInfo = ref<EnterpriseProfileBasicInfo>({} as EnterpriseProfileBasicInfo);
 const legalPersonInfo = ref<EnterpriseLegalPersonInfo>({} as EnterpriseLegalPersonInfo);
 const industryRegistration = ref<EnterpriseIndustryRegistration>({} as EnterpriseIndustryRegistration);
 const enterprise_id = ref(-1);
 
-const activeTab = ref<'base' | 'verify'>('base');
+const activeTab = ref<'base' | 'verify' | 'benefits'>((route.query.tab as 'base' | 'verify' | 'benefits') || 'base');
 
 onMounted(() => {
   getProfileDetail().then((res) => {

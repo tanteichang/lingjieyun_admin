@@ -117,17 +117,42 @@
         }"
       />
     </div>
+
+    <t-dialog
+      v-model:visible="uploadDialogVisible"
+      header="上传结算单"
+      width="560px"
+      :close-on-overlay-click="false"
+      :confirm-btn="{ content: '确认导入', loading: reuploadSubmitting }"
+      @confirm="handleConfirmReupload"
+      @cancel="handleCancelReupload"
+      @close="handleCancelReupload"
+    >
+      <t-space direction="vertical" style="width: 100%">
+        <t-alert theme="info" title="请上传结算单文件（.xlsx/.xls），上传后将自动执行文件传输。" />
+        <auto-upload v-model="uploadFiles" :max="1" accept=".xlsx,.xls">
+          <t-button theme="default">
+            选择文件
+            <template #icon>
+              <t-icon name="file-excel" />
+            </template>
+          </t-button>
+        </auto-upload>
+      </t-space>
+    </t-dialog>
   </div>
 </template>
 <script setup lang="ts">
 import { DownloadIcon, ErrorCircleFilledIcon, RefreshIcon } from 'tdesign-icons-vue-next';
+import type { UploadFile } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { getBillDetail } from '@/api/enterprise/bill';
+import { getBillDetail, reUploadSettlement } from '@/api/enterprise/bill';
 import type { BillDetailData, BillDetailPaymentItem, PaymentStatus } from '@/api/model/enterprise/bill';
 import { PaymentStatusMap, PaymentStatusTag } from '@/api/model/enterprise/bill';
+import AutoUpload from '@/components/auto-upload/index.vue';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { useCommonTable } from '@/hooks/useCommonTable';
@@ -164,6 +189,9 @@ interface DetailViewModel {
 const route = useRoute();
 const router = useRouter();
 const detailData = ref<BillDetailData | null>(null);
+const uploadDialogVisible = ref(false);
+const uploadFiles = ref<UploadFile[]>([]);
+const reuploadSubmitting = ref(false);
 
 const tabs = [
   { label: '全部记录', value: 'all' as const },
@@ -310,7 +338,6 @@ const detail = computed<DetailViewModel>(() => {
 });
 
 const showAlertBanner = computed(() => {
-  return true;
   return detailData.value?.can_reupload;
 });
 
@@ -332,7 +359,43 @@ const handleReupload = () => {
     MessagePlugin.warning('当前账单不可重新上传');
     return;
   }
-  MessagePlugin.success('已重新上传结算单');
+  uploadDialogVisible.value = true;
+};
+
+const handleCancelReupload = () => {
+  uploadDialogVisible.value = false;
+  uploadFiles.value = [];
+};
+
+const handleConfirmReupload = async () => {
+  const currentFile = uploadFiles.value[0];
+  const fileUrl = currentFile?.url;
+  const uploadId = detailData.value?.upload_id;
+
+  if (!currentFile || !fileUrl) {
+    MessagePlugin.warning('请先上传结算单文件');
+    return;
+  }
+
+  if (!uploadId) {
+    MessagePlugin.error('账单ID无效');
+    return;
+  }
+
+  reuploadSubmitting.value = true;
+  try {
+    const { msg } = await reUploadSettlement({
+      file_name: currentFile.name || '',
+      file_url: fileUrl,
+      upload_id: uploadId,
+    });
+
+    MessagePlugin.success(msg || '已重新上传结算单');
+    handleCancelReupload();
+    await fetchDetail();
+  } finally {
+    reuploadSubmitting.value = false;
+  }
 };
 
 const handleDownloadVoucher = (record: BillDetailPaymentItem) => {

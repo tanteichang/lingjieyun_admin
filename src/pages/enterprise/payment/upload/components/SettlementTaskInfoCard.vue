@@ -1,7 +1,7 @@
 <template>
   <t-card class="task-info-card" :bordered="false">
     <div class="task-title-row">
-      <div class="task-title">{{ taskInfo?.task_title || '-' }}{{ planDate ? `（${planDate}）` : '' }}</div>
+      <div class="task-title">{{ taskInfo?.task_title || '-' }}</div>
       <div class="task-no">任务编号：{{ taskInfo?.task_no || '-' }}</div>
     </div>
     <div class="task-info-grid">
@@ -35,7 +35,6 @@ import type { SettlementTaskInfo } from '@/api/model/enterprise/settlement';
 
 const props = defineProps<{
   taskInfo: SettlementTaskInfo | null;
-  planDate: string | null;
 }>();
 
 const commissionText = computed(() => {

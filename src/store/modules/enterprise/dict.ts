@@ -1,18 +1,45 @@
 import { defineStore } from 'pinia';
 
-import { getEducation, getExperience, getInvoiceType, getJob, getProjectType, getSalary } from '@/api/enterprise/dict';
-import type { Education, Experience, InvoiceType, Job, ProjectType, Salary } from '@/api/model/enterprise/dict';
+import { getCustomerList } from '@/api/enterprise/customer';
+import {
+  getCityTree,
+  getEducation,
+  getExperience,
+  getInvoiceType,
+  getJob,
+  getProjectType,
+  getSalary,
+} from '@/api/enterprise/dict';
+import type {
+  CityTree,
+  Education,
+  Experience,
+  InvoiceType,
+  Job,
+  ProjectType,
+  Salary,
+} from '@/api/model/enterprise/dict';
+
+import { useUserStore } from '../user';
 
 export const useDictStore = defineStore('_enterprise_dict', {
   state: () => ({
+    customerType: [] as { id: number; name: string }[],
     projectType: [] as ProjectType[],
     invoiceType: [] as InvoiceType[],
     experience: [] as Experience[],
     salary: [] as Salary[],
     education: [] as Education[],
     job: [] as Job[],
+    cityTree: [] as CityTree[],
   }),
   getters: {
+    getCustomerTypeOptions(): { label: string; value: number }[] {
+      return this.customerType.map((type) => ({
+        label: type.name,
+        value: type.id,
+      }));
+    },
     getProjectTypeOptions(): { label: string; value: number }[] {
       return this.projectType.map((type) => ({
         label: type.name,
@@ -115,6 +142,17 @@ export const useDictStore = defineStore('_enterprise_dict', {
     setJob(job: Job[]) {
       this.job = job;
     },
+    setCityTree(cityTree: CityTree[]) {
+      this.cityTree = cityTree;
+    },
+    async fetchCustomerType() {
+      const { data } = await getCustomerList();
+      const userStore = useUserStore();
+
+      this.customerType = [{ id: 0, name: userStore.enterpriseInfo.name }].concat(
+        data.map((item) => ({ id: item.id, name: item.name })),
+      );
+    },
     async fetchProjectType() {
       const { data } = await getProjectType();
       this.setProjectType(data);
@@ -139,6 +177,12 @@ export const useDictStore = defineStore('_enterprise_dict', {
       const { data } = await getJob();
       this.setJob(data);
     },
+    async fetchCityTree() {
+      const { data } = await getCityTree();
+      this.setCityTree(data);
+    },
   },
-  persist: false,
+  persist: {
+    storage: window.sessionStorage,
+  },
 });

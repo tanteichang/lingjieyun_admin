@@ -97,6 +97,15 @@
     .bottom-container {
       margin-top: 32px;
     }
+
+    .wechat-login-container {
+      width: 300px;
+      min-height: 400px;
+
+      :deep(iframe) {
+        display: block;
+      }
+    }
   }
 
   &.login-phone {
@@ -194,4 +203,9 @@
   .copyright {
     display: none;
   }
+}
+
+.wechat-login-container {
+  width: 400px;
+  height: 300px;
 }

@@ -1,4 +1,5 @@
 import type {
+  CityTreeResponse,
   EducationResponse,
   ExperienceResponse,
   InvoiceTypeResponse,
@@ -15,6 +16,7 @@ const Api = {
   Salary: '/api/dict/salary',
   Education: '/api/dict/education',
   Job: '/api/dict/job',
+  CityTree: '/api/dict/cityTree',
 };
 
 export function getProjectType() {
@@ -46,5 +48,10 @@ export function getEducation() {
 export function getJob() {
   return request.get<JobResponse>({
     url: Api.Job,
+  });
+}
+export function getCityTree() {
+  return request.get<CityTreeResponse>({
+    url: Api.CityTree,
   });
 }

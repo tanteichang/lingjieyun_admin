@@ -1,15 +1,18 @@
 <template>
   <div class="lng-lat-picker">
-    <t-input
-      :value="displayValue"
-      :placeholder="placeholder"
-      :readonly="true"
-      :disabled="disabled"
-      :clearable="clearable"
-      @click="openDrawer"
-      @clear="handleClear"
-    />
-
+    <t-space>
+      <t-input
+        :value="displayValue"
+        :placeholder="placeholder"
+        :readonly="true"
+        :disabled="disabled"
+        :clearable="clearable"
+        @click="openDrawer"
+        @clear="handleClear"
+      />
+      <t-button theme="primary" @click="openDrawer">选择经纬度</t-button>
+      <t-button theme="default" @click="openDrawer">手动填写</t-button>
+    </t-space>
     <t-drawer v-model:visible="drawerVisible" size="70%" :header="drawerTitle" :footer="false" :close-btn="true">
       <l-map v-model:keyword="keyword" :auto-search="mapAutoSearch" @select="handleSelect" />
     </t-drawer>

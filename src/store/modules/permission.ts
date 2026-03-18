@@ -35,7 +35,7 @@ const filterMenuRoutesByPermission = (
 export const usePermissionStore = defineStore('permission', {
   state: () => ({
     adminType: -1,
-    whiteListRouters: ['/login', '/enterprise-register', '/enterprise-register/join', '/enterprise-register/form'],
+    whiteListRouters: ['/login', '/loginByWeChat', '/enterprise-register', '/enterprise-register/join', '/enterprise-register/form'],
     routers: [],
     removeRoutes: [],
     asyncRoutes: [],

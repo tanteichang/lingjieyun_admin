@@ -64,11 +64,19 @@
             <div v-if="!essSignUrl" class="audit-text">
               你的账号已通过审核了，请与平台签约，签约完成即可使用发布任务等功能
             </div>
-            <div v-if="essSignUrl" class="audit-text">请扫描下方二维码，与平台签约，二维码有效期为<b>三十分钟</b></div>
-            <qrcode-vue v-if="essSignUrl" :value="essSignUrl" />
+            <div v-if="essSignUrl" class="audit-text">请扫描下方二维码，与平台签约</div>
+            <t-space direction="vertical">
+              <qrcode-vue v-if="essSignUrl" :value="essSignUrl" />
+              <text v-if="essSignUrl">
+                签署成果后请手动
+                <t-link theme="primary" @click="handleBack">重新登陆</t-link>
+              </text>
+            </t-space>
           </t-card>
           <div class="step-panel__actions">
-            <t-button v-if="!essSignUrl" theme="primary" @click="handleNextStep">去签约</t-button>
+            <t-button v-if="!essSignUrl" :loading="loading" theme="primary" @click="handleNextStep">{{
+              loading ? '加载中' : '去签约'
+            }}</t-button>
           </div>
         </div>
       </div>
@@ -105,6 +113,7 @@ const currentStep = ref(
 const phone = ref(userSessionStore.phone);
 const enterpriseCertFormRef = ref<EnterpriseCertFormExpose | null>(null);
 const essSignUrl = ref('');
+const loading = ref(false);
 
 const handleBack = () => {
   router.back();
@@ -148,14 +157,18 @@ const handleNextStep = async () => {
       MessagePlugin.error(res.msg || '企业认证信息提交失败');
     }
   } else if (currentStep.value === 3) {
-    getSign({ agreement_type: 1 }).then((res) => {
-      console.log(res);
-      if (res.code === 200) {
-        essSignUrl.value = res.data.ess_sign_url;
-      } else {
-        MessagePlugin.error(res.msg || '获取签约链接失败');
-      }
-    });
+    loading.value = true;
+    getSign({ agreement_type: 1 })
+      .then((res) => {
+        if (res.code === 200) {
+          essSignUrl.value = res.data.ess_sign_url;
+        } else {
+          MessagePlugin.error(res.msg || '获取签约链接失败');
+        }
+      })
+      .finally(() => {
+        loading.value = false;
+      });
   }
 };
 
@@ -164,7 +177,7 @@ const handlePrevStep = () => {
 };
 
 const handleOperation = () => {
-  router.push({ name: 'login' });
+  router.push({ name: 'login', query: { type: 'register' } });
 };
 </script>
 <style lang="less" scoped>

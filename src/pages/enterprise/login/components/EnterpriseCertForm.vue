@@ -45,6 +45,18 @@
       <t-select v-model="formData.industry_id" placeholder="请选择所属行业" :options="industryOptions" />
     </t-form-item>
 
+    <t-form-item label="营业执照注册地址" name="register_address">
+      <t-input v-model="formData.register_address" placeholder="营业执照注册地址" />
+    </t-form-item>
+
+    <t-form-item label="企业地址" name="_provinceCityAreaValue">
+      <province-city-area-picker v-model="formData._provinceCityAreaValue" :item-width="300" />
+    </t-form-item>
+
+    <t-form-item label="企业详细地址" name="address_detail">
+      <t-input v-model="formData.address_detail" placeholder="请填写经营地址" />
+    </t-form-item>
+
     <t-form-item label="企业联系电话" name="mobile">
       <t-input v-model="formData.mobile" placeholder="请填写电话号码" />
     </t-form-item>
@@ -115,7 +127,10 @@
     </t-form-item>
 
     <div v-if="formData.is_legal_admin === 0">
-      <div class="section-title section-gap">超级管理员</div>
+      <div class="section-title section-gap">
+        超级管理员
+        <span style="font-size: 18px">（当前用户：{{ userSessionStore.phone }}）</span>
+      </div>
       <div class="form-tip">
         <t-icon name="info-circle-filled" />
         <span>请上传超级管理员的身份证</span>
@@ -173,9 +188,11 @@
 <script setup lang="ts">
 import type { FormRule, SubmitContext } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { computed, reactive, ref, watch } from 'vue';
+import { onBeforeMount, reactive, ref, watch } from 'vue';
 
 import AutoUpload from '@/components/auto-upload/index.vue';
+import type { ProvinceCityAreaValue } from '@/components/provinceCityAreaPicker/index.vue';
+import ProvinceCityAreaPicker from '@/components/provinceCityAreaPicker/index.vue';
 import { useDictStore } from '@/store/modules/enterprise/dict';
 import { useUserLoginAndRegister } from '@/store/modules/user';
 import { CREDIT_CODE_PATTERN, EMAIL_PATTERN, MOBILE_PATTERN } from '@/utils/pattern';
@@ -198,10 +215,16 @@ const formData = reactive({
   _idCardBackImage: [],
   _superAdminIdCardFrontImage: [],
   _superAdminIdCardBackImage: [],
+  _provinceCityAreaValue: {} as ProvinceCityAreaValue,
   admin_id: '',
   name: '',
   credit_code: '',
   business_license: '',
+  register_address: '',
+  province_id: '',
+  city_id: '',
+  district_id: '',
+  address_detail: '',
   industry_id: '',
   industry: '',
   is_legal_admin: 1,
@@ -220,10 +243,9 @@ const formData = reactive({
 });
 
 const industryOptions = dictStore.getProjectTypeOptions;
-const currentUserPhone = computed(() => userSessionStore.phone || '');
 
 watch(
-  [() => formData.is_legal_admin, currentUserPhone],
+  [() => formData.is_legal_admin, () => userSessionStore.phone || ''],
   ([isLegalAdmin, phone]) => {
     if (!phone) return;
     if (isLegalAdmin === 1) {
@@ -270,10 +292,14 @@ const rules: Record<string, FormRule[]> = {
   // super_admin_id_front: [{ required: true, message: '请上传超级管理员身份证人像面照片', type: 'error' }],
   // super_admin_id_back: [{ required: true, message: '请上传超级管理员身份证国徽面照片', type: 'error' }],
   super_admin_name: [{ required: true, message: '请输入超级管理员姓名', type: 'error' }],
+  super_admin_id_no: [{ required: true, message: '请输入超级管理员身份证号', type: 'error' }],
   super_admin_phone: [
     { required: true, message: '请输入联系电话', type: 'error' },
     { pattern: MOBILE_PATTERN, message: '请输入正确的手机号', type: 'error' },
   ],
+  register_address: [{ required: true, message: '请输入营业执照注册地址', type: 'error' }],
+  _provinceCityAreaValue: [{ required: true, message: '请选择企业经营地址', type: 'error' }],
+  address_detail: [{ required: true, message: '请输入企业详细地址', type: 'error' }],
 };
 
 const handleSubmit = (ctx: SubmitContext) => {
@@ -295,11 +321,18 @@ const validateAndGetData = async () => {
     legal_person_id_back: formData._idCardBackImage[0].url,
     super_admin_id_front: formData?._superAdminIdCardFrontImage[0]?.url || '',
     super_admin_id_back: formData?._superAdminIdCardBackImage[0]?.url || '',
+    province_id: formData._provinceCityAreaValue.provinceId,
+    city_id: formData._provinceCityAreaValue.cityId,
+    district_id: formData._provinceCityAreaValue.districtId,
   };
 };
 
 defineExpose<EnterpriseCertFormExpose>({
   validateAndGetData,
+});
+
+onBeforeMount(() => {
+  dictStore.fetchProjectType();
 });
 </script>
 <style lang="less" scoped>

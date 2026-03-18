@@ -376,7 +376,7 @@ onUnmounted(() => {
   top: 98px;
   /* 搜索栏高度 + 上下边距 */
   width: 280px;
-  max-height: 580px;
+  max-height: 520px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;

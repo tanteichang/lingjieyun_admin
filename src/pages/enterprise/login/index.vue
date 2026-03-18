@@ -29,7 +29,7 @@ import { ref } from 'vue';
 import LFooter from '@/layouts/components/Footer.vue';
 import TdesignSetting from '@/layouts/setting.vue';
 import { t } from '@/locales';
-
+import { useRoute } from 'vue-router';
 import LoginHeader from './components/Header.vue';
 import Login from './components/Login.vue';
 import Register from './components/Register.vue';
@@ -37,7 +37,8 @@ import Register from './components/Register.vue';
 defineOptions({
   name: 'LoginIndex',
 });
-const type = ref('login');
+const route = useRoute();
+const type = ref(route.query.type || 'login');
 const switchType = (val: string) => {
   type.value = val;
 };

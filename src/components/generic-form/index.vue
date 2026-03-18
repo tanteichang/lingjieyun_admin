@@ -68,7 +68,17 @@
 <script setup lang="ts">
 import type { FormRule, SubmitContext } from 'tdesign-vue-next';
 // 导入TDesign表单组件
-import { DatePicker, DateRangePicker, Input, RadioGroup, Select, Textarea, TreeSelect, Upload } from 'tdesign-vue-next';
+import {
+  DatePicker,
+  DateRangePicker,
+  Input,
+  RadioGroup,
+  Select,
+  TagInput,
+  Textarea,
+  TreeSelect,
+  Upload,
+} from 'tdesign-vue-next';
 import { computed, defineAsyncComponent } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -110,6 +120,7 @@ const formComponents = {
   richTextEditor: RichTextEditor,
   provinceCityAreaPicker: ProvinceCityAreaPicker,
   lngLatPicker: LngLatPicker,
+  tagInput: TagInput,
 };
 
 // 组件Props

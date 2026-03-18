@@ -130,6 +130,7 @@ const transform: AxiosTransform = {
   // 响应拦截器处理
   responseInterceptors: (res) => {
     if (res.data.code === 1004) {
+      // token过期是1004 处理登录过期
       handleLoginExpired();
     }
     return res;
@@ -236,13 +237,18 @@ export const postRequest: <T>(config: RequestConfig) => Promise<T> = (config) =>
       .post(config)
       .then((res) => {
         if (res.code !== Code.OK) {
+          console.log('res', res);
           config.showError && MessagePlugin.error(res.msg, 10 * 1000);
           reject(res.msg);
         }
         resolve(res);
       })
       .catch((err) => {
-        config.showError && MessagePlugin.error(err, 10 * 1000);
+        let message = err;
+        if (err.response.data) {
+          message = err.response.data.msg;
+        }
+        config.showError && MessagePlugin.error(message, 10 * 1000);
         reject(err);
       });
   });

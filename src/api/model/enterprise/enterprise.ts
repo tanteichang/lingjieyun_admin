@@ -62,7 +62,6 @@ export type SearchEnterpriseResponse = ApiResponse<{
 }>;
 
 export interface JoinEnterprisePayload {
-  admin_id: number;
   enterprise_id: number;
   apply_remark?: string;
 }
@@ -74,6 +73,11 @@ export interface CreateEnterprisePayload {
   name: string;
   credit_code: string;
   business_license: string;
+  register_address: string;
+  province_id: number;
+  city_id: number;
+  district_id: number;
+  address_detail: string;
   industry_id: number;
   // industry: string;
   is_legal_admin: 0 | 1;

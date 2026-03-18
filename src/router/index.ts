@@ -19,6 +19,11 @@ const defaultRouterList: Array<RouteRecordRaw> = [
     component: () => import('@/pages/enterprise/login/index.vue'),
   },
   {
+    path: '/loginByWeChat',
+    name: 'loginByWeChat',
+    component: () => import('@/pages/enterprise/login/loginByWeChat.vue'),
+  },
+  {
     path: '/enterprise-register',
     name: 'enterpriseRegisterEntry',
     component: () => import('@/pages/enterprise/login/enterprise-entry.vue'),
