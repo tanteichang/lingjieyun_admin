@@ -21,14 +21,14 @@ const { getComponentsLocale, locale } = useLocale();
 
 onMounted(() => {
   // 初始化字典数据
-  dictStore.fetchCustomerType();
-  dictStore.fetchProjectType();
-  dictStore.fetchInvoiceType();
-  dictStore.fetchExperience();
-  dictStore.fetchSalary();
-  dictStore.fetchEducation();
-  dictStore.fetchJob();
-  dictStore.fetchCityTree();
+  dictStore.customerType.length === 0 && dictStore.fetchCustomerType();
+  dictStore.projectType.length === 0 && dictStore.fetchProjectType();
+  dictStore.invoiceType.length === 0 && dictStore.fetchInvoiceType();
+  dictStore.experience.length === 0 && dictStore.fetchExperience();
+  dictStore.salary.length === 0 && dictStore.fetchSalary();
+  dictStore.education.length === 0 && dictStore.fetchEducation();
+  dictStore.job.length === 0 && dictStore.fetchJob();
+  dictStore.cityTree.length === 0 && dictStore.fetchCityTree();
 });
 </script>
 <style lang="less" scoped>

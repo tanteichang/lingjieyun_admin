@@ -3,9 +3,9 @@
     <t-form :data="form" layout="inline" :label-width="80" colon @submit="handleSubmit" @reset="handleReset">
       <t-row>
         <t-col :span="10">
-          <t-row :gutter="[24, 24]">
-            <t-col v-for="item in formConfig.formItem" :key="item.name" :span="item.span || 4">
-              <t-form-item :label="item.label" :name="item.name">
+          <t-row :gutter="[12, 12]">
+            <t-col v-for="item in formConfig.formItem" :key="item.name" :span="item.span || 5">
+              <t-form-item :label="item.label" :name="item.name" class="full-form-item">
                 <t-input
                   v-if="item.type === 'input'"
                   v-model="form[item.name]"
@@ -388,7 +388,9 @@ onMounted(() => {
     margin: var(--td-comp-margin-xxl) 0 var(--td-comp-margin-l);
   }
 }
-
+:deep(.full-form-item) {
+  width: 100%;
+}
 .form-item-content {
   width: 100%;
 }

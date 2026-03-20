@@ -16,16 +16,15 @@
         <t-tab-panel value="verify" label="认证信息">
           <profile-verify-info :legal-person-info="legalPersonInfo" :industry-registration="industryRegistration" />
         </t-tab-panel>
-        <t-tab-panel value="benefits" label="账号绑定">
-          <account-bind-info />
-        </t-tab-panel>
       </t-tabs>
     </t-card>
   </div>
 </template>
 <script setup lang="ts">
+import { Button, MessagePlugin } from 'tdesign-vue-next';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+
 import { getProfileDetail, saveProfile } from '@/api/enterprise/profile';
 import type {
   EnterpriseIndustryRegistration,
@@ -37,7 +36,6 @@ import type {
 import ProfileBaseInfo from './components/ProfileBaseInfo.vue';
 import ProfileHeadCard from './components/ProfileHeadCard.vue';
 import ProfileVerifyInfo from './components/ProfileVerifyInfo.vue';
-import AccountBindInfo from './components/AccountBindInfo.vue';
 
 defineOptions({
   name: 'SettingProfile',

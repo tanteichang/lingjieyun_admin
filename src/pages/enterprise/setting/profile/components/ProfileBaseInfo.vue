@@ -76,6 +76,8 @@ const handleCancel = () => {
 };
 
 const handleSubmit = (ctx: SubmitContext) => {
+  console.log(data.value);
+  return;
   if (ctx.validateResult !== true) return;
   emit('save', {
     ...data.value,
@@ -146,19 +148,7 @@ const formGroups = computed(() => [
           options: dictStore.getProjectTypeOptions,
         },
       },
-      {
-        name: 'desc',
-        label: '企业简介',
-        rules: [{ required: true, message: '请输入企业简介' }],
-        type: 'textarea',
-        span: 6,
-        props: {
-          disabled: !isEditing.value,
-          maxlength: 400,
-          autosize: { minRows: 5, maxRows: 7 },
-          placeholder: '请输入企业简介',
-        },
-      },
+
       {
         name: 'address',
         label: '企业地址',
@@ -189,6 +179,19 @@ const formGroups = computed(() => [
         props: {
           disabled: !isEditing.value || !data.value.address_detail,
           mapKeyword: `${data.value.address?.province || ''}${data.value.address?.city || ''}${data.value.address?.district || ''}${data.value.address_detail || ''}`,
+        },
+      },
+      {
+        name: 'desc',
+        label: '企业简介',
+        rules: [{ required: true, message: '请输入企业简介' }],
+        type: 'textarea',
+        span: 6,
+        props: {
+          disabled: !isEditing.value,
+          maxlength: 400,
+          autosize: { minRows: 5, maxRows: 7 },
+          placeholder: '请输入企业简介',
         },
       },
       {

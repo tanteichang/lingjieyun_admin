@@ -2,13 +2,14 @@ import type {
   CreateCustomerPayload,
   CreateCustomerResponse,
   CustomerDetailResponse,
+  CustomerListQuery,
   CustomerListResponse,
   DeleteCustomerPayload,
   DeleteCustomerResponse,
   UpdateCustomerPayload,
   UpdateCustomerResponse,
 } from '@/api/model/enterprise/customer';
-import { postRequest, request } from '@/utils/request';
+import { getRequest, postRequest, request } from '@/utils/request';
 
 const Api = {
   list: '/admin/enterprise/customer/list',
@@ -22,9 +23,11 @@ const Api = {
  * 获取客户列表
  * @returns 客户列表响应
  */
-export const getCustomerList = () => {
-  return request.get<CustomerListResponse>({
+export const getCustomerList = (query: CustomerListQuery) => {
+  return getRequest<CustomerListResponse>({
     url: Api.list,
+    params: query,
+    showError: true,
   });
 };
 
@@ -68,7 +71,8 @@ export const deleteCustomer = (data: DeleteCustomerPayload) => {
 };
 
 export const getCustomerDetail = (id: number) => {
-  return request.get<CustomerDetailResponse>({
+  return getRequest<CustomerDetailResponse>({
     url: `${Api.detail}?id=${id}`,
+    showError: true,
   });
 };

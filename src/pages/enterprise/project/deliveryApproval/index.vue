@@ -151,7 +151,7 @@ const tableConfig: TableConfig<DeliveryRow, keyof DeliveryRow> = {
   tableItem: [
     { title: '姓名', colKey: 'user_name', width: 80, align: 'center' },
     { title: '手机号', colKey: 'user_mobile', width: 140, align: 'center' },
-    { title: '所属日期', colKey: 'plan_date', width: 100, align: 'center' },
+    { title: '所属日期', colKey: 'plan_date', width: 120, align: 'center' },
     { title: '提交类型', colKey: 'submit_type_text', width: 100, align: 'center' },
     { title: '提交状态', colKey: 'submit_status', width: 140, align: 'center' },
     { title: '项目名称', colKey: 'project_name', width: 200, align: 'center' },

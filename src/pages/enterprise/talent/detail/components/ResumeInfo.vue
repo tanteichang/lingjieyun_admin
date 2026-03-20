@@ -5,35 +5,38 @@
       <div class="section-grid">
         <div class="section-item">
           <div class="section-label">姓名</div>
-          <div class="section-value">{{ profile.name }}</div>
+          <div class="section-value">{{ basicInfo.name || '-' }}</div>
         </div>
         <div class="section-item">
           <div class="section-label">手机号</div>
-          <div class="section-value">{{ profile.phone }}</div>
+          <div class="section-value">{{ contactInfo.phone || contactInfo.phone_masked || '-' }}</div>
         </div>
         <div class="section-item">
           <div class="section-label">学历</div>
-          <div class="section-value">{{ profile.education }}</div>
+          <div class="section-value">{{ basicInfo.education || '-' }}</div>
         </div>
       </div>
       <div class="section-item full">
         <div class="section-label">个人优势</div>
-        <div class="section-value">{{ profile.advantage }}</div>
+        <div class="section-value">{{ resume.personal_advantage || '-' }}</div>
       </div>
     </div>
 
     <div class="section">
       <div class="section-title">教育背景</div>
       <t-timeline class="education-timeline">
-        <t-timeline-item v-for="item in educationList" :key="item.school">
+        <t-timeline-item
+          v-for="(item, index) in resume.education_list || []"
+          :key="item.school_name || item.school || index"
+        >
           <div class="timeline-content">
             <div class="timeline-row">
-              <div class="timeline-title">{{ item.school }}</div>
-              <div class="timeline-time">{{ item.time }}</div>
+              <div class="timeline-title">{{ item.school_name || item.school || '-' }}</div>
+              <div class="timeline-time">{{ formatRange(item.start_time, item.end_time) }}</div>
             </div>
             <div class="timeline-row">
-              <div class="timeline-text">{{ item.level }}</div>
-              <div class="timeline-text">{{ item.major }}</div>
+              <div class="timeline-text">{{ item.education || item.degree || '-' }}</div>
+              <div class="timeline-text">{{ item.major || item.major_name || '-' }}</div>
             </div>
           </div>
         </t-timeline-item>
@@ -45,19 +48,19 @@
       <div class="section-grid">
         <div class="section-item">
           <div class="section-label">期望岗位</div>
-          <div class="section-value">{{ intention.role }}</div>
+          <div class="section-value">{{ resume.job_intention?.expected_position || '-' }}</div>
         </div>
         <div class="section-item">
           <div class="section-label">期望薪资</div>
-          <div class="section-value">{{ intention.salary }}</div>
+          <div class="section-value">{{ resume.job_intention?.expected_salary || '-' }}</div>
         </div>
         <div class="section-item">
           <div class="section-label">期望工作城市</div>
-          <div class="section-value">{{ intention.city }}</div>
+          <div class="section-value">{{ resume.job_intention?.expected_city || '-' }}</div>
         </div>
         <div class="section-item">
           <div class="section-label">可到岗时间</div>
-          <div class="section-value">{{ intention.onboard }}</div>
+          <div class="section-value">{{ resume.job_intention?.available_time || '-' }}</div>
         </div>
       </div>
     </div>
@@ -65,18 +68,25 @@
     <div class="section">
       <div class="section-title">工作经历</div>
       <t-timeline class="experience-timeline">
-        <t-timeline-item v-for="item in experienceList" :key="item.company">
+        <t-timeline-item
+          v-for="(item, index) in resume.work_experience_list || []"
+          :key="item.company_name || item.company || index"
+        >
           <div class="timeline-content">
             <div class="timeline-row">
-              <div class="timeline-title">{{ item.company }}</div>
-              <div class="timeline-time">{{ item.time }}</div>
+              <div class="timeline-title">{{ item.company_name || item.company || '-' }}</div>
+              <div class="timeline-time">{{ formatRange(item.start_time, item.end_time) }}</div>
             </div>
             <div class="timeline-row">
-              <div class="timeline-text">{{ item.role }}</div>
+              <div class="timeline-text">{{ item.position || item.role || '-' }}</div>
             </div>
             <div class="timeline-list">
-              <div v-for="(desc, index) in item.desc" :key="index" class="timeline-desc">
-                {{ index + 1 }}. {{ desc }}
+              <div
+                v-for="(desc, descIndex) in normalizeDescriptions(item.description || item.desc)"
+                :key="descIndex"
+                class="timeline-desc"
+              >
+                {{ descIndex + 1 }}. {{ desc }}
               </div>
             </div>
           </div>
@@ -87,49 +97,41 @@
     <div class="section">
       <div class="section-title">资质证书</div>
       <div class="cert-list">
-        <div v-for="(img, index) in certificates" :key="index" class="cert-item">
-          <img :src="img" alt="证书" />
+        <div
+          v-for="(item, index) in resume.certificate_list || []"
+          :key="item.url || item.image_url || item.image || index"
+          class="cert-item"
+        >
+          <img :src="item.url || item.image_url || item.image" alt="证书" />
         </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-interface ProfileInfo {
-  name: string;
-  phone: string;
-  education: string;
-  advantage: string;
-}
-
-interface EducationItem {
-  school: string;
-  time: string;
-  level: string;
-  major: string;
-}
-
-interface IntentionInfo {
-  role: string;
-  salary: string;
-  city: string;
-  onboard: string;
-}
-
-interface ExperienceItem {
-  company: string;
-  time: string;
-  role: string;
-  desc: string[];
-}
+import type { TalentPoolBasicInfo, TalentPoolContactInfo, TalentPoolResume } from '@/api/model/enterprise/talentpool';
 
 defineProps<{
-  profile: ProfileInfo;
-  educationList: EducationItem[];
-  intention: IntentionInfo;
-  experienceList: ExperienceItem[];
-  certificates: string[];
+  basicInfo: TalentPoolBasicInfo;
+  contactInfo: TalentPoolContactInfo;
+  resume: TalentPoolResume;
 }>();
+
+const formatRange = (start?: string, end?: string) => {
+  if (start && end) return `${start} - ${end}`;
+  return start || end || '-';
+};
+
+const normalizeDescriptions = (value?: string | string[]) => {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === 'string') {
+    return value
+      .split(/[\n；;]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
 </script>
 <style lang="less" scoped>
 .section {

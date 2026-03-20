@@ -22,7 +22,7 @@ import type {
   TaskTerminatePayload,
   TaskTerminateResponse,
 } from '@/api/model/enterprise/taskModel';
-import { postRequest, request } from '@/utils/request';
+import { getRequest, postRequest, request } from '@/utils/request';
 
 const API = {
   TaskList: '/admin/enterprise/task/list',
@@ -42,61 +42,68 @@ const API = {
  * 获取任务列表
  */
 export const getTaskList = (params: TaskQuery) => {
-  return request.get<TaskListResponse>({
+  return getRequest<TaskListResponse>({
     url: API.TaskList,
     params,
+    showError: true,
   });
 };
 /**
  * 发布任务
  */
 export const publishTask = (params: TaskPublishPayload) => {
-  return request.post<TaskPublishResponse>({
+  return postRequest<TaskPublishResponse>({
     url: API.TaskPublish,
     params,
+    showError: true,
   });
 };
 /**
  * 暂停任务
  */
 export const pauseTask = (params: TaskPausePayload) => {
-  return request.post<TaskPauseResponse>({
+  return postRequest<TaskPauseResponse>({
     url: API.TaskPause,
     params,
+    showError: true,
   });
 };
 /**
  * 恢复任务
  */
 export const resumeTask = (params: TaskResumePayload) => {
-  return request.post<TaskResumeResponse>({
+  return postRequest<TaskResumeResponse>({
     url: API.TaskResume,
     params,
+    showError: true,
   });
 };
 /**
  * 终止任务
  */
 export const terminateTask = (params: TaskTerminatePayload) => {
-  return request.post<TaskTerminateResponse>({
+  return postRequest<TaskTerminateResponse>({
     url: API.TaskTerminate,
     params,
+    showError: true,
   });
 };
 /**
  * 获取任务成员列表
  */
 export const getTaskMemberList = (params: TaskMemberListPayload) => {
-  return request.get<TaskMemberListResponse>({
+  return getRequest<TaskMemberListResponse>({
     url: API.TaskMemberList,
     params,
+    showError: true,
   });
 };
 
 export const getTaskApplyList = (params: TaskApplyListPayload) => {
-  return request.get<TaskApplyListResponse>({
+  return getRequest<TaskApplyListResponse>({
     url: API.TaskApplyList,
     params,
+    showError: true,
   });
 };
 
@@ -109,9 +116,10 @@ export const reviewTaskApply = (params: TaskApplyReviewPayload) => {
 };
 
 export const downloadRecruitTemplate = () => {
-  return request.get({
+  return getRequest({
     url: API.DownloadRecruitTemplate,
     responseType: 'blob',
+    showError: true,
   });
 };
 

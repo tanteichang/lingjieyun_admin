@@ -40,7 +40,6 @@ export interface LoginResult {
     audit_status_text: string;
   };
   expire_time: number;
-  admin_id?: number;
   need_enterprise_info?: boolean;
   agreement_has_signed?: boolean;
   agreement_sign_status?: number;
@@ -49,6 +48,13 @@ export interface LoginResult {
     has_signed: boolean;
     sign_status: number;
     sign_status_text: string;
+  };
+  permission_paths?: string[];
+  admin_info: {
+    admin_type: number;
+    id: number;
+    is_super_admin: boolean;
+    mobile: string;
   };
 }
 
@@ -64,7 +70,11 @@ export type SendSmsCodeResponse = ApiResponse<[]>;
 export interface LoginByWeChatPayload {
   code: string;
 }
-export type LoginByWeChatResponse = ApiResponse<LoginResult>;
+export type LoginByWeChatResponse = ApiResponse<
+  {
+    key?: string; // 登录凭证
+  } & LoginResult
+>;
 
 export type CaptchaResponse = ApiResponse<{
   captcha_id: string;
@@ -90,8 +100,9 @@ export interface ChangePasswordPayload {
 export type ChangePasswordResponse = ApiResponse<[]>;
 
 export interface BindWeChatPayload {
-  code: string;
-  state: string;
+  code?: string;
+  state?: string;
+  key?: string; // loginByWeChat 返回的登录凭证
 }
 
 export type BindWeChatResponse = ApiResponse<[]>;
@@ -104,3 +115,24 @@ export interface ForgetPasswordPayload {
 }
 
 export type ForgetPasswordResponse = ApiResponse<[]>;
+
+export interface BindItem {
+  platform: string;
+  platform_name: string;
+  is_bound: boolean;
+  status: number;
+  bound_at: number;
+}
+export interface BindListResult {
+  admin_id: string;
+  user_id: string;
+  enterprise_id: number;
+  list: BindItem[];
+  platforms: {
+    wechat: BindItem;
+  };
+}
+
+export type BindListResponse = ApiResponse<BindListResult>;
+
+export type UnbindWeChatResponse = ApiResponse<[]>;

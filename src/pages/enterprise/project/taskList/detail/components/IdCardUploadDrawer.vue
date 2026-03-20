@@ -152,8 +152,6 @@ const handleUploadSuccess = () => {
             MessagePlugin.error(`${error.id_card} : ${error.message}`);
           }
         }
-      } else {
-        MessagePlugin.error(res?.msg || '上传失败');
       }
     })
     .finally(() => {

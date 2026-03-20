@@ -4,7 +4,6 @@
     <div class="wechat-login-callback__desc">正在完成扫码登录，请稍候...</div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -16,7 +15,6 @@ onMounted(() => {
   const code = typeof route.query.code === 'string' ? route.query.code : '';
   const state = typeof route.query.state === 'string' ? route.query.state : '';
   const target = new URL(`${window.location.origin}/login`);
-
   if (code) {
     target.searchParams.set('code', code);
   }
@@ -24,7 +22,6 @@ onMounted(() => {
     target.searchParams.set('state', state);
     target.searchParams.set('redirect', state);
   }
-
   if (!code) {
     if (window.top && window.top !== window) {
       window.top.location.replace(target.toString());
@@ -33,22 +30,19 @@ onMounted(() => {
     void router.replace({ name: 'login' });
     return;
   }
-
   if (window.top && window.top !== window) {
     window.top.location.replace(target.toString());
-    return;
   }
-
   void router.replace({
     name: 'login',
     query: {
       code,
+      mode: 'qrcode',
       ...(state ? { state, redirect: state } : {}),
     },
   });
 });
 </script>
-
 <style lang="less" scoped>
 .wechat-login-callback {
   min-height: 100vh;

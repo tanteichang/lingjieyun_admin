@@ -18,6 +18,7 @@ export function getList(params: TalentPoolListQuery) {
   return getRequest<TalentPoolListResponse>({
     url: API.list,
     params,
+    showError: true,
   });
 }
 
@@ -25,6 +26,7 @@ export function getDetail(params: { talent_pool_id: number }) {
   return getRequest<TalentPoolDetailResponse>({
     url: API.detail,
     params,
+    showError: true,
   });
 }
 

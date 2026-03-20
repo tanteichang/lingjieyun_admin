@@ -186,16 +186,12 @@ const handleRemoveMember = (record: MemberRow) => {
   removeMember({
     task_id: Number(route.query.id),
     member_id: record.id,
-  })
-    .then((res) => {
-      if (res.code === 200) {
-        MessagePlugin.success(res.msg);
-        handleSearch();
-      }
-    })
-    .catch((err) => {
-      MessagePlugin.error(err || '提交失败');
-    });
+  }).then((res) => {
+    if (res.code === 200) {
+      MessagePlugin.success(res.msg);
+      handleSearch();
+    }
+  });
 };
 
 const handleRecruitSubmit = (payload: RecruitFormSubmitPayload) => {
@@ -207,19 +203,13 @@ const handleRecruitSubmit = (payload: RecruitFormSubmitPayload) => {
     id_card_front: payload.id_card_front,
     id_card_back: payload.id_card_back,
     sign_method: payload.sign_method,
-  })
-    .then((res) => {
-      console.log('recruit response', res);
-      if (res.code === 200) {
-        MessagePlugin.success(res.msg);
-      } else {
-        MessagePlugin.error(res.msg);
-      }
-      handleCloseRecruitDrawer();
-    })
-    .catch((err) => {
-      MessagePlugin.error(err || '提交失败');
-    });
+  }).then((res) => {
+    console.log('recruit response', res);
+    if (res.code === 200) {
+      MessagePlugin.success(res.msg);
+    }
+    handleCloseRecruitDrawer();
+  });
 };
 </script>
 <style lang="less" scoped>

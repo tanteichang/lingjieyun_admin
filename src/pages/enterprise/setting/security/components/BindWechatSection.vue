@@ -16,11 +16,26 @@
 
     <div v-if="wechatName" class="wechat-name">已绑定：{{ wechatName }}</div>
   </security-action-card>
+
+  <t-dialog
+    v-model:visible="unbindConfirmVisible"
+    header="确认解除绑定微信"
+    confirm-btn="确认解除"
+    cancel-btn="取消"
+    @confirm="handleConfirmUnbind"
+  >
+    解除后将无法继续使用微信扫码登录，确认继续吗？
+  </t-dialog>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue';
+import { MessagePlugin } from 'tdesign-vue-next';
+import { computed, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
+import { bindWeChat, unbindWeChat } from '@/api/enterprise/auth';
+import type { BindWeChatResponse } from '@/api/model/enterprise/auth';
 import { useUserStore } from '@/store';
+import { WeChat } from '@/utils/thirdAccount';
 
 import SecurityActionCard from './SecurityActionCard.vue';
 
@@ -28,22 +43,109 @@ defineOptions({
   name: 'BindWechatSection',
 });
 
-const userStore = useUserStore();
+const props = defineProps({
+  isBound: {
+    type: Boolean,
+    default: false,
+  },
+});
+const emit = defineEmits<{
+  'bind-result': [
+    payload: {
+      success: boolean;
+      response?: BindWeChatResponse;
+      error?: unknown;
+    },
+  ];
+}>();
 
-const APP_ID = 'wx377743ca48ff6c19';
-const REDIRECT_URI = encodeURIComponent('https://enterprise.lingjieyun.com/setting/security');
-const SCOPE = 'snsapi_login';
-const state = crypto.randomUUID();
+const userStore = useUserStore();
+const route = useRoute();
+const router = useRouter();
+const unbindConfirmVisible = ref(false);
+
 const wechatName = computed(() => userStore.userInfo.wechat?.trim() || '');
-const isWechatBound = computed(() => !!wechatName.value);
+const isWechatBound = computed(() => props.isBound);
 const wechatStatusText = computed(() => (isWechatBound.value ? '已绑定' : '未绑定'));
 const wechatStatusTone = computed(() => (isWechatBound.value ? 'success' : 'warning'));
-const wechatActionText = computed(() => (isWechatBound.value ? '更换绑定微信' : '去绑定微信'));
+const wechatActionText = computed(() => (isWechatBound.value ? '解除绑定微信' : '去绑定微信'));
 
 const handleBindWechat = () => {
-  const url = `https://open.weixin.qq.com/connect/qrconnect?appid=${APP_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${SCOPE}&state=${state}#wechat_redirect`;
-  window.open(url, '_blank');
+  if (props.isBound) {
+    unbindConfirmVisible.value = true;
+  } else {
+    WeChat.goToBindPage();
+  }
 };
+
+const handleConfirmUnbind = () => {
+  unbindWeChat()
+    .then((res) => {
+      if (res.code === 200) {
+        MessagePlugin.success('解除绑定成功');
+        emit('bind-result', {
+          success: true,
+          response: res,
+        });
+      }
+    })
+    .catch((error) => {
+      emit('bind-result', {
+        success: false,
+        error,
+      });
+      throw error;
+    })
+    .finally(() => {
+      clearWechatQuery();
+      unbindConfirmVisible.value = false;
+    });
+};
+
+const clearWechatQuery = () => {
+  const { code: _code, state: _state, ...query } = route.query;
+  router.replace({
+    path: route.path,
+    query,
+    hash: route.hash,
+  });
+};
+
+onMounted(() => {
+  if (props.isBound) {
+    return;
+  }
+  const code = typeof route.query.code === 'string' ? route.query.code : '';
+  const state = typeof route.query.state === 'string' ? route.query.state : '';
+
+  if (!code || !state) return;
+
+  if (props.isBound === false) {
+    bindWeChat({
+      code,
+      state,
+    })
+      .then((res) => {
+        if (res.code === 200) {
+          MessagePlugin.success('绑定成功');
+          emit('bind-result', {
+            success: true,
+            response: res,
+          });
+        }
+      })
+      .catch((error) => {
+        emit('bind-result', {
+          success: false,
+          error,
+        });
+        throw error;
+      })
+      .finally(() => {
+        clearWechatQuery();
+      });
+  }
+});
 </script>
 <style lang="less" scoped>
 .card-icon-symbol {

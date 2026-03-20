@@ -7,7 +7,7 @@
     <div class="task-info-grid">
       <div class="info-item">
         <span class="label">任务类型</span>
-        <span class="value">{{ taskInfo?.task_type_name || '-' }}</span>
+        <span class="value">{{ taskInfo?.job_name || '-' }}</span>
       </div>
       <div class="info-item">
         <span class="label">结算方式</span>

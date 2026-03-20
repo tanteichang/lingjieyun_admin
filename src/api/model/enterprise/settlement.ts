@@ -73,6 +73,8 @@ export interface SettlementTaskInfo {
   task_status: TaskStatus;
   task_status_text: string;
   task_no: string;
+  job_name: string;
+  job_id: number;
 }
 
 export interface SettlementPlanDateItem {

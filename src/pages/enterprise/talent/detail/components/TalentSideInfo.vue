@@ -3,12 +3,16 @@
     <t-card class="left-card" :bordered="false">
       <div class="profile-card">
         <div class="profile-header">
-          <t-avatar :image="profile.avatar" size="64" />
+          <t-avatar :image="basicInfo.avatar" size="64" />
           <div class="profile-info">
-            <div class="profile-name">{{ profile.name }}</div>
+            <div class="profile-name">{{ basicInfo.name || '-' }}</div>
             <div class="profile-tags">
-              <t-tag theme="primary">已实名</t-tag>
-              <t-tag theme="primary" variant="outline">已签约</t-tag>
+              <t-tag :theme="basicInfo.is_auth ? 'success' : 'warning'">
+                {{ basicInfo.is_auth ? '已实名' : '待实名' }}
+              </t-tag>
+              <t-tag :theme="basicInfo.is_signed ? 'success' : 'warning'" variant="outline">
+                {{ basicInfo.is_signed ? '已签约' : '待签约' }}
+              </t-tag>
             </div>
           </div>
           <button class="profile-edit" type="button">
@@ -17,15 +21,15 @@
         </div>
         <div class="profile-metrics">
           <div class="metric-item">
-            <div class="metric-value">{{ profile.applyCount }}次</div>
+            <div class="metric-value">{{ basicInfo.apply_count || 0 }}次</div>
             <div class="metric-label">报名次数</div>
           </div>
           <div class="metric-item">
-            <div class="metric-value">{{ profile.education }}</div>
+            <div class="metric-value">{{ basicInfo.education || '-' }}</div>
             <div class="metric-label">学历</div>
           </div>
           <div class="metric-item">
-            <div class="metric-value">{{ profile.score }}</div>
+            <div class="metric-value">{{ basicInfo.score ?? '-' }}</div>
             <div class="metric-label">评分</div>
           </div>
         </div>
@@ -36,15 +40,15 @@
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">身份证号</div>
-            <div class="info-value">{{ profile.idCard }}</div>
+            <div class="info-value">{{ identityInfo.id_card || identityInfo.id_card_masked || '-' }}</div>
           </div>
           <div class="info-item">
             <div class="info-label">手机号</div>
-            <div class="info-value">{{ profile.phone }}</div>
+            <div class="info-value">{{ contactInfo.phone || contactInfo.phone_masked || '-' }}</div>
           </div>
           <div class="info-item">
             <div class="info-label">签约日期</div>
-            <div class="info-value">{{ profile.signTime }}</div>
+            <div class="info-value">{{ formatDateTime(signInfo.signed_at) }}</div>
           </div>
         </div>
       </div>
@@ -54,15 +58,15 @@
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">持卡人</div>
-            <div class="info-value">{{ bankInfo.owner }}</div>
+            <div class="info-value">{{ bankInfo.holder_name || '-' }}</div>
           </div>
           <div class="info-item">
             <div class="info-label">开户行名</div>
-            <div class="info-value">{{ bankInfo.bank }}</div>
+            <div class="info-value">{{ bankInfo.bank_name || '-' }}</div>
           </div>
           <div class="info-item">
             <div class="info-label">银行卡号</div>
-            <div class="info-value">{{ bankInfo.cardNo }}</div>
+            <div class="info-value">{{ bankInfo.bank_card || bankInfo.bank_card_masked || '-' }}</div>
           </div>
         </div>
       </div>
@@ -72,11 +76,29 @@
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">身份证人像面</div>
-            <t-link theme="primary" hover="color">查看图片</t-link>
+            <t-link
+              v-if="identityInfo.card_front"
+              :href="identityInfo.card_front"
+              target="_blank"
+              theme="primary"
+              hover="color"
+            >
+              查看图片
+            </t-link>
+            <div v-else class="info-value">-</div>
           </div>
           <div class="info-item">
             <div class="info-label">身份证国徽面</div>
-            <t-link theme="primary" hover="color">查看图片</t-link>
+            <t-link
+              v-if="identityInfo.card_back"
+              :href="identityInfo.card_back"
+              target="_blank"
+              theme="primary"
+              hover="color"
+            >
+              查看图片
+            </t-link>
+            <div v-else class="info-value">-</div>
           </div>
         </div>
       </div>
@@ -84,37 +106,44 @@
   </div>
 </template>
 <script setup lang="ts">
+import dayjs from 'dayjs';
 import { Edit1Icon } from 'tdesign-icons-vue-next';
+
+import type {
+  TalentPoolBankInfo,
+  TalentPoolBasicInfo,
+  TalentPoolContactInfo,
+  TalentPoolIdentityInfo,
+  TalentPoolSignInfo,
+} from '@/api/model/enterprise/talentpool';
 
 defineOptions({
   name: 'TalentSideInfo',
 });
 
 defineProps<{
-  profile: ProfileInfo;
-  bankInfo: BankInfo;
+  basicInfo: TalentPoolBasicInfo;
+  contactInfo: TalentPoolContactInfo;
+  bankInfo: TalentPoolBankInfo;
+  identityInfo: TalentPoolIdentityInfo;
+  signInfo: TalentPoolSignInfo;
 }>();
 
-interface ProfileInfo {
-  name: string;
-  avatar: string;
-  applyCount: number;
-  education: string;
-  score: number;
-  idCard: string;
-  phone: string;
-  signTime: string;
-}
-
-interface BankInfo {
-  owner: string;
-  bank: string;
-  cardNo: string;
-}
+const formatDateTime = (value: string | number | null) => {
+  if (value === undefined || value === null || value === '') return '-';
+  if (typeof value === 'number') {
+    const timestamp = value > 1_000_000_000_000 ? value : value * 1000;
+    return dayjs(timestamp).format('YYYY-MM-DD HH:mm:ss');
+  }
+  const date = dayjs(value);
+  return date.isValid() ? date.format('YYYY-MM-DD HH:mm:ss') : value;
+};
 </script>
 <style lang="less" scoped>
 .left-panel {
   min-width: 0;
+  padding: 16px;
+  background: #fff;
 }
 
 .left-card {

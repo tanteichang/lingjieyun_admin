@@ -18,7 +18,7 @@
       <template #op="{ record }">
         <t-space>
           <t-link theme="primary" variant="outline" @click="handleDetail(record)">
-            {{ expandedRowKeys.includes(record.id) ? '收起' : '详情' }}
+            {{ expandedRowKeys.includes(record.id) ? '收起' : '展开' }}
           </t-link>
           <t-link theme="primary" variant="outline" @click="handleDownloadTemplate(record)"> 模版下载 </t-link>
           <t-link theme="primary" variant="outline" @click="handleUpload(record)"> 上传结算单 </t-link>

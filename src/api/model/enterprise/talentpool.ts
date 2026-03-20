@@ -89,7 +89,48 @@ export interface TalentPoolSignInfo {
   agreement_no: string;
 }
 
+export interface TalentPoolResumeEducationItem {
+  school_name?: string;
+  school?: string;
+  start_time?: string;
+  end_time?: string;
+  education?: string;
+  degree?: string;
+  major?: string;
+  major_name?: string;
+}
+
+export interface TalentPoolResumeJobIntention {
+  expected_position?: string;
+  expected_salary?: string;
+  expected_city?: string;
+  available_time?: string;
+}
+
+export interface TalentPoolResumeWorkExperienceItem {
+  company_name?: string;
+  company?: string;
+  start_time?: string;
+  end_time?: string;
+  position?: string;
+  role?: string;
+  description?: string | string[];
+  desc?: string[];
+}
+
+export interface TalentPoolResumeCertificateItem {
+  url?: string;
+  image_url?: string;
+  image?: string;
+  name?: string;
+}
+
 export interface TalentPoolResume {
+  personal_advantage?: string;
+  education_list?: TalentPoolResumeEducationItem[];
+  job_intention?: TalentPoolResumeJobIntention;
+  work_experience_list?: TalentPoolResumeWorkExperienceItem[];
+  certificate_list?: TalentPoolResumeCertificateItem[];
   [key: string]: unknown;
 }
 

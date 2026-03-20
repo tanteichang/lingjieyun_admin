@@ -271,22 +271,15 @@ const handleConfirmAction = async () => {
   if (!row) return;
   try {
     let code = -1;
-    let msg = '';
     if (currentActionType.value === 'pause') {
-      ({ code, msg } = await pauseTask({ id: row.id }));
-      console.log('暂停任务:', row);
+      ({ code } = await pauseTask({ id: row.id }));
     } else if (currentActionType.value === 'resume') {
-      ({ code, msg } = await resumeTask({ id: row.id }));
-      console.log('恢复任务:', row);
+      ({ code } = await resumeTask({ id: row.id }));
     } else if (currentActionType.value === 'terminate') {
-      ({ code, msg } = await terminateTask({ id: row.id }));
-      console.log('终止任务:', row);
+      ({ code } = await terminateTask({ id: row.id }));
     }
-    console.log('code:', code);
     if (code === 200) {
       MessagePlugin.success(`${currentActionLabel.value}任务 ${row.name} 成功`);
-    } else {
-      MessagePlugin.error(`${currentActionLabel.value}任务 ${row.name} 失败 \n ${msg}`);
     }
     actionDialogVisible.value = false;
     handleSearch();

@@ -29,7 +29,7 @@ const emit = defineEmits<{
   'verify-captcha-change': [value: boolean];
 }>();
 
-const REFRESH_INTERVAL = 3000;
+const REFRESH_INTERVAL = 1000;
 
 const model = computed({
   get: () => props.modelValue,

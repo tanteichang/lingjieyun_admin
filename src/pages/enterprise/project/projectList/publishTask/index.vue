@@ -421,8 +421,6 @@ const onSubmitStep2 = (ctx: SubmitContext) => {
       if (res.code === 200) {
         MessagePlugin.success('任务发布成功');
         currentStep.value = 2;
-      } else {
-        MessagePlugin.error(res.msg || '任务发布失败');
       }
     });
   }

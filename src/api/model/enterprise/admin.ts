@@ -48,6 +48,9 @@ export type ToggleAdminResponse = ApiResponse<[]>;
 export interface AddAdminPayload {
   mobile: string; // 管理员手机号
   role_id: number; // 角色ID
+  password: string; // 密码
+  name: string; // 真实姓名
+  sms_code: string; // 短信验证码
 }
 export type AddAdminResponse = ApiResponse<{
   admin_id: number; // 管理员ID

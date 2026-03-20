@@ -301,8 +301,6 @@ const handleCancelUpload = () => {
 };
 
 const handleUpload = () => {
-  console.log('uploadFiles', uploadFiles.value);
-  console.log(uploadFiles.value);
   const payload: DeliveryUploadPayload = {
     submit_ids: selectedRowKeys.value,
     files: uploadFiles.value.map((item) => ({
@@ -311,14 +309,17 @@ const handleUpload = () => {
       type: isImage(item.url || '') ? 'image' : 'file',
     })),
   };
-  console.log(payload);
   requestLading.value = true;
   uploadDelivery(payload)
     .then((res) => {
       MessagePlugin.info(res.msg || '上传成功');
       if (res.data.fail_count > 0) {
         res.data.fail_items.forEach((item) => {
-          MessagePlugin.error(item.error);
+          MessagePlugin.error({
+            content: item.error,
+            duration: 1000 * 5,
+            closeBtn: true,
+          });
         });
       } else {
         drawerVisible.value = false;

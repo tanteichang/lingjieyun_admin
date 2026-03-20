@@ -8,6 +8,8 @@ import type {
   ProjectCreatePayload,
   ProjectCreateResponse,
   ProjectListResponse,
+  ProjectLogListResponse,
+  ProjectLogQuery,
   ProjectPausePayload,
   ProjectPauseResponse,
   ProjectQuery,
@@ -15,11 +17,9 @@ import type {
   ProjectResumeResponse,
   ProjectTerminatePayload,
   ProjectTerminateResponse,
-  ProjectLogListResponse,
   ProjectUpdatePayload,
   ProjectUpdateResponse,
   TaskQuery,
-  ProjectLogQuery,
 } from '@/api/model/enterprise/projectModel';
 import { postRequest, request } from '@/utils/request';
 

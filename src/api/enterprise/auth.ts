@@ -1,5 +1,12 @@
 import type {
+  BindListResponse,
+  BindWeChatPayload,
+  BindWeChatResponse,
   CaptchaResponse,
+  ChangePasswordPayload,
+  ChangePasswordResponse,
+  ForgetPasswordPayload,
+  ForgetPasswordResponse,
   LoginByWeChatPayload,
   LoginByWeChatResponse,
   LoginPayload,
@@ -8,14 +15,9 @@ import type {
   RegisterResponse,
   SendSmsCodePayload,
   SendSmsCodeResponse,
+  UnbindWeChatResponse,
   VerifyCaptchaPayload,
   VerifyCaptchaResponse,
-  ChangePasswordPayload,
-  ChangePasswordResponse,
-  BindWeChatPayload,
-  BindWeChatResponse,
-  ForgetPasswordPayload,
-  ForgetPasswordResponse,
 } from '@/api/model/enterprise/auth';
 import { getRequest, postRequest } from '@/utils/request';
 
@@ -29,6 +31,8 @@ const Api = {
   ChangePassword: '/admin/enterprise/password/change',
   BindWeChat: '/admin/enterprise/bindWeChat',
   ForgetPassword: '/admin/enterprise/forgetPassword',
+  BindList: '/admin/enterprise/bindList',
+  UnbindWeChat: '/admin/enterprise/unbindWeChat',
 };
 
 export function login(params: LoginPayload) {
@@ -85,7 +89,7 @@ export function changePassword(params: ChangePasswordPayload) {
 }
 
 export function bindWeChat(params: BindWeChatPayload) {
-  return postRequest<BindWeChatResponse>({
+  return getRequest<BindWeChatResponse>({
     url: Api.BindWeChat,
     params,
     showError: true,
@@ -96,6 +100,19 @@ export function forgetPassword(params: ForgetPasswordPayload) {
   return postRequest<ForgetPasswordResponse>({
     url: Api.ForgetPassword,
     params,
+    showError: true,
+  });
+}
+
+export function bindList() {
+  return getRequest<BindListResponse>({
+    url: Api.BindList,
+  });
+}
+
+export function unbindWeChat() {
+  return postRequest<UnbindWeChatResponse>({
+    url: Api.UnbindWeChat,
     showError: true,
   });
 }

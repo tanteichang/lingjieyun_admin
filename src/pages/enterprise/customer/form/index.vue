@@ -11,11 +11,12 @@
 <script setup lang="ts">
 import type { SubmitContext } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { onMounted, ref } from 'vue';
+import { onBeforeMount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { createCustomer, updateCustomer } from '@/api/enterprise/customer';
 import type { CreateCustomerPayload } from '@/api/model/enterprise/customer';
+import { useAdminStore } from '@/store/modules/enterprise/admin';
 import { useCustomerStore } from '@/store/modules/enterprise/customer';
 
 import { INITIAL_DATA } from './constants';
@@ -26,6 +27,7 @@ defineOptions({
 
 const route = useRoute();
 const router = useRouter();
+const adminStore = useAdminStore();
 
 const isEdit = ref(route.query.id !== undefined);
 
@@ -44,8 +46,11 @@ const formData = ref<CreateCustomerPayload>({
 
 const loading = ref(false);
 
+onBeforeMount(() => {
+  adminStore.initAdmins();
+});
+
 onMounted(() => {
-  console.log('isEditxx', isEdit.value);
   if (isEdit.value) {
     const data = useCustomerStore().getCustomer(route.query.id as string);
     console.log('data', data);
@@ -144,6 +149,17 @@ const formGroups = ref([
         rules: [{ required: true, message: '请输入企业地址' }],
         props: {
           placeholder: '请输入企业地址',
+        },
+      },
+      {
+        name: 'manager_id',
+        label: '负责人',
+        type: 'select',
+        span: 6,
+        rules: [{ required: true, message: '请选择管理员' }],
+        props: {
+          options: adminStore.getSelectOptions(),
+          placeholder: '请选择管理员',
         },
       },
     ],

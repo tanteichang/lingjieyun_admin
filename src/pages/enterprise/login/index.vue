@@ -25,11 +25,12 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
 
 import LFooter from '@/layouts/components/Footer.vue';
 import TdesignSetting from '@/layouts/setting.vue';
 import { t } from '@/locales';
-import { useRoute } from 'vue-router';
+
 import LoginHeader from './components/Header.vue';
 import Login from './components/Login.vue';
 import Register from './components/Register.vue';

@@ -229,6 +229,7 @@ export const request = createAxios();
 
 type RequestConfig = AxiosRequestConfig & {
   showError?: boolean;
+  errorDuration?: number;
 };
 
 export const postRequest: <T>(config: RequestConfig) => Promise<T> = (config) => {
@@ -237,9 +238,12 @@ export const postRequest: <T>(config: RequestConfig) => Promise<T> = (config) =>
       .post(config)
       .then((res) => {
         if (res.code !== Code.OK) {
-          console.log('res', res);
-          config.showError && MessagePlugin.error(res.msg, 10 * 1000);
-          reject(res.msg);
+          config.showError &&
+            MessagePlugin.error({
+              content: res.msg,
+              closeBtn: true,
+              duration: config.errorDuration || 10 * 1000,
+            });
         }
         resolve(res);
       })
@@ -248,7 +252,12 @@ export const postRequest: <T>(config: RequestConfig) => Promise<T> = (config) =>
         if (err.response.data) {
           message = err.response.data.msg;
         }
-        config.showError && MessagePlugin.error(message, 10 * 1000);
+        config.showError &&
+          MessagePlugin.error({
+            content: message,
+            closeBtn: true,
+            duration: config.errorDuration || 10 * 1000,
+          });
         reject(err);
       });
   });
@@ -260,13 +269,27 @@ export const getRequest: <T>(config: RequestConfig) => Promise<T> = (config) => 
       .get(config)
       .then((res) => {
         if (res.code !== Code.OK) {
-          config.showError && MessagePlugin.error(res.msg);
-          reject(res.msg);
+          config.showError &&
+            MessagePlugin.error({
+              content: res.msg,
+              closeBtn: true,
+              duration: config.errorDuration || 10 * 1000,
+            });
+          // reject(res.msg);
         }
         resolve(res);
       })
       .catch((err) => {
-        config.showError && MessagePlugin.error(err);
+        let message = err;
+        if (err.response.data) {
+          message = err.response.data.msg;
+        }
+        config.showError &&
+          MessagePlugin.error({
+            content: message,
+            closeBtn: true,
+            duration: config.errorDuration || 10 * 1000,
+          });
         reject(err);
       });
   });

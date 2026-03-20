@@ -2,6 +2,7 @@
   <div class="lng-lat-picker">
     <t-space>
       <t-input
+        v-if="!selfInput"
         :value="displayValue"
         :placeholder="placeholder"
         :readonly="true"
@@ -10,8 +11,16 @@
         @click="openDrawer"
         @clear="handleClear"
       />
-      <t-button theme="primary" @click="openDrawer">选择经纬度</t-button>
-      <t-button theme="default" @click="openDrawer">手动填写</t-button>
+
+      <t-input-adornment prepend="经度" v-if="selfInput">
+        <t-input :disabled="disabled" class="input" v-model="longitude"></t-input>
+      </t-input-adornment>
+      <t-input-adornment prepend="纬度" v-if="selfInput">
+        <t-input :disabled="disabled" class="input" v-model="latitude"></t-input>
+      </t-input-adornment>
+      <t-button :disabled="disabled" theme="default" @click="selfInput = !selfInput">{{
+        selfInput ? '选择经纬度' : '手动填写'
+      }}</t-button>
     </t-space>
     <t-drawer v-model:visible="drawerVisible" size="70%" :header="drawerTitle" :footer="false" :close-btn="true">
       <l-map v-model:keyword="keyword" :auto-search="mapAutoSearch" @select="handleSelect" />
@@ -63,6 +72,10 @@ const emit = defineEmits<{
 const drawerVisible = ref(false);
 const keyword = ref(props.mapKeyword);
 
+const longitude = ref('');
+const latitude = ref('');
+const selfInput = ref(false);
+
 const displayValue = computed(() => {
   const value = props.modelValue;
   if (!value || !value.lng || !value.lat) return '';
@@ -101,9 +114,24 @@ watch(
     }
   },
 );
+watch(longitude, (value) => {
+  emit('update:modelValue', {
+    ...props.modelValue,
+    lng: value,
+  });
+});
+watch(latitude, (value) => {
+  emit('update:modelValue', {
+    ...props.modelValue,
+    lat: value,
+  });
+});
 </script>
 <style scoped>
 .lng-lat-picker {
   width: 100%;
+}
+.input {
+  width: 120px;
 }
 </style>

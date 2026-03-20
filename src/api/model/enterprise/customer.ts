@@ -1,4 +1,4 @@
-import type { ApiResponse } from '../common';
+import type { ApiResponse, Pagination, Query } from '../common';
 
 // 客户信息接口
 export interface Customer {
@@ -12,12 +12,18 @@ export interface Customer {
   contact_phone: string; // 联系电话
   contact_person: string; // 联系人
   manager_id: number; // 管理员ID
+  manager_name: string; // 负责人名称
   status: number; // 状态
   created_at: string; // 创建时间
   updated_at: string | null; // 更新时间
 }
+
+export interface CustomerListQuery extends Query {
+  keyword?: string;
+}
+
 // 客户列表响应
-export type CustomerListResponse = ApiResponse<Customer[]>;
+export type CustomerListResponse = ApiResponse<Pagination<Customer>>;
 
 // 创建客户请求参数
 export interface CreateCustomerPayload {

@@ -54,10 +54,10 @@
 <script lang="ts" setup>
 import { computed, reactive, ref } from 'vue';
 
+import { getTaskApplyList, reviewTaskApply } from '@/api/enterprise/task';
 import type { Row } from '@/api/model/common';
 import type { TaskApplyItem, TaskApplyQuery } from '@/api/model/enterprise/taskModel';
 import { TaskApplyStatus } from '@/api/model/enterprise/taskModel';
-import { getTaskApplyList, reviewTaskApply } from '@/api/enterprise/task';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
@@ -118,7 +118,7 @@ const formConfig: FormConfig<RegistrationRow, keyof RegistrationRow | keyof type
       label: '申请日期',
       name: 'date_range',
       type: 'date-range',
-      span: 12,
+      span: 6,
       placeholder: '请选择申请日期',
       props: {
         clearable: true,
@@ -128,18 +128,8 @@ const formConfig: FormConfig<RegistrationRow, keyof RegistrationRow | keyof type
       },
     },
     { label: '姓名', name: 'keyword_name', type: 'input', span: 6, placeholder: '请输入姓名' },
-    { label: '电话', name: 'keyword_mobile', type: 'input', span: 6, placeholder: '请输入电话' },
-    { label: '任务标题', name: 'keyword_task', type: 'input', span: 6, placeholder: '请输入任务标题' },
-    {
-      label: '审核状态',
-      name: 'status',
-      type: 'select',
-      span: 6,
-      placeholder: '请选择审核状态',
-      props: {
-        options: statusOptions,
-      },
-    },
+    { label: '电话', name: 'keyword_mobile', type: 'input', span: 5, placeholder: '请输入电话' },
+    { label: '任务标题', name: 'keyword_task', type: 'input', span: 5, placeholder: '请输入任务标题' },
   ],
   formData: { ...defaultQuery },
 };

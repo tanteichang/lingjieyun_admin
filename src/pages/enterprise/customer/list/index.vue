@@ -13,7 +13,7 @@
     >
       <template #toolbar>
         <t-button theme="primary" @click="handleCreate">新增企业</t-button>
-        <t-button theme="primary" @click="handleBatchImport">批量导入</t-button>
+        <!-- <t-button theme="primary" @click="handleBatchImport">批量导入</t-button> -->
       </template>
       <template #status="{ record }">
         <t-tag :theme="statusTag[(record as CustomerRow).status]?.theme" variant="light">
@@ -57,7 +57,7 @@ import { useRouter } from 'vue-router';
 
 import { deleteCustomer, getCustomerDetail, getCustomerList } from '@/api/enterprise/customer';
 import type { Row } from '@/api/model/common';
-import type { Customer, CustomerDetail } from '@/api/model/enterprise/customer';
+import type { Customer, CustomerDetail, CustomerListQuery } from '@/api/model/enterprise/customer';
 import type { BatchImportConfirmPayload } from '@/components/batch-import-dialog/index.vue';
 import BatchImportDialog from '@/components/batch-import-dialog/index.vue';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
@@ -76,15 +76,7 @@ const router = useRouter();
 
 type CustomerStatus = number;
 
-type CustomerRow = Customer & Row;
-interface CustomerQuery {
-  page: number;
-  limit: number;
-  name?: string;
-  contact_person?: string;
-  contact_phone?: string;
-  status?: CustomerStatus | '';
-}
+type CustomerRow = Customer & Row & CustomerListQuery;
 
 const statusTabs: Array<{ label: string; value: CustomerStatus | '' }> = [
   { label: '全部', value: '' },
@@ -104,25 +96,14 @@ const currentDetail = ref<CustomerDetail | null>(null);
 const batchImportVisible = ref(false);
 const batchImportLoading = ref(false);
 
-const defaultQuery: CustomerQuery = {
+const defaultQuery: CustomerListQuery = {
+  keyword: '',
   page: 1,
   limit: 10,
 };
 
 const formConfig: FormConfig<CustomerRow, keyof CustomerRow> = {
-  formItem: [
-    { label: '客户名称', name: 'name', type: 'input', placeholder: '请输入客户名称', span: 6 },
-    { label: '联系人', name: 'contact_person', type: 'input', placeholder: '请输入联系人', span: 6 },
-    { label: '联系电话', name: 'contact_phone', type: 'input', placeholder: '请输入联系电话', span: 6 },
-    {
-      label: '状态',
-      name: 'status',
-      type: 'select',
-      placeholder: '请选择状态',
-      span: 6,
-      props: { options: customerStatusOptions },
-    },
-  ],
+  formItem: [{ label: '客户名称', name: 'keyword', type: 'input', placeholder: '请输入客户名称', span: 12 }],
   formData: { ...defaultQuery },
 };
 
@@ -135,6 +116,7 @@ const tableConfig: TableConfig<CustomerRow, keyof CustomerRow> = {
     { title: '联系电话', colKey: 'contact_phone', width: 140 },
     { title: '地址', colKey: 'address', minWidth: 240, ellipsis: true },
     { title: '状态', colKey: 'status', width: 100, align: 'center' },
+    { title: '负责人', colKey: 'manager_name', width: 120 },
     { title: '创建时间', colKey: 'created_at', width: 180, align: 'center' },
     { title: '操作', colKey: 'op', width: 180, align: 'center', fixed: 'right' },
   ],
@@ -149,10 +131,10 @@ const headerAffixedTop = computed(
     }) as any,
 );
 
-const tableHook = useCommonTable<CustomerQuery, CustomerRow>({
+const tableHook = useCommonTable<CustomerListQuery, CustomerRow>({
   fetcher: async (params) => {
     const response = await getCustomerList(params);
-    const data = response.data;
+    const data = response.data.list;
     useCustomerStore().setCustomers(data);
     return { list: data, total: data.length };
   },
@@ -191,9 +173,6 @@ const handleDelete = (row: CustomerRow) => {
 
 const handleCreate = () => {
   router.push({ name: 'CustomerForm' });
-};
-const handleBatchImport = () => {
-  batchImportVisible.value = true;
 };
 
 const handleDownloadTemplate = () => {

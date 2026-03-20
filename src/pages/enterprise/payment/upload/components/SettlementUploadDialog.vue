@@ -22,11 +22,10 @@
     </t-space>
   </t-dialog>
 </template>
-
 <script setup lang="ts">
 import type { UploadFile } from 'tdesign-vue-next';
-import { computed, ref } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
+import { computed, ref } from 'vue';
 
 import { importSettlement } from '@/api/enterprise/settlement';
 import AutoUpload from '@/components/auto-upload/index.vue';
@@ -83,12 +82,14 @@ const handleConfirmImport = async () => {
 
     if (code === 200) {
       MessagePlugin.success(msg || '上传成功');
-    } else {
-      MessagePlugin.error(msg || '上传失败', 0);
     }
 
     (data?.errors || []).forEach((item) => {
-      MessagePlugin.warning(item.error || '');
+      MessagePlugin.warning({
+        content: item.error || '',
+        duration: 1000 * 5,
+        closeBtn: true,
+      });
     });
 
     emit('success');

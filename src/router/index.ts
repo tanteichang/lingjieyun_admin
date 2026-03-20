@@ -24,6 +24,11 @@ const defaultRouterList: Array<RouteRecordRaw> = [
     component: () => import('@/pages/enterprise/login/loginByWeChat.vue'),
   },
   {
+    path: '/login/wechat-bind',
+    name: 'wechatBindAccount',
+    component: () => import('@/pages/enterprise/login/wechat-bind/index.vue'),
+  },
+  {
     path: '/enterprise-register',
     name: 'enterpriseRegisterEntry',
     component: () => import('@/pages/enterprise/login/enterprise-entry.vue'),

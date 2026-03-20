@@ -30,14 +30,19 @@
       <div class="actions-grid">
         <login-password-section />
         <pay-password-section />
-        <bind-wechat-section />
+        <bind-wechat-section
+          :is-bound="bindListResult?.platforms?.wechat?.is_bound"
+          @bind-result="handleBindWechatResult"
+        />
       </div>
     </t-card>
   </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeMount, ref } from 'vue';
 
+import { bindList } from '@/api/enterprise/auth';
+import type { BindListResult } from '@/api/model/enterprise/auth';
 import { useUserStore } from '@/store';
 
 import BindWechatSection from './components/BindWechatSection.vue';
@@ -49,6 +54,8 @@ defineOptions({
 });
 
 const userStore = useUserStore();
+
+const bindListResult = ref<BindListResult>(null);
 
 const securityLevelMap: Record<number, string> = {
   1: '很弱',
@@ -71,6 +78,23 @@ const securityLevelText = computed(
 );
 
 const securityScore = computed(() => Math.round((securityLevel.value / 8) * 100));
+
+const loadBindList = () => {
+  return bindList().then((res) => {
+    if (res.code === 200) {
+      bindListResult.value = res.data;
+    }
+  });
+};
+
+const handleBindWechatResult = (payload: { success: boolean }) => {
+  if (!payload.success) return;
+  void loadBindList();
+};
+
+onBeforeMount(() => {
+  void loadBindList();
+});
 </script>
 <style lang="less" scoped>
 .security-page {
