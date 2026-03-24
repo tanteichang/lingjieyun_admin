@@ -1,3 +1,4 @@
+import type { TagProps } from 'tdesign-vue-next';
 import type { VNode } from 'vue';
 
 export enum Code {
@@ -13,6 +14,14 @@ export interface Row {
   index?: number;
   op?: VNode;
 }
+
+export interface StatusTagMeta {
+  label: string;
+  theme?: TagProps['theme'];
+  variant?: TagProps['variant'];
+  color?: string;
+}
+export type StatusTagMap<T extends string | number> = Record<T, StatusTagMeta>;
 
 // 接口返回统一格式
 export interface ApiResponse<T> {

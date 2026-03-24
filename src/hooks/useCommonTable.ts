@@ -24,6 +24,8 @@ export interface UseCommonTableOptions<TQuery extends Record<string, any>, TRow>
   debounceWait?: number;
 }
 
+const cloneQuery = <T extends Record<string, any>>(value: T): T => JSON.parse(JSON.stringify(value || {})) as T;
+
 const createDebounce = <T extends (...args: any[]) => void>(fn: T, wait: number): T => {
   let timer: ReturnType<typeof setTimeout> | null = null;
   return ((...args: Parameters<T>) => {
@@ -41,8 +43,8 @@ export const useCommonTable = <TQuery extends Record<string, any>, TRow>(
   const loading = ref(false);
   const data = ref<TRow[]>([]);
   const debounceWait = options.debounceWait ?? 300;
-  const initialQuery = JSON.parse(JSON.stringify(options.defaultQuery || {})) as TQuery;
-  const query = reactive<TQuery>({ ...initialQuery });
+  const getInitialQuery = () => cloneQuery(options.defaultQuery);
+  const query = reactive<TQuery>(getInitialQuery());
   const pagination = reactive<PaginationProps>({
     current: options.defaultPagination?.current ?? 1,
     pageSize: options.defaultPagination?.pageSize ?? 20,
@@ -82,6 +84,12 @@ export const useCommonTable = <TQuery extends Record<string, any>, TRow>(
   };
 
   const reset = () => {
+    const initialQuery = getInitialQuery();
+
+    Object.keys(query).forEach((key) => {
+      delete query[key];
+    });
+
     Object.assign(query, initialQuery);
     pagination.current = 1;
     triggerFetch();

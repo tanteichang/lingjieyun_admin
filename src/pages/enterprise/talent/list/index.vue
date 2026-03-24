@@ -1,6 +1,7 @@
 <template>
   <t-card :bordered="false" class="talent-list-page">
     <common-table
+      row-key="id"
       :data="tableData"
       :loading="loading"
       :pagination="pagination"
@@ -11,18 +12,34 @@
       @reset="handleReset"
       @page-change="handlePageChange"
     >
+      <template #select-auth_status-option="{ option }">
+        <t-tag :theme="TalentAuthStatusTag[option.value as TalentAuthStatus].theme">
+          {{ TalentAuthStatusTag[option.value as TalentAuthStatus].label }}
+        </t-tag>
+      </template>
+      <template #select-sign_status-option="{ option }">
+        <t-tag :theme="TalentSignStatusTag[option.value as TalentSignStatus].theme">
+          {{ TalentSignStatusTag[option.value as TalentSignStatus].label }}
+        </t-tag>
+      </template>
       <template #auth_status_text="{ record }">
-        <t-tag :theme="authStatusTag[record.auth_status].theme">
-          {{ authStatusTag[record.auth_status].label }}
+        <t-tag :theme="TalentAuthStatusTag[record.auth_status as TalentAuthStatus].theme">
+          {{ TalentAuthStatusTag[record.auth_status as TalentAuthStatus].label }}
         </t-tag>
       </template>
       <template #sign_status_text="{ record }">
-        <t-tag :theme="signStatusTag[record.sign_status].theme">
-          {{ signStatusTag[record.sign_status].label }}
+        <t-tag
+          :theme="TalentSignStatusTag[record.sign_status as TalentSignStatus].theme"
+          :variant="TalentSignStatusTag[record.sign_status as TalentSignStatus].variant"
+        >
+          {{ TalentSignStatusTag[record.sign_status as TalentSignStatus].label }}
         </t-tag>
       </template>
-      <template #channel="{ record }">
-        {{ channelLabelMap[record.channel] || '-' }}
+      <template #is_face_verified="{ record }">
+        {{ record.is_face_verified }}
+        <t-tooltip v-if="!record.face_photo_url" content="刷脸认证已过期" theme="danger">
+          <t-icon name="info-circle" color="red" />
+        </t-tooltip>
       </template>
       <template #join_time="{ record }">
         {{ formatSeconds(record.join_time) }}
@@ -35,14 +52,19 @@
 </template>
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import type { TdTagProps } from 'tdesign-vue-next';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { getList } from '@/api/enterprise/talentpool';
 import type { Row } from '@/api/model/common';
 import type { TalentPoolItem, TalentPoolListQuery } from '@/api/model/enterprise/talentpool';
-import { TalentAuthStatus, TalentChannel, TalentSignStatus } from '@/api/model/enterprise/talentpool';
-import { getList } from '@/api/enterprise/talentpool';
+import {
+  TalentAuthStatus,
+  TalentAuthStatusTag,
+  TalentChannel,
+  TalentSignStatus,
+  TalentSignStatusTag,
+} from '@/api/model/enterprise/talentpool';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
@@ -63,12 +85,6 @@ const channelOptions = [
   { label: 'H5', value: TalentChannel.H5 },
 ];
 
-const channelLabelMap: Record<TalentChannel, string> = {
-  [TalentChannel.WechatMiniProgram]: '微信小程序',
-  [TalentChannel.AdminImport]: '后台导入',
-  [TalentChannel.H5]: 'H5',
-};
-
 const authStatusOptions = [
   { label: '待认证', value: TalentAuthStatus.Pending },
   { label: '已认证', value: TalentAuthStatus.Verified },
@@ -78,16 +94,6 @@ const signStatusOptions = [
   { label: '待签约', value: TalentSignStatus.Pending },
   { label: '已签约', value: TalentSignStatus.Signed },
 ];
-
-const authStatusTag: Record<TalentAuthStatus, { label: string; theme: TdTagProps['theme'] }> = {
-  [TalentAuthStatus.Pending]: { label: '待认证', theme: 'warning' },
-  [TalentAuthStatus.Verified]: { label: '已认证', theme: 'success' },
-};
-
-const signStatusTag: Record<TalentSignStatus, { label: string; theme: TdTagProps['theme'] }> = {
-  [TalentSignStatus.Pending]: { label: '待签约', theme: 'warning' },
-  [TalentSignStatus.Signed]: { label: '已签约', theme: 'success' },
-};
 
 const formatSeconds = (value: number | string | null | undefined) => {
   if (!value) return '-';
@@ -99,7 +105,6 @@ const formatSeconds = (value: number | string | null | undefined) => {
 const defaultQuery: TalentPoolListQuery = {
   page: 1,
   limit: 10,
-  keyword: '',
   name: '',
   phone: '',
   sign_status: undefined,
@@ -109,15 +114,14 @@ const defaultQuery: TalentPoolListQuery = {
 
 const formConfig: FormConfig<TalentPoolListQuery, keyof TalentPoolListQuery> = {
   formItem: [
-    { label: '关键词', name: 'keyword', type: 'input', placeholder: '请输入关键词', span: 6 },
-    { label: '姓名', name: 'name', type: 'input', placeholder: '请输入姓名', span: 6 },
-    { label: '手机号', name: 'phone', type: 'input', placeholder: '请输入手机号', span: 6 },
+    { label: '姓名', name: 'name', type: 'input', placeholder: '请输入姓名', span: 4 },
+    { label: '手机号', name: 'phone', type: 'input', placeholder: '请输入手机号', span: 4 },
     {
       label: '入驻渠道',
       name: 'channel',
       type: 'select',
       placeholder: '请选择渠道',
-      span: 6,
+      span: 4,
       props: { options: channelOptions },
     },
     {
@@ -125,7 +129,7 @@ const formConfig: FormConfig<TalentPoolListQuery, keyof TalentPoolListQuery> = {
       name: 'auth_status',
       type: 'select',
       placeholder: '请选择认证状态',
-      span: 6,
+      span: 4,
       props: { options: authStatusOptions },
     },
     {
@@ -133,7 +137,7 @@ const formConfig: FormConfig<TalentPoolListQuery, keyof TalentPoolListQuery> = {
       name: 'sign_status',
       type: 'select',
       placeholder: '请选择签约状态',
-      span: 6,
+      span: 4,
       props: { options: signStatusOptions },
     },
   ],
@@ -146,10 +150,11 @@ const tableConfig: TableConfig<TalentRow, keyof TalentRow> = {
     { title: '手机号', colKey: 'phone_masked', width: 140, align: 'center' },
     { title: '身份证号', colKey: 'id_card_masked', width: 160, align: 'center' },
     { title: '银行卡号', colKey: 'bank_card_masked', width: 140, align: 'center' },
-    { title: '入驻渠道', colKey: 'channel', width: 120, align: 'center' },
     { title: '认证状态', colKey: 'auth_status_text', width: 120, align: 'center' },
     { title: '签约状态', colKey: 'sign_status_text', width: 120, align: 'center' },
-    { title: '加入时间', colKey: 'join_time', width: 160, align: 'center' },
+    { title: '人脸验证', colKey: 'is_face_verified', width: 120, align: 'center' },
+    { title: '入驻渠道', colKey: 'channel', width: 120, align: 'center' },
+    { title: '评分等级', colKey: 'score_level', width: 120, align: 'center' },
     { title: '签约日期', colKey: 'sign_date', width: 160, align: 'center' },
     { title: '操作', colKey: 'op', width: 120, align: 'left', fixed: 'right' },
   ],

@@ -3,6 +3,7 @@
     <common-table
       :data="tableData"
       :loading="dataLoading"
+      row-key="id"
       :pagination="pagination"
       :header-affixed-top="headerAffixedTop"
       :dropdown-options="dropdownOptions"
@@ -13,8 +14,16 @@
       @page-change="handlePageChange"
       @more="handleMoreAction"
     >
+      <template #select-project_status-option="{ option }">
+        <t-tag :theme="PROJECT_STATUS_TAG[option.value as ProjectStatus].theme">
+          {{ option.label }}
+        </t-tag>
+      </template>
       <template #projectTime="{ record }">
-        <span>{{ (record as ProjectItem).start_time || '-' }}至{{ (record as ProjectItem).end_time || '-' }}</span>
+        <div class="project-time">
+          <div><t-tag variant="light" theme="primary">始</t-tag>{{ (record as ProjectItem).start_time || '-' }}</div>
+          <div><t-tag variant="light" theme="warning">止</t-tag>{{ (record as ProjectItem).end_time || '-' }}</div>
+        </div>
       </template>
       <template #customer_name="{ record }">
         {{ (record as ProjectItem).customer_name || (record as ProjectItem).enterprise_name }}
@@ -109,6 +118,14 @@ const dropdownOptions: DropdownOption[] = [
   { content: '终止项目', value: 'terminate' },
 ];
 
+const projectStatusOptions = [
+  { label: '未开始', value: ProjectStatus.NotStarted },
+  { label: '进行中', value: ProjectStatus.InProgress },
+  { label: '已暂停', value: ProjectStatus.Paused },
+  { label: '已完成', value: ProjectStatus.Completed },
+  { label: '已终止', value: ProjectStatus.Terminated },
+];
+
 /**
  * 1-待开始 发布任务 暂停项目 终止项目
  * 2-进行中 发布任务 暂停项目 终止项目
@@ -156,13 +173,7 @@ const formConfig = computed<FormConfig<ProjectQuery, keyof ProjectQuery>>(() => 
       type: 'select',
       placeholder: '请选择项目状态',
       props: {
-        options: [
-          { label: '未开始', value: ProjectStatus.NotStarted },
-          { label: '进行中', value: ProjectStatus.InProgress },
-          { label: '已暂停', value: ProjectStatus.Paused },
-          { label: '已完成', value: ProjectStatus.Completed },
-          { label: '已终止', value: ProjectStatus.Terminated },
-        ],
+        options: projectStatusOptions,
       },
     },
     {
@@ -190,11 +201,11 @@ const formConfig = computed<FormConfig<ProjectQuery, keyof ProjectQuery>>(() => 
 }));
 const tableConfig: TableConfig<ProjectRow, keyof ProjectRow> = {
   tableItem: [
-    { title: '项目编号', colKey: 'pro_no', width: 140 },
-    { title: '项目名称', colKey: 'name', minWidth: 240, ellipsis: true },
-    { title: '发票类型', colKey: 'invoice_type_name', width: 140 },
+    { title: '项目编号', colKey: 'pro_no', width: 160 },
+    { title: '项目名称', colKey: 'name', minWidth: 240, ellipsis: true, fixed: 'left' },
+    { title: '发票类型', colKey: 'invoice_type_name', width: 140, ellipsis: true },
     { title: '所属企业', colKey: 'customer_name', minWidth: 220, ellipsis: true },
-    { title: '项目时间', colKey: 'projectTime', width: 200 },
+    { title: '项目时间', colKey: 'projectTime', width: 220 },
     { title: '任务数量', colKey: 'task_count', width: 120, align: 'center' },
     { title: '项目状态', colKey: 'project_status', width: 120 },
     { title: '所需人员', colKey: 'required_personnel', width: 120, align: 'center' },
@@ -286,6 +297,11 @@ const handleDialogConfirm = (type: string) => {
   :deep(.t-card__body) {
     padding: 0;
   }
+}
+
+.project-time {
+  display: flex;
+  flex-direction: column;
 }
 
 .text-warning {

@@ -1,4 +1,4 @@
-import type { ApiResponse, Pagination, Query } from '../common';
+import type { ApiResponse, Pagination, Query, StatusTagMeta } from '../common';
 import type { TaskStatus } from './taskModel';
 
 // 交付模式枚举
@@ -60,15 +60,7 @@ export const DeliveryStatusOptions: Record<DeliveryStatus, string> = {
   [DeliveryStatus.Pending]: '待审核',
 };
 
-export const DELIVERY_STATUS_TAG: Record<
-  DeliveryStatus,
-  {
-    label: string;
-    theme?: 'primary' | 'warning' | 'success' | 'danger';
-    variant?: 'light' | 'light-outline';
-    color?: string;
-  }
-> = {
+export const DELIVERY_STATUS_TAG: Record<DeliveryStatus, StatusTagMeta> = {
   [DeliveryStatus.NotUploaded]: { label: '待提交', color: '#C0C0C0', variant: 'light' },
   [DeliveryStatus.Pending]: { label: '待审核', theme: 'warning', variant: 'light' },
   [DeliveryStatus.Approved]: { label: '已通过', theme: 'success', variant: 'light' },
@@ -131,6 +123,8 @@ export interface DeliveryUploadItem {
   publish_time: string;
   delivery_upload_time: string; // 上传时间
   status_text: string;
+  delivery_status: DeliveryStatus;
+  delivery_status_text: string;
 }
 
 export interface DeliveryListResult extends Pagination<DeliveryItem> {

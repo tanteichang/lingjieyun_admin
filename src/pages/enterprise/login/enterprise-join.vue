@@ -35,18 +35,27 @@
                   @click="handleSelect(item.id)"
                 >
                   <div class="enterprise-main">
-                    <div class="enterprise-name">
-                      <span
-                        v-for="(segment, idx) in getNameSegments(item.name)"
-                        :key="`${item.id}-${idx}`"
-                        :class="{ 'keyword-hit': segment.hit }"
-                      >
-                        {{ segment.text }}
-                      </span>
-                    </div>
-                    <div class="enterprise-extra">
-                      <span>统一社会信用代码：{{ item.credit_code || '-' }}</span>
-                      <span>地址：{{ item.address || '-' }}</span>
+                    <company-badge
+                      class="enterprise-badge"
+                      :full-name="item.name"
+                      :logo="item.logo"
+                      :size="36"
+                      text-size="11px"
+                    />
+                    <div class="enterprise-copy">
+                      <div class="enterprise-name">
+                        <span
+                          v-for="(segment, idx) in getNameSegments(item.name)"
+                          :key="`${item.id}-${idx}`"
+                          :class="{ 'keyword-hit': segment.hit }"
+                        >
+                          {{ segment.text }}
+                        </span>
+                      </div>
+                      <div class="enterprise-extra">
+                        <span>统一社会信用代码：{{ item.credit_code || '-' }}</span>
+                        <span>地址：{{ item.register_address || '-' }}</span>
+                      </div>
                     </div>
                   </div>
                   <t-radio :checked="selectedEnterpriseId === item.id" @change="() => handleSelect(item.id)" />
@@ -58,7 +67,7 @@
         </div>
 
         <div class="footer-actions">
-          <t-button variant="base" theme="default" @click="handleBack">返回</t-button>
+          <t-button variant="base" theme="default" @click="handleBack">返回登录</t-button>
           <t-button theme="primary" :disabled="!selectedEnterpriseId" @click="handleJoin">申请加入</t-button>
         </div>
       </t-card>
@@ -83,18 +92,13 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { joinEnterprise, searchEnterprise } from '@/api/enterprise/enterprise';
+import type { SearchEnterpriseResult } from '@/api/model/enterprise/enterprise';
+import CompanyBadge from '@/components/company-badge/index.vue';
 import { useUserLoginAndRegister } from '@/store';
 
 defineOptions({
   name: 'EnterpriseJoin',
 });
-
-interface EnterpriseItem {
-  id: number;
-  name: string;
-  credit_code: string;
-  address: string;
-}
 
 const userSessionStore = useUserLoginAndRegister();
 
@@ -107,7 +111,7 @@ const selectedEnterpriseName = ref('');
 const auditPending = ref(userSessionStore.pending_join_apply);
 const searching = ref(false);
 
-const enterpriseList = ref<EnterpriseItem[]>([]);
+const enterpriseList = ref<SearchEnterpriseResult[]>([]);
 
 const filteredEnterprises = computed(() => {
   const value = searchKeyword.value.trim();
@@ -327,7 +331,7 @@ const handleBack = () => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 12px 14px;
   cursor: pointer;
   border-bottom: 1px solid #edf1f6;
   transition: background-color 0.2s ease;
@@ -343,14 +347,27 @@ const handleBack = () => {
 }
 
 .enterprise-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
   min-width: 0;
+}
+
+.enterprise-badge {
+  flex-shrink: 0;
+}
+
+.enterprise-copy {
+  min-width: 0;
+  flex: 1;
 }
 
 .enterprise-name {
   color: var(--td-text-color-primary);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 20px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .keyword-hit {
@@ -359,7 +376,7 @@ const handleBack = () => {
 }
 
 .enterprise-extra {
-  margin-top: 2px;
+  margin-top: 4px;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;

@@ -117,6 +117,7 @@ const handleSubmit = async (ctx: SubmitContext) => {
 
         if (res.code !== 200) {
           captchaInputRef.value?.refreshCaptcha();
+          formData.value.captcha_code = '';
           return;
         }
 

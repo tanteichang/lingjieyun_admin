@@ -4,6 +4,7 @@
     <t-tabs v-model="activeTab" class="settlement-tabs">
       <t-tab-panel value="task" label="任务结算">
         <common-table
+          row-key="id"
           :data="tableData"
           :loading="loading"
           :pagination="pagination"

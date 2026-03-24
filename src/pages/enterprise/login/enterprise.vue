@@ -6,8 +6,9 @@
           <template #icon>
             <t-icon name="arrow-left" />
           </template>
-          返回
+          返回登录
         </t-button>
+        <!-- <t-button variant="outline" theme="primary" @click="handleGoToJoin">去加入企业</t-button> -->
       </div>
       <t-steps class="stepper" :current="currentStep" readonly>
         <t-step-item title="确认账号信息" />
@@ -44,14 +45,33 @@
         </div>
 
         <div v-else-if="currentStep === 2" class="step-panel">
-          <t-result theme="success" title="企业认证信息已提交" description="审核预计 1-3 个工作日，请耐心等待。" />
+          <t-result
+            :theme="isCreateRejected ? 'error' : 'success'"
+            :title="isCreateRejected ? '企业审核未通过' : '企业认证信息已提交'"
+            :description="isCreateRejected ? '请核对企业资料后重新提交。' : '审核预计 1-3 个工作日，请耐心等待。'"
+          />
           <t-card :bordered="false" class="audit-card">
             <div class="audit-icon-wrap">
-              <t-icon name="time-filled" class="audit-icon" />
+              <t-icon
+                :name="isCreateRejected ? 'close-circle-filled' : 'time-filled'"
+                :class="isCreateRejected ? 'error-icon' : 'audit-icon'"
+              />
             </div>
-            <div class="audit-title">企业审核中</div>
-            <div class="audit-text">企业注册申请已提交</div>
-            <div class="audit-text">预计 5 个工作日内完成审核，请耐心等待。</div>
+            <div class="audit-title">{{ isCreateRejected ? '企业审核未通过' : '企业审核中' }}</div>
+            <div class="audit-text">
+              {{ isCreateRejected ? '企业注册申请审核未通过，请重新填写企业认证信息。' : '企业注册申请已提交' }}
+            </div>
+            <div class="audit-text">
+              {{
+                isCreateRejected
+                  ? '点击下方按钮可返回第一步，重新发起企业注册。'
+                  : '预计 5 个工作日内完成审核，请耐心等待。'
+              }}
+            </div>
+            <div v-if="isCreateRejected" class="audit-actions">
+              <t-button theme="primary" @click="handleRestartRegister">重新注册企业</t-button>
+              <t-button variant="outline" theme="primary" @click="handleGoToJoin">去加入企业</t-button>
+            </div>
           </t-card>
         </div>
 
@@ -86,7 +106,7 @@
 <script setup lang="ts">
 import QrcodeVue from 'qrcode.vue';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { getSign } from '@/api/enterprise/agreement';
@@ -104,7 +124,7 @@ const userSessionStore = useUserLoginAndRegister();
 
 const router = useRouter();
 const currentStep = ref(
-  userSessionStore.status === UserStatus.CreatePending
+  userSessionStore.status === UserStatus.CreatePending || userSessionStore.status === UserStatus.CreateRejected
     ? 2
     : userSessionStore.status === UserStatus.CreateSignPending
       ? 3
@@ -114,9 +134,14 @@ const phone = ref(userSessionStore.phone);
 const enterpriseCertFormRef = ref<EnterpriseCertFormExpose | null>(null);
 const essSignUrl = ref('');
 const loading = ref(false);
+const isCreateRejected = computed(() => userSessionStore.status === UserStatus.CreateRejected);
 
 const handleBack = () => {
   router.back();
+};
+
+const handleGoToJoin = () => {
+  router.push({ name: 'enterpriseJoin' });
 };
 
 const handleNextStep = async () => {
@@ -130,7 +155,7 @@ const handleNextStep = async () => {
     }
 
     const res = await createEnterprise({
-      admin_id: Number(userSessionStore.admin_id),
+      // admin_id: Number(userSessionStore.admin_id),
       name: certFormData.name,
       credit_code: certFormData.credit_code,
       business_license: certFormData.business_license,
@@ -149,12 +174,16 @@ const handleNextStep = async () => {
       super_admin_phone: certFormData.super_admin_phone,
       super_admin_id_front: certFormData.super_admin_id_front,
       super_admin_id_back: certFormData.super_admin_id_back,
+      register_address: certFormData.register_address,
+      province_id: Number(certFormData.province_id),
+      city_id: Number(certFormData.city_id),
+      district_id: Number(certFormData.district_id),
+      address_detail: certFormData.address_detail,
     });
     if (res.code === 200) {
       MessagePlugin.success('企业认证信息已提交');
+      userSessionStore.setStatus(UserStatus.CreatePending);
       currentStep.value = 2;
-    } else {
-      MessagePlugin.error(res.msg || '企业认证信息提交失败');
     }
   } else if (currentStep.value === 3) {
     loading.value = true;
@@ -162,8 +191,6 @@ const handleNextStep = async () => {
       .then((res) => {
         if (res.code === 200) {
           essSignUrl.value = res.data.ess_sign_url;
-        } else {
-          MessagePlugin.error(res.msg || '获取签约链接失败');
         }
       })
       .finally(() => {
@@ -174,6 +201,11 @@ const handleNextStep = async () => {
 
 const handlePrevStep = () => {
   currentStep.value = Math.max(currentStep.value - 1, 0);
+};
+
+const handleRestartRegister = () => {
+  userSessionStore.setStatus(UserStatus.NotDo);
+  currentStep.value = 0;
 };
 
 const handleOperation = () => {
@@ -193,6 +225,9 @@ const handleOperation = () => {
 }
 
 .top-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
@@ -237,6 +272,12 @@ const handleOperation = () => {
   font-size: 100px;
   color: var(--td-warning-color);
 }
+
+.error-icon {
+  font-size: 100px;
+  color: var(--td-error-color);
+}
+
 .ok-icon {
   font-size: 100px;
   color: var(--td-success-color);
@@ -255,5 +296,9 @@ const handleOperation = () => {
   font-size: 14px;
   line-height: 22px;
   margin-bottom: 8px;
+}
+
+.audit-actions {
+  margin-top: 24px;
 }
 </style>

@@ -1,6 +1,7 @@
 import type {
   BatchRecruitPayload,
   BatchRecruitResponse,
+  ExportApprovedMemberListPayload,
   RecruitPayload,
   RecruitResponse,
   RemoveMemberPayload,
@@ -22,7 +23,7 @@ import type {
   TaskTerminatePayload,
   TaskTerminateResponse,
 } from '@/api/model/enterprise/taskModel';
-import { getRequest, postRequest, request } from '@/utils/request';
+import { getRequest, postRequest } from '@/utils/request';
 
 const API = {
   TaskList: '/admin/enterprise/task/list',
@@ -37,6 +38,7 @@ const API = {
   BatchRecruit: '/admin/enterprise/task/batchRecruit',
   Recruit: '/admin/enterprise/task/recruit',
   RemoveMember: '/admin/enterprise/task/removeMember',
+  ExportApprovedMemberList: '/admin/enterprise/task/exportApprovedMemberList',
 };
 /**
  * 获取任务列表
@@ -143,6 +145,18 @@ export const removeMember = (params: RemoveMemberPayload) => {
   return postRequest<RemoveMemberResponse>({
     url: API.RemoveMember,
     params,
+    showError: true,
+  });
+};
+
+/**
+ * 导出已通过成员列表
+ */
+export const exportApprovedMemberList = (params: ExportApprovedMemberListPayload) => {
+  return getRequest({
+    url: API.ExportApprovedMemberList,
+    params,
+    responseType: 'blob',
     showError: true,
   });
 };

@@ -8,7 +8,7 @@
         <div class="basic-info-grid">
           <div class="info-item">
             <span class="info-label">项目编号：</span>
-            <span class="info-value">{{ projectInfo.task_no }}</span>
+            <span class="info-value">{{ projectInfo.pro_no }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">项目名称：</span>
@@ -25,7 +25,10 @@
           </div>
           <div class="info-item">
             <span class="info-label">项目时间：</span>
-            <span class="info-value">{{ projectInfo.start_time }} - {{ projectInfo.end_time }}</span>
+            <span class="info-value">
+              <div><t-tag variant="light" theme="primary">始</t-tag>{{ projectInfo.start_time || '-' }}</div>
+              <div><t-tag variant="light" theme="warning">止</t-tag>{{ projectInfo.end_time || '-' }}</div>
+            </span>
           </div>
           <div class="info-item">
             <span class="info-label">项目类型：</span>
@@ -41,7 +44,7 @@
           </div>
           <div class="info-item">
             <span class="info-label">所属公司：</span>
-            <span class="info-value">{{ projectInfo.enterprise_name }}</span>
+            <span class="info-value">{{ projectInfo.customer_name }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">自由报名人数：</span>
@@ -74,7 +77,7 @@
           <member-list @update:total="updateMemberTotal" />
         </t-tab-panel> -->
 
-        <t-tab-panel key="logs" :label="`操作日志 (${logTotal || 0})`" value="logs" :destroy-on-hide="false">
+        <t-tab-panel key="logs" :label="`操作日志 ${logTotalText}`" value="logs" :destroy-on-hide="false" :lazy="true">
           <!-- 日志列表 -->
           <log-list @update:total="updateLogTotal" />
         </t-tab-panel>
@@ -83,8 +86,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { MessagePlugin } from 'tdesign-vue-next';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import type { ProjectItem } from '@/api/model/enterprise/projectModel';
@@ -94,7 +96,7 @@ import { useProjectStore } from '@/store/modules/enterprise/project';
 const projectStore = useProjectStore();
 
 import LogList from './logList.vue';
-import MemberList from './memberList.vue';
+// import MemberList from './memberList.vue';
 import TaskList from './taskList.vue';
 
 // 响应式数据
@@ -103,6 +105,10 @@ const currentTab = ref('tasks');
 const taskTotal = ref(0);
 const memberTotal = ref(0);
 const logTotal = ref(0);
+
+const logTotalText = computed(() => {
+  return logTotal.value > 0 ? `(${logTotal.value})` : '';
+});
 
 // 更新任务总数
 const updateTaskTotal = (total: number) => {
@@ -122,7 +128,7 @@ const updateLogTotal = (total: number) => {
 // 项目基本信息
 const projectInfo = ref<ProjectItem>({
   id: '', // 唯一标识
-  task_no: '', // 项目编号
+  pro_no: '', // 项目编号
   name: '', // 项目名称
   desc: '', // 项目描述
   invoice_type_name: '', // 发票类型
@@ -135,12 +141,7 @@ const projectInfo = ref<ProjectItem>({
   required_personnel: 0, // 所需人员数量表
   direct_recruitment_count: 0, // 定向招募人数
   free_recruitment_count: 0, // 自由招募人数
-});
-
-// 任务搜索条件
-const taskSearch = ref({
-  taskName: '',
-  taskStatus: '',
+  customer_name: '', // 所属客户
 });
 
 // 处理标签页切换
@@ -215,6 +216,9 @@ onMounted(() => {
       color: #181818;
       flex: 1;
       word-break: break-word;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
   }
 

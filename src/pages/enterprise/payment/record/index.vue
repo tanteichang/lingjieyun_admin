@@ -14,6 +14,7 @@
 
     <div class="table-main">
       <common-table
+        row-key="id"
         :data="tableData"
         :loading="loading"
         :pagination="pagination"

@@ -10,13 +10,12 @@ export enum ImportDataType {
   BatchRecruit = 7, // 批量招募
 }
 
-export interface ImportLogPayload {
-  page?: number;
-  limit?: number;
+export interface ImportLogPayload extends Query {
   data_type: ImportDataType;
+  task_id?: number;
 }
 
-export type ImportLogQuery = ImportLogPayload & Query;
+export type ImportLogQuery = ImportLogPayload;
 
 export interface ImportLogItem {
   id: number;

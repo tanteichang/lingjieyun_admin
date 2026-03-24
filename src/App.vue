@@ -4,13 +4,15 @@
   </t-config-provider>
 </template>
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onBeforeUnmount, onMounted } from 'vue';
 
 import { useLocale } from '@/locales/useLocale';
-import { useSettingStore } from '@/store';
+import { useSettingStore, useUserStore } from '@/store';
 import { useDictStore } from '@/store/modules/enterprise/dict';
+import { onLoginSuccessEvent } from '@/utils/authEvent';
 
 const store = useSettingStore();
+const userStore = useUserStore();
 const dictStore = useDictStore();
 
 const mode = computed(() => {
@@ -19,8 +21,11 @@ const mode = computed(() => {
 
 const { getComponentsLocale, locale } = useLocale();
 
-onMounted(() => {
-  // 初始化字典数据
+const initDictData = () => {
+  if (!userStore.token) {
+    return;
+  }
+
   dictStore.customerType.length === 0 && dictStore.fetchCustomerType();
   dictStore.projectType.length === 0 && dictStore.fetchProjectType();
   dictStore.invoiceType.length === 0 && dictStore.fetchInvoiceType();
@@ -29,6 +34,19 @@ onMounted(() => {
   dictStore.education.length === 0 && dictStore.fetchEducation();
   dictStore.job.length === 0 && dictStore.fetchJob();
   dictStore.cityTree.length === 0 && dictStore.fetchCityTree();
+};
+
+let removeLoginSuccessListener = () => {};
+
+onMounted(() => {
+  removeLoginSuccessListener = onLoginSuccessEvent(() => {
+    initDictData();
+  });
+  initDictData();
+});
+
+onBeforeUnmount(() => {
+  removeLoginSuccessListener();
 });
 </script>
 <style lang="less" scoped>

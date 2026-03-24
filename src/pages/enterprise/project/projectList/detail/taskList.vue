@@ -3,6 +3,7 @@
     <common-table
       :data="tableData"
       :loading="dataLoading"
+      row-key="id"
       :pagination="pagination"
       :header-affixed-top="headerAffixedTop"
       :form-config="formConfig"
@@ -11,13 +12,28 @@
       @reset="handleReset"
       @page-change="handlePageChange"
     >
+      <template #select-task_status-option="{ option }">
+        <t-tag
+          :color="TASK_STATUS_TAG[option.value as TaskStatus]?.color"
+          :theme="TASK_STATUS_TAG[option.value as TaskStatus]?.theme"
+          :variant="TASK_STATUS_TAG[option.value as TaskStatus]?.variant"
+        >
+          {{ TASK_STATUS_TAG[option.value as TaskStatus]?.label || option.label }}
+        </t-tag>
+      </template>
       <template #task_status="{ record }">
         <t-tag
+          :color="TASK_STATUS_TAG[(record as TaskItem).task_status].color"
           :variant="TASK_STATUS_TAG[(record as TaskItem).task_status].variant"
           :theme="TASK_STATUS_TAG[(record as TaskItem).task_status].theme"
         >
           {{ TASK_STATUS_TAG[(record as TaskItem).task_status].label }}
         </t-tag>
+      </template>
+      <template #recruitment_type_text="{ record }">
+        <div v-for="item in record.recruitment_type_text.split(',')" :key="item">
+          {{ item.trim() }}
+        </div>
       </template>
       <template #op="{ record }">
         <t-space>
@@ -107,8 +123,8 @@ const formConfig: FormConfig<TaskQuery, keyof TaskQuery> = {
 const tableConfig: TableConfig<TaskRow, keyof TaskRow> = {
   tableItem: [
     { title: '任务编号', colKey: 'task_no', width: 120, align: 'center' as const },
-    { title: '任务名称', colKey: 'name', minWidth: 20, ellipsis: true },
-    // { title: '任务类型', colKey: 'type', width: 120, align: 'center' as const },
+    { title: '任务名称', colKey: 'name', width: 200, ellipsis: true },
+    { title: '任务类型', colKey: 'job_name', width: 120, align: 'center' as const },
     { title: '招募方式', colKey: 'recruitment_type_text', width: 120, align: 'center' as const },
     { title: '任务状态', colKey: 'task_status', width: 120, align: 'center' as const },
     { title: '成员数量', colKey: 'member_count', width: 120, align: 'center' as const },

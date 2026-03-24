@@ -1,6 +1,7 @@
 <template>
   <div class="panel">
     <common-table
+      row-key="id"
       :data="tableData"
       :loading="loading"
       :pagination="pagination"

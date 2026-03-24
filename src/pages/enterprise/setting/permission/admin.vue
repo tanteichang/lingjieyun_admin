@@ -87,6 +87,7 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 import { addAdmin, getAdminList, removeAdmin, toggleAdmin, updateAdmin } from '@/api/enterprise/admin';
+import { sendSmsCode } from '@/api/enterprise/auth';
 import type { Admin } from '@/api/model/enterprise/admin';
 import { AdminStatus, AdminType } from '@/api/model/enterprise/admin';
 import SmsCodeInput from '@/components/sms-code-input/index.vue';
@@ -285,8 +286,11 @@ const handleSendSmsCode = () => {
     MessagePlugin.warning(validator.mobile.message);
     return false;
   }
-  MessagePlugin.success(`短信验证码已发送至${createForm.value.mobile}`);
-  return true;
+  sendSmsCode({ mobile, type: 'admin_add' }).then((res) => {
+    if (res.code === 200) {
+      MessagePlugin.success(`短信验证码已发送至${mobile}`);
+    }
+  });
 };
 
 watch(createVisible, (visible) => {

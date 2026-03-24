@@ -8,10 +8,6 @@
           <div class="section-value">{{ basicInfo.name || '-' }}</div>
         </div>
         <div class="section-item">
-          <div class="section-label">手机号</div>
-          <div class="section-value">{{ contactInfo.phone || contactInfo.phone_masked || '-' }}</div>
-        </div>
-        <div class="section-item">
           <div class="section-label">学历</div>
           <div class="section-value">{{ basicInfo.education || '-' }}</div>
         </div>

@@ -13,11 +13,15 @@ import type {
   LoginResponse,
   RegisterPayload,
   RegisterResponse,
+  SendEmailCodePayload,
+  SendEmailCodeResponse,
   SendSmsCodePayload,
   SendSmsCodeResponse,
   UnbindWeChatResponse,
   VerifyCaptchaPayload,
   VerifyCaptchaResponse,
+  VerifyEmailCodePayload,
+  VerifyEmailCodeResponse,
 } from '@/api/model/enterprise/auth';
 import { getRequest, postRequest } from '@/utils/request';
 
@@ -33,6 +37,8 @@ const Api = {
   ForgetPassword: '/admin/enterprise/forgetPassword',
   BindList: '/admin/enterprise/bindList',
   UnbindWeChat: '/admin/enterprise/unbindWeChat',
+  SendEmailCode: '/admin/enterprise/sendEmailCode',
+  VerifyEmailCode: '/admin/enterprise/verifyEmailCode',
 };
 
 export function login(params: LoginPayload) {
@@ -113,6 +119,22 @@ export function bindList() {
 export function unbindWeChat() {
   return postRequest<UnbindWeChatResponse>({
     url: Api.UnbindWeChat,
+    showError: true,
+  });
+}
+
+export function sendEmailCode(params: SendEmailCodePayload) {
+  return postRequest<SendEmailCodeResponse>({
+    url: Api.SendEmailCode,
+    params,
+    showError: true,
+  });
+}
+
+export function verifyEmailCode(params: VerifyEmailCodePayload) {
+  return postRequest<VerifyEmailCodeResponse>({
+    url: Api.VerifyEmailCode,
+    params,
     showError: true,
   });
 }

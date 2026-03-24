@@ -8,6 +8,7 @@ import type { LoginResult } from '@/api/model/enterprise/auth';
 import { useUserLoginAndRegister, useUserStore } from '@/store';
 import { usePermissionStore } from '@/store/modules/permission';
 import { UserStatus } from '@/store/modules/user';
+import { emitLoginSuccessEvent } from '@/utils/authEvent';
 
 export function useEnterpriseLoginSuccess() {
   const router = useRouter();
@@ -43,9 +44,17 @@ export function useEnterpriseLoginSuccess() {
       await router.push({ name: 'enterpriseRegister' });
       return;
     }
+    // 企业审核未通过
+    if (loginResult.enterprise && loginResult.enterprise.audit_status === 2) {
+      userLoginAndRegister.setAdminId(loginResult.enterprise.id);
+      userLoginAndRegister.setPhone(currentMobile);
+      userLoginAndRegister.setStatus(UserStatus.CreateRejected);
+      await router.push({ name: 'enterpriseRegister' });
+      return;
+    }
 
     if (loginResult.agreement && loginResult.agreement.sign_status === 0) {
-      userLoginAndRegister.setAdminId(loginResult.admin_id ?? -1);
+      // userLoginAndRegister.setAdminId(loginResult.admin_id ?? -1);
       userLoginAndRegister.setPhone(currentMobile);
       userLoginAndRegister.setStatus(UserStatus.CreateSignPending);
       await router.push({ name: 'enterpriseRegister' });
@@ -53,7 +62,7 @@ export function useEnterpriseLoginSuccess() {
     }
 
     if (loginResult.pending_join_apply) {
-      userLoginAndRegister.setAdminId(loginResult.admin_id ?? -1);
+      // userLoginAndRegister.setAdminId(loginResult.admin_id ?? -1);
       userLoginAndRegister.setPhone(currentMobile);
       userLoginAndRegister.setStatus(UserStatus.JoinPending);
       userLoginAndRegister.setPendingJoinApply(true);
@@ -85,6 +94,7 @@ export function useEnterpriseLoginSuccess() {
       });
     }
 
+    emitLoginSuccessEvent();
     await router.push(loginRedirect.value);
   };
 

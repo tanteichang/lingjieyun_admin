@@ -15,9 +15,9 @@
               </t-tag>
             </div>
           </div>
-          <button class="profile-edit" type="button">
+          <!-- <button class="profile-edit" type="button">
             <edit1-icon size="20" />
-          </button>
+          </button> -->
         </div>
         <div class="profile-metrics">
           <div class="metric-item">
@@ -40,11 +40,11 @@
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">身份证号</div>
-            <div class="info-value">{{ identityInfo.id_card || identityInfo.id_card_masked || '-' }}</div>
+            <div class="info-value">{{ identityInfo.id_card_masked || '-' }}</div>
           </div>
           <div class="info-item">
             <div class="info-label">手机号</div>
-            <div class="info-value">{{ contactInfo.phone || contactInfo.phone_masked || '-' }}</div>
+            <div class="info-value">{{ contactInfo.phone_masked || '-' }}</div>
           </div>
           <div class="info-item">
             <div class="info-label">签约日期</div>
@@ -66,7 +66,7 @@
           </div>
           <div class="info-item">
             <div class="info-label">银行卡号</div>
-            <div class="info-value">{{ bankInfo.bank_card || bankInfo.bank_card_masked || '-' }}</div>
+            <div class="info-value">{{ bankInfo.bank_card_masked || '-' }}</div>
           </div>
         </div>
       </div>
@@ -76,26 +76,14 @@
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">身份证人像面</div>
-            <t-link
-              v-if="identityInfo.card_front"
-              :href="identityInfo.card_front"
-              target="_blank"
-              theme="primary"
-              hover="color"
-            >
+            <t-link v-if="identityInfo.card_front" theme="primary" hover="color" @click="openIdentityImage('front')">
               查看图片
             </t-link>
             <div v-else class="info-value">-</div>
           </div>
           <div class="info-item">
             <div class="info-label">身份证国徽面</div>
-            <t-link
-              v-if="identityInfo.card_back"
-              :href="identityInfo.card_back"
-              target="_blank"
-              theme="primary"
-              hover="color"
-            >
+            <t-link v-if="identityInfo.card_back" theme="primary" hover="color" @click="openIdentityImage('back')">
               查看图片
             </t-link>
             <div v-else class="info-value">-</div>
@@ -103,11 +91,12 @@
         </div>
       </div>
     </t-card>
+    <t-image-viewer v-model:visible="previewVisible" v-model:index="previewIndex" :images="previewImages" />
   </div>
 </template>
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { Edit1Icon } from 'tdesign-icons-vue-next';
+import { computed, ref, toRefs } from 'vue';
 
 import type {
   TalentPoolBankInfo,
@@ -121,13 +110,27 @@ defineOptions({
   name: 'TalentSideInfo',
 });
 
-defineProps<{
+const props = defineProps<{
   basicInfo: TalentPoolBasicInfo;
   contactInfo: TalentPoolContactInfo;
   bankInfo: TalentPoolBankInfo;
   identityInfo: TalentPoolIdentityInfo;
   signInfo: TalentPoolSignInfo;
 }>();
+
+const { basicInfo, contactInfo, bankInfo, identityInfo, signInfo } = toRefs(props);
+
+const previewVisible = ref(false);
+const previewIndex = ref(0);
+const previewImages = computed(() => [identityInfo.value.card_front, identityInfo.value.card_back].filter(Boolean) as string[]);
+
+const openIdentityImage = (side: 'front' | 'back') => {
+  const currentUrl = side === 'front' ? identityInfo.value.card_front : identityInfo.value.card_back;
+  if (!currentUrl) return;
+  const index = previewImages.value.findIndex((url) => url === currentUrl);
+  previewIndex.value = index >= 0 ? index : 0;
+  previewVisible.value = true;
+};
 
 const formatDateTime = (value: string | number | null) => {
   if (value === undefined || value === null || value === '') return '-';

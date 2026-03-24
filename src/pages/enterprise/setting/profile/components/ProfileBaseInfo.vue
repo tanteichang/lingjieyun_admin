@@ -77,13 +77,14 @@ const handleCancel = () => {
 
 const handleSubmit = (ctx: SubmitContext) => {
   console.log(data.value);
-  return;
   if (ctx.validateResult !== true) return;
   emit('save', {
     ...data.value,
-    province: data.value.address.province || '',
-    city: data.value.address.city || '',
-    district: data.value.address.district || '',
+    province_id: data.value.address.province_id || '',
+    city_id: data.value.address.city_id || '',
+    district_id: data.value.address.district_id || '',
+    longitude: data.value._lngLat.lng || 0,
+    latitude: data.value._lngLat.lat || 0,
   });
   isEditing.value = false;
   MessagePlugin.success('保存成功');

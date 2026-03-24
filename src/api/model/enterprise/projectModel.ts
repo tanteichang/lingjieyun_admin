@@ -1,4 +1,4 @@
-import type { ApiResponse, Pagination, Query } from '../common';
+import type { ApiResponse, Pagination, Query, StatusTagMeta } from '../common';
 
 export interface ProjectQuery extends Query {
   name?: string;
@@ -15,11 +15,9 @@ export interface TaskQuery extends Query {
 }
 
 export interface LogQuery extends Query {
-  dateRange?: string[];
-}
-
-export interface MemberListQuery {
-  product_id: string;
+  keyword?: string;
+  start_time?: string;
+  end_time?: string;
 }
 
 // 项目状态枚举（与后端统一）
@@ -31,20 +29,12 @@ export enum ProjectStatus {
   Completed = 5, // 已完成
 }
 
-export const PROJECT_STATUS_TAG: Record<
-  ProjectStatus,
-  {
-    label: string;
-    theme?: 'primary' | 'warning' | 'success' | 'danger';
-    variant?: 'light' | 'light-outline';
-    color?: string;
-  }
-> = {
-  [ProjectStatus.NotStarted]: { label: '未开始', color: '#C0C0C0', variant: 'light' },
-  [ProjectStatus.InProgress]: { label: '进行中', theme: 'primary', variant: 'light' },
-  [ProjectStatus.Paused]: { label: '已暂停', theme: 'warning', variant: 'light' },
-  [ProjectStatus.Completed]: { label: '已完成', theme: 'success', variant: 'light' },
-  [ProjectStatus.Terminated]: { label: '已终止', theme: 'danger', variant: 'light' },
+export const PROJECT_STATUS_TAG: Record<ProjectStatus, StatusTagMeta> = {
+  [ProjectStatus.NotStarted]: { label: '未开始', theme: 'warning' },
+  [ProjectStatus.InProgress]: { label: '进行中', theme: 'success' },
+  [ProjectStatus.Paused]: { label: '已暂停', color: '#86909C' },
+  [ProjectStatus.Completed]: { label: '已完成', theme: 'primary' },
+  [ProjectStatus.Terminated]: { label: '已终止', theme: 'danger' },
 };
 
 // 所属企业信息

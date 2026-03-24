@@ -1,16 +1,17 @@
 <template>
   <t-card :bordered="false" class="delivery-approval-page">
     <t-tabs :value="currentStatus" @change="handleTabChange">
-      <t-tab-panel
-        v-for="tab in statusTabs"
-        :key="tab.value"
-        :value="tab.value"
-        :label="`${tab.label} (${tabCounts[tab.value] ?? 0})`"
-      />
+      <t-tab-panel v-for="tab in statusTabs" :key="tab.value" :value="tab.value">
+        <template #label>
+          {{ tab.label }}
+          <span :style="{ marginLeft: '5px', color: tab.color }"> ({{ tabCounts[tab.value] ?? 0 }}) </span>
+        </template>
+      </t-tab-panel>
     </t-tabs>
     <div style="height: 20px"></div>
     <common-table
       :data="tableData"
+      row-key="id"
       :loading="loading"
       :pagination="pagination"
       :form-config="formConfig"
@@ -92,11 +93,11 @@ type DeliveryListQuery = DeliveryListPayload;
 
 type DeliveryRow = DeliveryItem & Row;
 
-const statusTabs: Array<{ label: string; value: 'all' | DeliverySubmitStatus }> = [
-  { label: '全部', value: 'all' },
-  { label: '待验收', value: DeliverySubmitStatus.Pending },
-  { label: '已验收', value: DeliverySubmitStatus.Accepted },
-  { label: '不合格需重提', value: DeliverySubmitStatus.RejectedNeedResubmit },
+const statusTabs: Array<{ label: string; value: 'all' | DeliverySubmitStatus; color: string }> = [
+  { label: '全部', value: 'all', color: 'gray' },
+  { label: '待验收', value: DeliverySubmitStatus.Pending, color: 'red' },
+  { label: '已验收', value: DeliverySubmitStatus.Accepted, color: 'gray' },
+  { label: '不合格需重提', value: DeliverySubmitStatus.RejectedNeedResubmit, color: 'gray' },
 ];
 
 const submitStatusTag: Record<DeliverySubmitStatus, { label: string; theme: TdTagProps['theme'] }> = {
@@ -131,16 +132,19 @@ const defaultQuery: DeliveryListQuery = {
 
 const formConfig: FormConfig<DeliveryListQuery, keyof DeliveryListQuery> = {
   formItem: [
-    { label: '姓名', name: 'keyword_name', type: 'input', placeholder: '请输入姓名', span: 6 },
-    { label: '手机号', name: 'keyword_mobile', type: 'input', placeholder: '请输入手机号', span: 6 },
+    { label: '姓名', name: 'keyword_name', type: 'input', placeholder: '请输入姓名', span: 3 },
+    { label: '手机号', name: 'keyword_mobile', type: 'input', placeholder: '请输入手机号', span: 3 },
     {
       label: '日期范围',
       name: 'date_range',
       type: 'date-range',
       placeholder: '请选择日期范围',
-      span: 6,
+      span: 5,
       props: {
-        type: 'daterange',
+        clearable: true,
+        disableDate: (date: Date) => {
+          return date.getTime() > Date.now();
+        },
       },
     },
   ],

@@ -1,6 +1,7 @@
 <template>
   <div class="registration-list-card">
     <common-table
+      row-key="id"
       :data="tableData"
       :loading="loading"
       :pagination="pagination"

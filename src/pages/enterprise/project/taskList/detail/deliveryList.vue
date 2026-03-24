@@ -1,6 +1,7 @@
 <template>
   <div class="delivery-list-card">
     <common-table
+      row-key="id"
       :data="tableData"
       :loading="loading"
       :pagination="pagination"

@@ -146,11 +146,13 @@ export const useDictStore = defineStore('_enterprise_dict', {
       this.cityTree = cityTree;
     },
     async fetchCustomerType() {
-      const { data } = await getCustomerList();
       const userStore = useUserStore();
-
+      if (!userStore.token) {
+        return;
+      }
+      const { data } = await getCustomerList({ page: 0, limit: 0 });
       this.customerType = [{ id: 0, name: userStore.enterpriseInfo.name }].concat(
-        data.map((item) => ({ id: item.id, name: item.name })),
+        data.list.map((item) => ({ id: item.id, name: item.name })),
       );
     },
     async fetchProjectType() {
@@ -180,6 +182,19 @@ export const useDictStore = defineStore('_enterprise_dict', {
     async fetchCityTree() {
       const { data } = await getCityTree();
       this.setCityTree(data);
+    },
+    getEducationLabel(id: number) {
+      return this.education.find((item) => item.id === id)?.name || '-';
+    },
+    logout() {
+      this.customerType = [];
+      this.projectType = [];
+      this.invoiceType = [];
+      this.experience = [];
+      this.salary = [];
+      this.education = [];
+      this.job = [];
+      this.cityTree = [];
     },
   },
   persist: {

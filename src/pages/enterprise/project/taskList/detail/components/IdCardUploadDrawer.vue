@@ -16,11 +16,10 @@
         :before-upload="beforeUploadIdCard"
         :file-list-display="fileListDisplay"
         :on-success="handleUploadSuccess"
-      />
+      >
+      </auto-upload>
 
       <div class="naming-rule">
-        <div class="naming-rule__header">命名规则</div>
-        <div class="naming-rule__example">示例：610629198602052135-1.png</div>
         <div class="naming-rule__content">
           <div class="rule-item">
             <div class="rule-title">身份证照·命名规则：</div>
@@ -149,7 +148,11 @@ const handleUploadSuccess = () => {
         MessagePlugin.success(res.msg);
         if (res.data.errors?.length) {
           for (const error of res.data.errors) {
-            MessagePlugin.error(`${error.id_card} : ${error.message}`);
+            MessagePlugin.error({
+              content: `${error.id_card} : ${error.message}`,
+              duration: 0,
+              closeBtn: true,
+            });
           }
         }
       }
@@ -162,7 +165,7 @@ const handleUploadSuccess = () => {
 const beforeUploadIdCard = (file: UploadFile) => {
   const fileName = file.name || '';
   const baseName = fileName.replace(/\.[^.]+$/, '');
-  const isValid = /^\d{17}[\dX]-(1|2)$/i.test(baseName);
+  const isValid = /^\d{17}[\dX]-(?:1|2)$/i.test(baseName);
   if (!isValid) {
     MessagePlugin.warning('文件名需为“证件号-1/2”，例如：610629198602052135-1');
     return false;

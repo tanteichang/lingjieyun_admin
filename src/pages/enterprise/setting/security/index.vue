@@ -30,6 +30,7 @@
       <div class="actions-grid">
         <login-password-section />
         <pay-password-section />
+        <bind-email-section />
         <bind-wechat-section
           :is-bound="bindListResult?.platforms?.wechat?.is_bound"
           @bind-result="handleBindWechatResult"
@@ -45,6 +46,7 @@ import { bindList } from '@/api/enterprise/auth';
 import type { BindListResult } from '@/api/model/enterprise/auth';
 import { useUserStore } from '@/store';
 
+import BindEmailSection from './components/BindEmailSection.vue';
 import BindWechatSection from './components/BindWechatSection.vue';
 import LoginPasswordSection from './components/LoginPasswordSection.vue';
 import PayPasswordSection from './components/PayPasswordSection.vue';
@@ -204,7 +206,7 @@ onBeforeMount(() => {
 
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
 

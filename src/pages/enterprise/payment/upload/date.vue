@@ -3,6 +3,7 @@
     <settlement-task-info-card :task-info="taskInfo" :plan-date="currentPlanDate" />
 
     <common-table
+      row-key="plan_date"
       :data="tableData"
       :loading="loading"
       :pagination="pagination"
@@ -18,7 +19,7 @@
       <template #op="{ record }">
         <t-space>
           <t-link theme="primary" variant="outline" @click="handleDetail(record)">
-            {{ expandedRowKeys.includes(record.id) ? '收起' : '展开' }}
+            {{ expandedRowKeys.includes(record.plan_date) ? '收起' : '展开' }}
           </t-link>
           <t-link theme="primary" variant="outline" @click="handleDownloadTemplate(record)"> 模版下载 </t-link>
           <t-link theme="primary" variant="outline" @click="handleUpload(record)"> 上传结算单 </t-link>
@@ -51,15 +52,15 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue';
 import { MessagePlugin } from 'tdesign-vue-next';
+import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { downloadSettlementTemplate, getSettlementDetail } from '@/api/enterprise/settlement';
 import type { Row } from '@/api/model/common';
 import type {
-  SettlementDetailPayload,
   SettlementDeliveryItem,
+  SettlementDetailPayload,
   SettlementPlanDateItem,
   SettlementTaskInfo,
 } from '@/api/model/enterprise/settlement';
@@ -155,7 +156,7 @@ const expandFirstRow = async (rows: PlanDateRow[]) => {
     return;
   }
 
-  expandedRowKeys.value = [firstRow.id];
+  expandedRowKeys.value = [firstRow.plan_date];
   await loadDetailList(firstRow);
 };
 
@@ -181,11 +182,11 @@ const loadDetailList = async (row: PlanDateRow) => {
 };
 
 const handleDetail = async (row: PlanDateRow) => {
-  if (expandedRowKeys.value.includes(row.id)) {
+  if (expandedRowKeys.value.includes(row.plan_date)) {
     expandedRowKeys.value = [];
     return;
   }
-  expandedRowKeys.value = [row.id];
+  expandedRowKeys.value = [row.plan_date];
   await loadDetailList(row);
 };
 
@@ -193,7 +194,9 @@ const handleExpandChange = async (payload: {
   expandedRowKeys: Array<string | number>;
   currentRowData?: PlanDateRow;
 }) => {
-  expandedRowKeys.value = payload.currentRowData ? [payload.currentRowData.id] : payload.expandedRowKeys.slice(0, 1);
+  expandedRowKeys.value = payload.currentRowData
+    ? [payload.currentRowData.plan_date]
+    : payload.expandedRowKeys.slice(0, 1);
   if (payload.currentRowData && expandedRowKeys.value.length > 0) {
     await loadDetailList(payload.currentRowData);
   }
@@ -208,12 +211,12 @@ const getDetailLoading = (row: PlanDateRow) => {
 };
 
 const getRowClassName = ({ row }: { row: PlanDateRow }) => {
-  return expandedRowKeys.value.includes(row.id) ? 'settlement-row--expanded' : '';
+  return expandedRowKeys.value.includes(row.plan_date) ? 'settlement-row--expanded' : '';
 };
 
 const currentPlanDate = computed(() => {
   const currentId = expandedRowKeys.value[0];
-  return tableData.value.find((item) => item.id === currentId)?.plan_date || null;
+  return tableData.value.find((item) => item.plan_date === currentId)?.plan_date || null;
 });
 
 const handleDownloadTemplate = async (row: PlanDateRow) => {
@@ -251,7 +254,7 @@ const handleUploadSuccess = async () => {
   }
 
   delete rowDetailMap[getDetailCacheKey(currentRow)];
-  expandedRowKeys.value = [currentRow.id];
+  expandedRowKeys.value = [currentRow.plan_date];
   await loadDetailList(currentRow);
 };
 

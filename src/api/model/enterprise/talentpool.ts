@@ -1,4 +1,4 @@
-import type { ApiResponse, Pagination, Query } from '../common';
+import type { ApiResponse, Pagination, Query, StatusTagMap } from '../common';
 
 export interface TalentPoolListQuery extends Query {
   keyword?: string;
@@ -19,11 +19,19 @@ export enum TalentAuthStatus {
   Pending = 0,
   Verified = 1,
 }
+export const TalentAuthStatusTag: StatusTagMap<TalentAuthStatus> = {
+  [TalentAuthStatus.Pending]: { label: '待认证', theme: 'warning' },
+  [TalentAuthStatus.Verified]: { label: '已认证', theme: 'success' },
+};
 
 export enum TalentSignStatus {
   Pending = 0,
   Signed = 1,
 }
+export const TalentSignStatusTag: StatusTagMap<TalentSignStatus> = {
+  [TalentSignStatus.Pending]: { label: '待签约', theme: 'warning', variant: 'outline' },
+  [TalentSignStatus.Signed]: { label: '已签约', theme: 'success', variant: 'outline' },
+};
 
 export interface TalentPoolItem {
   id: number; // 人才ID

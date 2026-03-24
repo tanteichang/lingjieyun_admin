@@ -2,7 +2,7 @@
   <div class="verify-info">
     <div class="section-title">工商注册信息</div>
     <div class="verify-grid">
-      <div class="left-fields">
+      <!-- <div class="left-fields">
         <div class="field-item">
           <div class="field-label">成立日期</div>
           <div class="field-value">2026-08-18</div>
@@ -17,7 +17,7 @@
             技术开发、技术推广、技术服务；销售自行开发的产品；软件开发；人工智能基础软件开发。
           </div>
         </div>
-      </div>
+      </div> -->
       <div class="doc-card">
         <div class="doc-title">营业执照</div>
         <div class="license-image">
@@ -161,6 +161,11 @@ console.log(props.legalPersonInfo);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.license-image img {
+  width: 100%;
+  height: 100%;
 }
 
 .id-images {

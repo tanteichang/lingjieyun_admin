@@ -1,4 +1,4 @@
-import type { ApiResponse, Pagination, Query } from '../common';
+import type { ApiResponse, Pagination, Query, StatusTagMap } from '../common';
 // 获取账单列表
 export enum PaymentStatus {
   Pending = 0, // 待支付
@@ -11,15 +11,7 @@ export const PaymentStatusMap = {
   [PaymentStatus.Paid]: '已支付',
 };
 
-export const PaymentStatusTag: Record<
-  PaymentStatus,
-  {
-    label: string;
-    theme?: 'primary' | 'warning' | 'success' | 'danger';
-    variant?: 'light' | 'light-outline';
-    color?: string;
-  }
-> = {
+export const PaymentStatusTag: StatusTagMap<PaymentStatus> = {
   [PaymentStatus.Pending]: { label: '待支付', theme: 'warning', variant: 'light' },
   [PaymentStatus.Processing]: { label: '支付中', theme: 'primary', variant: 'light' },
   [PaymentStatus.Paid]: { label: '已支付', theme: 'success', variant: 'light' },

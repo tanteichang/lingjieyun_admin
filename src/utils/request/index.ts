@@ -237,12 +237,12 @@ export const postRequest: <T>(config: RequestConfig) => Promise<T> = (config) =>
     request
       .post(config)
       .then((res) => {
-        if (res.code !== Code.OK) {
+        if (res.code && res.code !== Code.OK) {
           config.showError &&
             MessagePlugin.error({
               content: res.msg,
               closeBtn: true,
-              duration: config.errorDuration || 10 * 1000,
+              duration: config.errorDuration || 5 * 1000,
             });
         }
         resolve(res);
@@ -256,7 +256,7 @@ export const postRequest: <T>(config: RequestConfig) => Promise<T> = (config) =>
           MessagePlugin.error({
             content: message,
             closeBtn: true,
-            duration: config.errorDuration || 10 * 1000,
+            duration: config.errorDuration || 5 * 1000,
           });
         reject(err);
       });
@@ -268,12 +268,12 @@ export const getRequest: <T>(config: RequestConfig) => Promise<T> = (config) => 
     request
       .get(config)
       .then((res) => {
-        if (res.code !== Code.OK) {
+        if (res.code && res.code !== Code.OK) {
           config.showError &&
             MessagePlugin.error({
               content: res.msg,
               closeBtn: true,
-              duration: config.errorDuration || 10 * 1000,
+              duration: config.errorDuration || 5 * 1000,
             });
           // reject(res.msg);
         }
@@ -288,7 +288,7 @@ export const getRequest: <T>(config: RequestConfig) => Promise<T> = (config) => 
           MessagePlugin.error({
             content: message,
             closeBtn: true,
-            duration: config.errorDuration || 10 * 1000,
+            duration: config.errorDuration || 5 * 1000,
           });
         reject(err);
       });

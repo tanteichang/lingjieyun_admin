@@ -1,4 +1,4 @@
-import type { ApiResponse, Pagination, Query } from '../common';
+import type { ApiResponse, Pagination, Query, StatusTagMap } from '../common';
 
 // 客户信息接口
 export interface Customer {
@@ -13,7 +13,7 @@ export interface Customer {
   contact_person: string; // 联系人
   manager_id: number; // 管理员ID
   manager_name: string; // 负责人名称
-  status: number; // 状态
+  status: CustomerStatus; // 状态
   created_at: string; // 创建时间
   updated_at: string | null; // 更新时间
 }
@@ -69,6 +69,22 @@ export interface BatchImportCustomerPayload {
 // 批量导入客户响应
 export type BatchImportCustomerResponse = ApiResponse<[]>;
 
+export enum CustomerStatus {
+  Active = 1,
+  Disabled = 0,
+}
+
+export const CustomerStatusTag: StatusTagMap<CustomerStatus> = {
+  [CustomerStatus.Active]: {
+    label: '正常',
+    theme: 'success',
+  },
+  [CustomerStatus.Disabled]: {
+    label: '停用',
+    theme: 'danger',
+  },
+};
+
 export interface CustomerDetail {
   id: number; // 客户ID
   customer_no: string; // 客户编码
@@ -80,7 +96,7 @@ export interface CustomerDetail {
   contact_phone: string; // 联系电话
   contact_person: string; // 联系人
   manager_id: number; // 负责人ID
-  status: number; // 状态
+  status: CustomerStatus; // 状态
   created_at: string; // 创建时间
   updated_at: string | null; // 更新时间
 }

@@ -28,6 +28,7 @@
             :form-config="formConfig"
             :table-config="tableConfig"
             :header-affixed-top="headerAffixedTop"
+            :selected-row-keys="selectedRowKeys"
             selection-type="multiple"
             :selection-disabled="selectionDisabled"
             row-key="id"

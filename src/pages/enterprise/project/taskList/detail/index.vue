@@ -46,6 +46,9 @@
       <t-collapse-panel value="1" header="验收标准">
         <div class="desc-text" v-html="taskInfo?.accept"></div>
       </t-collapse-panel>
+      <t-collapse-panel value="2" header="交付物要求">
+        <div class="desc-text" v-html="taskInfo?.delivery_standard"></div>
+      </t-collapse-panel>
     </t-collapse>
 
     <t-card :bordered="false" class="tabs-card">

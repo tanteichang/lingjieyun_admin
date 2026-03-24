@@ -1,6 +1,7 @@
 <template>
   <t-card :bordered="false" class="customer-list-page">
     <common-table
+      row-key="id"
       :data="tableData"
       :loading="loading"
       :pagination="pagination"
@@ -16,8 +17,8 @@
         <!-- <t-button theme="primary" @click="handleBatchImport">批量导入</t-button> -->
       </template>
       <template #status="{ record }">
-        <t-tag :theme="statusTag[(record as CustomerRow).status]?.theme" variant="light">
-          {{ statusTag[(record as CustomerRow).status]?.label || '-' }}
+        <t-tag :theme="CustomerStatusTag[(record as CustomerRow).status]?.theme">
+          {{ CustomerStatusTag[(record as CustomerRow).status]?.label || '-' }}
         </t-tag>
       </template>
       <template #op="{ record }">
@@ -57,7 +58,8 @@ import { useRouter } from 'vue-router';
 
 import { deleteCustomer, getCustomerDetail, getCustomerList } from '@/api/enterprise/customer';
 import type { Row } from '@/api/model/common';
-import type { Customer, CustomerDetail, CustomerListQuery } from '@/api/model/enterprise/customer';
+import type { Customer, CustomerDetail, CustomerListQuery, CustomerStatus } from '@/api/model/enterprise/customer';
+import { CustomerStatusTag } from '@/api/model/enterprise/customer';
 import type { BatchImportConfirmPayload } from '@/components/batch-import-dialog/index.vue';
 import BatchImportDialog from '@/components/batch-import-dialog/index.vue';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
@@ -74,8 +76,6 @@ defineOptions({
 
 const router = useRouter();
 
-type CustomerStatus = number;
-
 type CustomerRow = Customer & Row & CustomerListQuery;
 
 const statusTabs: Array<{ label: string; value: CustomerStatus | '' }> = [
@@ -89,7 +89,6 @@ const statusTag: Record<CustomerStatus, { label: string; theme: DropdownOption['
   0: { label: '禁用', theme: 'warning' },
 };
 
-const customerStatusOptions = statusTabs.slice(1);
 const detailDialogVisible = ref(false);
 const detailLoading = ref(false);
 const currentDetail = ref<CustomerDetail | null>(null);

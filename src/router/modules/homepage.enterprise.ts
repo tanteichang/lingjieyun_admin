@@ -21,7 +21,7 @@ export default [
         component: () => import('@/pages/enterprise/dashboard/base/index.vue'),
         meta: {
           title: {
-            zh_CN: '概览仪表盘',
+            zh_CN: '仪表盘',
             en_US: 'Overview',
           },
           icon: 'chart-bar',
@@ -438,6 +438,20 @@ export default [
             en_US: 'Profile',
           },
           icon: 'user-circle',
+          keepAlive: false,
+        },
+      },
+      {
+        path: 'profile/recharge',
+        name: 'SettingProfileRecharge',
+        component: () => import('@/pages/enterprise/setting/profile/recharge.vue'),
+        meta: {
+          title: {
+            zh_CN: '充值',
+            en_US: 'Recharge',
+          },
+          icon: 'money',
+          hidden: true,
           keepAlive: false,
         },
       },

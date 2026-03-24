@@ -37,6 +37,7 @@ import type { FormInstanceFunctions, FormRule, SubmitContext } from 'tdesign-vue
 import { MessagePlugin } from 'tdesign-vue-next';
 import { ref } from 'vue';
 
+import { sendSmsCode } from '@/api/enterprise/auth';
 import SmsCodeInput from '@/components/sms-code-input/index.vue';
 import { validator } from '@/utils/validator';
 
@@ -74,7 +75,11 @@ const handleSendCode = async () => {
   const validateResult = await form.value?.validate({ fields: ['mobile'] });
   if (validateResult !== true) return false;
 
-  MessagePlugin.info('手机号登录暂未开放');
+  sendSmsCode({ mobile: formData.value.mobile, type: 'login' }).then((res) => {
+    if (res.code === 200) {
+      MessagePlugin.success(`短信验证码已发送至${formData.value.mobile}`);
+    }
+  });
   return false;
 };
 

@@ -1,6 +1,7 @@
 <template>
   <div class="member-list-card">
     <common-table
+      row-key="id"
       :data="tableData"
       :loading="loading"
       :pagination="pagination"
@@ -14,7 +15,7 @@
       <template #toolbar>
         <t-button theme="primary" @click="openRecruitDrawer">招募</t-button>
         <t-button theme="primary" @click="goRecruit">批量招募</t-button>
-        <t-button variant="outline" @click="handleExportFreelancerList">导出人员名单</t-button>
+        <t-button :loading="btnLoading" variant="outline" @click="handleExportFreelancerList">导出人员名单</t-button>
       </template>
       <template #op="{ record }">
         <t-space>
@@ -39,8 +40,7 @@ import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { exportFreelancerList } from '@/api/enterprise/settlement';
-import { getTaskMemberList, recruit, removeMember } from '@/api/enterprise/task';
+import { exportApprovedMemberList, getTaskMemberList, recruit, removeMember } from '@/api/enterprise/task';
 import type { Row } from '@/api/model/common';
 import type { TaskMemberItem, TaskMemberListQuery } from '@/api/model/enterprise/taskModel';
 import { SignStatus } from '@/api/model/enterprise/taskModel';
@@ -68,6 +68,7 @@ const emit = defineEmits<{
 const route = useRoute();
 const router = useRouter();
 const recruitDrawerVisible = ref(false);
+const btnLoading = ref(false);
 
 const total = ref(0);
 
@@ -167,8 +168,8 @@ const handleCloseRecruitDrawer = () => {
 };
 
 const handleExportFreelancerList = () => {
-  console.log('export freelancer list');
-  exportFreelancerList({ product_id: Number(route.query.id) })
+  btnLoading.value = true;
+  exportApprovedMemberList({ task_id: Number(route.query.id) })
     .then((res) => {
       const url = window.URL.createObjectURL(new Blob([res]));
       const link = document.createElement('a');
@@ -179,6 +180,9 @@ const handleExportFreelancerList = () => {
     })
     .catch((err) => {
       MessagePlugin.error(err || '导出失败');
+    })
+    .finally(() => {
+      btnLoading.value = false;
     });
 };
 
@@ -204,9 +208,9 @@ const handleRecruitSubmit = (payload: RecruitFormSubmitPayload) => {
     id_card_back: payload.id_card_back,
     sign_method: payload.sign_method,
   }).then((res) => {
-    console.log('recruit response', res);
     if (res.code === 200) {
       MessagePlugin.success(res.msg);
+      handleSearch();
     }
     handleCloseRecruitDrawer();
   });

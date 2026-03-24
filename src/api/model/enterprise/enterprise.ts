@@ -53,7 +53,7 @@ export interface SearchEnterpriseResult {
   name: string;
   logo: string;
   credit_code: string;
-  address: string;
+  register_address: string;
 }
 export type SearchEnterpriseResponse = ApiResponse<{
   list: SearchEnterpriseResult[];
@@ -69,7 +69,7 @@ export interface JoinEnterprisePayload {
 export type JoinEnterpriseResponse = ApiResponse<[]>;
 
 export interface CreateEnterprisePayload {
-  admin_id: number;
+  // admin_id: number;
   name: string;
   credit_code: string;
   business_license: string;

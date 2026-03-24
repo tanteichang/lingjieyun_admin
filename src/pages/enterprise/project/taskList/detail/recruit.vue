@@ -110,6 +110,7 @@
     <t-card :bordered="false">
       <h3 class="section-title">批量招募记录</h3>
       <common-table
+        row-key="id"
         :data="tableData"
         :loading="loading"
         :pagination="pagination"
@@ -248,6 +249,7 @@ const tableHook = useCommonTable<ImportLogQuery, RecruitRecordRow>({
   fetcher: async (params) => {
     const { data } = await getImportLogList({
       ...params,
+      task_id: Number(route.query.id),
       data_type: ImportDataType.BatchRecruit,
     });
     return {

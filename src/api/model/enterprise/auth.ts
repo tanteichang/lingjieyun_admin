@@ -27,6 +27,7 @@ export interface LoginPayload {
 }
 
 export interface LoginResult {
+  admin_id?: number;
   token: string;
   can_access_console: boolean;
   rejected_join_apply?: boolean;
@@ -62,7 +63,7 @@ export type LoginResponse = ApiResponse<LoginResult>;
 
 export interface SendSmsCodePayload {
   mobile: string;
-  type: 'forget_password' | 'register';
+  type: 'forget_password' | 'register' | 'login' | 'admin_add';
 }
 
 export type SendSmsCodeResponse = ApiResponse<[]>;
@@ -136,3 +137,23 @@ export interface BindListResult {
 export type BindListResponse = ApiResponse<BindListResult>;
 
 export type UnbindWeChatResponse = ApiResponse<[]>;
+
+export interface SendEmailCodePayload {
+  email: string;
+}
+export type SendEmailCodeResponse = ApiResponse<{
+  email: string;
+  scene: string;
+  expire_seconds: number;
+}>;
+
+export interface VerifyEmailCodePayload {
+  email: string;
+  code: string;
+}
+export type VerifyEmailCodeResponse = ApiResponse<{
+  valid: boolean;
+  email: string;
+  scene: string;
+  consume: boolean;
+}>;

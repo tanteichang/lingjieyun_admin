@@ -1,67 +1,63 @@
 <template>
   <div class="list-common-table">
     <t-form :data="form" layout="inline" :label-width="80" colon @submit="handleSubmit" @reset="handleReset">
-      <t-row>
-        <t-col :span="10">
-          <t-row :gutter="[12, 12]">
-            <t-col v-for="item in formConfig.formItem" :key="item.name" :span="item.span || 5">
-              <t-form-item :label="item.label" :name="item.name" class="full-form-item">
-                <t-input
-                  v-if="item.type === 'input'"
-                  v-model="form[item.name]"
-                  type="search"
-                  :placeholder="item.placeholder"
-                  class="form-item-content"
-                  v-bind="item.props"
-                />
-                <t-select
-                  v-else-if="item.type === 'select'"
-                  v-model="form[item.name]"
-                  :placeholder="item.placeholder"
-                  clearable
-                  class="form-item-content"
-                  v-bind="item.props"
-                />
-                <t-tree-select
-                  v-else-if="item.type === 'treeSelect'"
-                  v-model="form[item.name]"
-                  :placeholder="item.placeholder"
-                  clearable
-                  class="form-item-content"
-                  v-bind="item.props"
-                />
-                <t-date-picker
-                  v-else-if="item.type === 'date'"
-                  v-model="form[item.name]"
-                  type="date"
-                  :placeholder="item.placeholder"
-                  class="form-item-content"
-                  v-bind="item.props"
-                />
-                <t-date-range-picker
-                  v-else-if="item.type === 'date-range'"
-                  :value="getRangeValue(item.name)"
-                  type="daterange"
-                  :placeholder="item.placeholder"
-                  class="form-item-content"
-                  v-bind="item.props"
-                  @change="(value) => handleRangeChange(item.name, value)"
-                />
-              </t-form-item>
-            </t-col>
-          </t-row>
-        </t-col>
-        <t-col :span="props.formConfig.formItem.length > 0 ? 2 : 4">
-          <t-space size="small">
-            <t-button theme="primary" type="submit">{{
-              props.formConfig.formItem.length > 0 ? '查询' : '刷新'
-            }}</t-button>
-            <t-button v-if="props.formConfig.formItem.length" variant="base" theme="default" type="reset"
-              >重置</t-button
-            >
-          </t-space>
-        </t-col>
-      </t-row>
+      <div class="form-container">
+        <t-row :gutter="[16, 16]">
+          <t-col v-for="item in formConfig.formItem" :key="item.name" :span="item.span || 5" :offset="item.offset || 0">
+            <t-form-item :label="item.label" :name="item.name" class="full-form-item">
+              <t-input
+                v-if="item.type === 'input'"
+                v-model="form[item.name]"
+                type="search"
+                :placeholder="item.placeholder"
+                class="form-item-content"
+                v-bind="item.props"
+              />
+              <t-select
+                v-else-if="item.type === 'select'"
+                v-model="form[item.name]"
+                :placeholder="item.placeholder"
+                :options="getSelectOptions(item)"
+                clearable
+                class="form-item-content"
+                v-bind="getFormItemProps(item)"
+              />
+              <t-tree-select
+                v-else-if="item.type === 'treeSelect'"
+                v-model="form[item.name]"
+                :placeholder="item.placeholder"
+                clearable
+                class="form-item-content"
+                v-bind="item.props"
+              />
+              <t-date-picker
+                v-else-if="item.type === 'date'"
+                v-model="form[item.name]"
+                type="date"
+                :placeholder="item.placeholder"
+                class="form-item-content"
+                v-bind="item.props"
+              />
+              <t-date-range-picker
+                v-else-if="item.type === 'date-range'"
+                :value="getRangeValue(item.name)"
+                type="daterange"
+                :placeholder="item.placeholder"
+                class="form-item-content"
+                v-bind="item.props"
+                @change="(value) => handleRangeChange(item.name, value)"
+              />
+            </t-form-item>
+          </t-col>
+        </t-row>
+
+        <t-space size="small" class="action-buttons">
+          <t-button theme="primary" type="submit">{{
+            props.formConfig.formItem.length > 0 ? '查询' : '刷新'
+          }}</t-button>
+          <t-button v-if="props.formConfig.formItem.length" variant="base" theme="default" type="reset">重置</t-button>
+        </t-space>
+      </div>
     </t-form>
 
     <div class="project-toolbar">
@@ -98,6 +94,9 @@
     </div>
   </div>
 </template>
+<script lang="ts">
+export type { FormConfig, RowKey, TableConfig } from './types';
+</script>
 <script
   setup
   lang="ts"
@@ -107,55 +106,30 @@
     NameType extends Extract<keyof FormType, string> = Extract<keyof FormType, string>
   "
 >
-import type { DropdownOption, PaginationProps } from 'tdesign-vue-next';
-import { computed, onMounted, reactive, ref, toRefs, useSlots, watch, withDefaults } from 'vue';
+import type { DropdownOption, PaginationProps, SelectOption } from 'tdesign-vue-next';
+import { computed, onMounted, reactive, ref, toRefs, watch, withDefaults } from 'vue';
 
-// export type RowKey<Row> = Extract<keyof Row, string>;
-export type RowKey<Row> = keyof Row;
-
-export interface FormConfig<T, K extends keyof T = keyof T> {
-  /** 表单配置 */
-  formItem: Array<{
-    /** 表单项标签 */
-    label: string;
-    /** 表单项名称 */
-    name: K;
-    /** 表单项宽度 */
-    span?: number;
-    /** 表单项类型 */
-    type: 'input' | 'select' | 'treeSelect' | 'date' | 'date-range';
-    /** 表单项占位符 */
-    placeholder?: string;
-    /** 传递给渲染组件的额外属性 */
-    props?: Record<string, any>;
-  }>;
-  /** 表单数据 */
-  formData: Partial<Pick<T, K>>;
-}
-
-export interface TableConfig<Row, FieldKey extends RowKey<Row>> {
-  /** 表格配置 */
-  tableItem: Array<{
-    /** 表格项标签 */
-    title: string;
-    /** 表格项名称 */
-    colKey: FieldKey;
-    /** 表格项类型（用于行选择等） */
-    type?: 'single' | 'multiple';
-    /** 表格项宽度 */
-    width?: number;
-    /** 表格项最小宽度 */
-    minWidth?: number;
-    /** 表格项是否超出部分省略号显示 */
-    ellipsis?: boolean;
-    /** 表格项对齐方式 */
-    align?: 'left' | 'center' | 'right';
-    /** 表格项是否固定在左侧 */
-    fixed?: 'left' | 'right';
-  }>;
-}
+import type { FormConfig, RowKey, SelectLeafOption, TableConfig } from './types';
 
 type SelectionType = 'single' | 'multiple';
+type FormItemConfig = FormConfig<FormType, NameType>['formItem'][number];
+type RangeValue = string[];
+interface RecordSlotProps {
+  record: RowType;
+}
+interface SelectOptionSlotProps {
+  option: SelectLeafOption;
+  index: number;
+  item: FormItemConfig;
+}
+type CommonTableSlots = {
+  toolbar?: () => any;
+  expandedRow?: (props: RecordSlotProps) => any;
+} & {
+  [K in Extract<keyof RowType, string>]?: (props: RecordSlotProps) => any;
+} & {
+  [K in `select-${NameType}-option`]?: (props: SelectOptionSlotProps) => any;
+};
 
 const props = withDefaults(
   defineProps<{
@@ -200,7 +174,7 @@ const props = withDefaults(
     dropdownOptions: () => [],
     autoSearch: true,
     autoAddIndex: true,
-    rowKey: 'id',
+    rowKey: () => 'id',
     selectedRowKeys: () => [],
     expandedRowKeys: () => [],
     expandOnRowClick: false,
@@ -219,28 +193,55 @@ const emit = defineEmits([
   'update:expandedRowKeys',
 ]);
 
+const slots = defineSlots<CommonTableSlots>();
+const runtimeSlots = slots as Record<string, ((props?: any) => any) | undefined>;
+
 const createInitialForm = () =>
   JSON.parse(JSON.stringify(props.formConfig.formData || {})) as Partial<Pick<FormType, NameType>>;
 const form = reactive<Partial<Pick<FormType, NameType>>>(createInitialForm());
+const rangeValueMap = reactive<Record<string, RangeValue>>({});
+
+const syncRangeValueMap = (source: Partial<Pick<FormType, NameType>>) => {
+  props.formConfig.formItem.forEach((item) => {
+    if (item.type !== 'date-range') return;
+    const value = (source as Record<string, any>)[item.name];
+    if (Array.isArray(value)) {
+      rangeValueMap[String(item.name)] = [...value];
+      return;
+    }
+    if (typeof value === 'string' && value) {
+      const parsedValue = parseDateRangeString(value);
+      rangeValueMap[String(item.name)] = Array.isArray(parsedValue) ? parsedValue : [];
+      return;
+    }
+    rangeValueMap[String(item.name)] = [];
+  });
+};
+
+syncRangeValueMap(form);
 
 watch(
   () => props.formConfig.formData,
   () => {
-    Object.assign(form, createInitialForm());
+    const initialForm = createInitialForm();
+    Object.assign(form, initialForm);
+    syncRangeValueMap(initialForm);
   },
   { deep: true },
 );
 
 const { data, loading, pagination, headerAffixedTop } = toRefs(props);
-
-const slots = useSlots();
-const curSlotName: string[] = ['toolbar'];
+const getSelectOptionSlotName = (name: NameType) => `select-${String(name)}-option`;
+const selectOptionSlotNames = computed(() =>
+  props.formConfig.formItem.map((item) => getSelectOptionSlotName(item.name)),
+);
+const curSlotName = computed(() => ['toolbar', ...selectOptionSlotNames.value]);
 const columnSlots = computed(() => {
-  if (slots) {
-    return Object.keys(slots)
-      .filter((key) => !curSlotName.includes(key))
+  if (runtimeSlots) {
+    return Object.keys(runtimeSlots)
+      .filter((key) => !curSlotName.value.includes(key))
       .map((t) => {
-        return { colKey: t, slot: slots[t] };
+        return { colKey: t, slot: runtimeSlots[t] };
       });
   } else {
     return [];
@@ -251,6 +252,55 @@ const rowKey = computed(() => props.rowKey ?? 'id');
 const expandOnRowClick = computed(() => props.expandOnRowClick ?? false);
 const rowClassName = computed(() => props.rowClassName);
 
+const getFormItemProps = (item: FormItemConfig) => {
+  if (item.type !== 'select') return item.props;
+  const { options: _options, ...restProps } = item.props || {};
+  return restProps;
+};
+
+const mapSelectOptions = (options: SelectOption[], item: FormItemConfig): SelectOption[] => {
+  const optionSlot = runtimeSlots[getSelectOptionSlotName(item.name)] as
+    | ((props: SelectOptionSlotProps) => any)
+    | undefined;
+
+  return options.map((option, index) => {
+    const currentOption = option as SelectLeafOption & {
+      children?: SelectOption[];
+      slots?: Record<string, () => any>;
+    };
+
+    if (Array.isArray(currentOption.children)) {
+      return {
+        ...currentOption,
+        children: mapSelectOptions(currentOption.children, item),
+      };
+    }
+
+    if (!item.optionRender && !optionSlot) {
+      return currentOption;
+    }
+
+    return {
+      ...currentOption,
+      slots: {
+        ...(currentOption.slots || {}),
+        default: () => {
+          if (item.optionRender) {
+            return item.optionRender(currentOption, { index, item });
+          }
+          return optionSlot?.({ option: currentOption, index, item });
+        },
+      },
+    };
+  });
+};
+
+const getSelectOptions = (item: FormItemConfig) => {
+  const options = item.props?.options as SelectOption[] | undefined;
+  if (!Array.isArray(options)) return options;
+  return mapSelectOptions(options, item);
+};
+
 const parseDateRangeString = (value: string) => {
   const match = value.match(/^\s*(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})\s*$/);
   if (!match) {
@@ -260,26 +310,23 @@ const parseDateRangeString = (value: string) => {
 };
 
 const getRangeValue = (name: NameType) => {
-  const value = (form as Record<string, any>)[name];
-  if (Array.isArray(value) || value == null || value === '') {
-    return value;
-  }
-  if (typeof value === 'string') {
-    return parseDateRangeString(value);
-  }
-  return value;
+  return rangeValueMap[String(name)] || [];
 };
 
 const handleRangeChange = (name: NameType, value: any) => {
   if (Array.isArray(value)) {
+    rangeValueMap[String(name)] = [...value];
     const [start, end] = value;
     (form as Record<string, any>)[name] = start && end ? `${start} - ${end}` : '';
     return;
   }
   if (typeof value === 'string') {
+    const parsedValue = parseDateRangeString(value);
+    rangeValueMap[String(name)] = Array.isArray(parsedValue) ? parsedValue : [];
     (form as Record<string, any>)[name] = value;
     return;
   }
+  rangeValueMap[String(name)] = [];
   (form as Record<string, any>)[name] = '';
 };
 
@@ -342,7 +389,7 @@ const columnsWithIndex = computed(() => {
   const indexColumn = {
     title: '#',
     colKey: '__index',
-    width: 80,
+    width: 50,
     align: 'center',
     cell: (_h: any, { rowIndex }: { rowIndex: number }) => (current - 1) * pageSize + rowIndex + 1,
   };
@@ -367,12 +414,13 @@ const handleSubmit = () => {
 };
 
 const handleReset = () => {
-  Object.assign(form, createInitialForm());
+  const initialForm = createInitialForm();
+  Object.assign(form, initialForm);
+  syncRangeValueMap(initialForm);
   emit('reset', { ...form });
 };
 
 onMounted(() => {
-  console.log(props.formConfig);
   if (props.autoSearch) {
     handleSubmit();
   }
@@ -387,6 +435,14 @@ onMounted(() => {
   .project-toolbar {
     margin: var(--td-comp-margin-xxl) 0 var(--td-comp-margin-l);
   }
+}
+.form-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+}
+.action-buttons {
+  margin-left: 12px;
 }
 :deep(.full-form-item) {
   width: 100%;

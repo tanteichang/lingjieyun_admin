@@ -5,7 +5,13 @@
         <div class="logo-panel">
           <div class="logo-wrap">
             <div v-if="!showLogoUploader" class="company-logo">
-              <img :src="logo" alt="公司logo" class="company-logo-img" />
+              <company-badge
+                class="company-logo-badge"
+                :logo="logo"
+                :full-name="companyName"
+                size="100%"
+                text-size="30px"
+              />
             </div>
             <auto-upload
               v-else
@@ -30,13 +36,15 @@
           <div class="company-name">{{ companyName }}</div>
           <div class="company-code">统一社会信用代码: {{ creditCode }}</div>
           <div class="meta-tags">
-            <span class="meta-tag">
+            <span class="meta-tag meta-tag--location">
               <t-icon name="location" />
-              {{ address?.province || '-' }}-{{ address?.city || '-' }}-{{ address?.district || '-' }}
+              <span class="meta-tag__text">
+                {{ address?.province || '-' }}-{{ address?.city || '-' }}-{{ address?.district || '-' }}
+              </span>
             </span>
-            <span class="meta-tag">
+            <span class="meta-tag meta-tag--person">
               <t-icon name="user" />
-              {{ legalPersonInfo.name }}（法人）
+              <span class="meta-tag__text">{{ legalPersonInfo.name }}（法人）</span>
             </span>
           </div>
         </div>
@@ -52,6 +60,7 @@ import { ref } from 'vue';
 
 import type { EnterpriseLegalPersonInfo, EnterpriseProfileAddress } from '@/api/model/enterprise/profile';
 import AutoUpload from '@/components/auto-upload/index.vue';
+import CompanyBadge from '@/components/company-badge/index.vue';
 
 defineOptions({
   name: 'ProfileHeadCard',
@@ -77,7 +86,7 @@ const handleOpenUploader = () => {
 
 const handleSaveLogo = () => {
   const selected = logoFiles.value[0] || null;
-  console.log(selected);
+  if (!selected?.url) return;
   emit('save-logo', selected.url);
   showLogoUploader.value = false;
 };
@@ -99,14 +108,16 @@ const handleCancelLogo = () => {
 .head-wrap {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 20px;
 }
 
 .head-left {
   display: flex;
   gap: 18px;
-  align-items: center;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
 }
 
 .logo-panel {
@@ -136,6 +147,12 @@ const handleCancelLogo = () => {
   justify-content: center;
   gap: 8px;
 }
+
+.company-logo-badge {
+  width: 100%;
+  height: 100%;
+}
+
 .company-logo-img {
   width: 112px;
   height: 112px;
@@ -211,48 +228,118 @@ const handleCancelLogo = () => {
 }
 
 .company-name {
-  font-size: 34px;
-  line-height: 1.2;
+  font-size: clamp(28px, 2.15vw, 34px);
+  line-height: 1.12;
   font-weight: 600;
   color: var(--td-text-color-primary);
+  word-break: break-all;
+}
+
+.company-meta {
+  flex: 1;
+  min-width: 0;
 }
 
 .company-code {
   margin-top: 10px;
   font-size: 12px;
   color: var(--td-text-color-secondary);
+  line-height: 20px;
 }
 
 .meta-tags {
   margin-top: 14px;
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .meta-tag {
   padding: 0 12px;
   border-radius: 999px;
-  height: 28px;
+  min-height: 28px;
   background: #f1f4f9;
   color: var(--td-text-color-secondary);
   font-size: 12px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.meta-tag__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta-tag--location {
+  max-width: min(100%, 320px);
+}
+
+.meta-tag--person {
+  flex: 0 0 auto;
 }
 
 .agreement-btn {
   min-width: 130px;
+  flex: 0 0 auto;
+  align-self: flex-start;
 }
 
-@media (max-width: 1400px) {
+@media (max-width: 1680px) {
+  .logo-wrap {
+    width: 132px;
+    height: 132px;
+  }
+
+  .company-logo,
+  .company-logo-img,
+  .logo-upload,
+  .logo-upload :deep(.t-upload),
+  .logo-upload :deep(.t-upload__flow-op),
+  .logo-upload :deep(.t-upload__card),
+  .logo-upload :deep(.t-upload__single-display) {
+    width: 102px;
+    height: 102px;
+  }
+
+  .agreement-btn {
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 1460px) {
   .head-wrap {
-    flex-direction: column;
     align-items: flex-start;
   }
 
+  .head-left {
+    gap: 14px;
+  }
+
   .company-name {
-    font-size: 22px;
+    font-size: 26px;
+  }
+
+  .meta-tag--location {
+    max-width: 260px;
+  }
+
+  .agreement-btn {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 1280px) {
+  .head-wrap {
+    flex-direction: column;
+  }
+
+  .agreement-btn {
+    align-self: flex-start;
   }
 }
 </style>

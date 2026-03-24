@@ -7,6 +7,8 @@ import router from '@/router';
 import { getPermissionStore, useUserLoginAndRegister, useUserStore } from '@/store';
 import { UserStatus } from '@/store/modules/user';
 
+import { useDictStore } from './store/modules/enterprise/dict';
+
 NProgress.configure({ showSpinner: false });
 
 router.beforeEach(async (to, from, next) => {
@@ -65,6 +67,8 @@ router.beforeEach(async (to, from, next) => {
 router.afterEach((to) => {
   if (to.path === '/login') {
     const userStore = useUserStore();
+    const dictStore = useDictStore();
+    dictStore.logout();
     const permissionStore = getPermissionStore();
     userStore.logout();
     const userLoginAndRegisterStore = useUserLoginAndRegister();

@@ -190,6 +190,7 @@ import type { FormRule, SubmitContext } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { onBeforeMount, reactive, ref, watch } from 'vue';
 
+import { ocrBusinessLicense, ocrIdCard } from '@/api/enterprise/ocr';
 import AutoUpload from '@/components/auto-upload/index.vue';
 import type { ProvinceCityAreaValue } from '@/components/provinceCityAreaPicker/index.vue';
 import ProvinceCityAreaPicker from '@/components/provinceCityAreaPicker/index.vue';
@@ -208,6 +209,11 @@ export interface EnterpriseCertFormExpose {
 const dictStore = useDictStore();
 const userSessionStore = useUserLoginAndRegister();
 const formRef = ref<any>(null);
+const lastOcrLicenseUrl = ref('');
+const lastIdCardOcrUrls = reactive({
+  legalFront: '',
+  superFront: '',
+});
 
 const formData = reactive({
   _licenseImage: [],
@@ -258,6 +264,104 @@ watch(
     }
   },
   { immediate: true },
+);
+
+watch(
+  () => formData._licenseImage?.[0]?.url || '',
+  async (url) => {
+    if (!url || url === lastOcrLicenseUrl.value) {
+      return;
+    }
+
+    lastOcrLicenseUrl.value = url;
+    formData.business_license = url;
+
+    try {
+      const res = await ocrBusinessLicense({ image_url: url });
+      if (res.code !== 200) {
+        return;
+      }
+
+      const fields = res.data?.fields;
+      if (!fields) {
+        return;
+      }
+      formData.name = fields.enterprise_name || formData.name;
+      formData.credit_code = fields.credit_code || formData.credit_code;
+      formData.register_address = fields.address || formData.register_address;
+      formData.legal_person_name = fields.legal_person_name || formData.legal_person_name;
+    } catch (error) {
+      MessagePlugin.warning('营业执照识别失败，请手动填写信息');
+    }
+  },
+);
+
+const handleIdCardOcr = async (
+  url: string,
+  cardSide: 'FRONT' | 'BACK',
+  key: keyof typeof lastIdCardOcrUrls,
+  role: 'legal' | 'super',
+) => {
+  if (!url || url === lastIdCardOcrUrls[key]) {
+    return;
+  }
+
+  lastIdCardOcrUrls[key] = url;
+
+  try {
+    const res = await ocrIdCard({
+      image_url: url,
+      card_side: cardSide,
+    });
+    if (res.code !== 200 || !res.data?.fields) {
+      return;
+    }
+
+    console.log(`${role} ${cardSide.toLowerCase()} id card ocr result:`, res.data);
+
+    if (cardSide === 'FRONT') {
+      if (role === 'legal') {
+        formData.legal_person_name = res.data.fields.name || formData.legal_person_name;
+        formData.legal_person_id_no = res.data.fields.id_card_no || formData.legal_person_id_no;
+      } else {
+        formData.super_admin_name = res.data.fields.name || formData.super_admin_name;
+        formData.super_admin_id_no = res.data.fields.id_card_no || formData.super_admin_id_no;
+      }
+    }
+  } catch (error) {
+    console.error(`${role} ${cardSide.toLowerCase()} id card ocr failed:`, error);
+    MessagePlugin.warning(cardSide === 'FRONT' ? '身份证人像面识别失败，请手动填写信息' : '身份证国徽面识别失败');
+  }
+};
+
+watch(
+  () => formData._idCardFrontImage?.[0]?.url || '',
+  async (url) => {
+    formData.legal_person_id_front = url;
+    await handleIdCardOcr(url, 'FRONT', 'legalFront', 'legal');
+  },
+);
+
+watch(
+  () => formData._idCardBackImage?.[0]?.url || '',
+  (url) => {
+    formData.legal_person_id_back = url;
+  },
+);
+
+watch(
+  () => formData._superAdminIdCardFrontImage?.[0]?.url || '',
+  async (url) => {
+    formData.super_admin_id_front = url;
+    await handleIdCardOcr(url, 'FRONT', 'superFront', 'super');
+  },
+);
+
+watch(
+  () => formData._superAdminIdCardBackImage?.[0]?.url || '',
+  (url) => {
+    formData.super_admin_id_back = url;
+  },
 );
 
 const rules: Record<string, FormRule[]> = {

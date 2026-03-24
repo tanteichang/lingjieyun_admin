@@ -82,6 +82,7 @@
           </div>
 
           <common-table
+            row-key="order_no"
             :data="tableData"
             :loading="loading"
             :pagination="pagination"

@@ -17,6 +17,9 @@ export interface SettlementListPayload extends Query {
   project_id?: number;
   task_type_id?: number; // 任务类型ID
   task_status?: TaskStatus; // 任务状态
+  project_keyword?: string; // 项目名称模糊查询
+  start_time?: string; // 开始时间
+  end_time?: string; // 结束时间
 }
 
 export interface Settlement {
@@ -40,6 +43,7 @@ export interface Settlement {
   task_type_name: string;
   invoice_type_name: string;
   task_status_text: string;
+  job_name: string;
 }
 
 export type SettlementListResponse = ApiResponse<Pagination<Settlement>>;

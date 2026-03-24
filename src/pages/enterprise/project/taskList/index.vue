@@ -11,6 +11,7 @@
     <div style="height: 20px"></div>
     <common-table
       :data="tableData"
+      row-key="id"
       :loading="loading"
       :pagination="pagination"
       :header-affixed-top="headerAffixedTop"
@@ -20,12 +21,28 @@
       @reset="handleReset"
       @page-change="handlePageChange"
     >
+      <template #select-task_status-option="{ option }">
+        <t-tag
+          :color="TASK_STATUS_TAG[option.value as TaskStatus]?.color"
+          :theme="TASK_STATUS_TAG[option.value as TaskStatus]?.theme"
+          :variant="TASK_STATUS_TAG[option.value as TaskStatus]?.variant"
+        >
+          {{ TASK_STATUS_TAG[option.value as TaskStatus]?.label || '-' }}
+        </t-tag>
+      </template>
       <template #project="{ record }">
         {{ record.project?.name || '-' }}
       </template>
+      <template #recruitment_type_text="{ record }">
+        <div v-for="value in record.recruitment_type_text.split(',')" :key="value">{{ value.trim() }}</div>
+      </template>
       <template #task_status="{ record }">
-        <t-tag :theme="statusTag[(record as TaskRow).task_status]?.theme" variant="light">
-          {{ statusTag[(record as TaskRow).task_status]?.label || '-' }}
+        <t-tag
+          :theme="TASK_STATUS_TAG[(record as TaskRow).task_status]?.theme"
+          :variant="TASK_STATUS_TAG[(record as TaskRow).task_status]?.variant"
+          :color="TASK_STATUS_TAG[(record as TaskRow).task_status]?.color"
+        >
+          {{ TASK_STATUS_TAG[(record as TaskRow).task_status]?.label || '-' }}
         </t-tag>
       </template>
       <template #op="{ record }">
@@ -75,7 +92,6 @@
   </t-card>
 </template>
 <script setup lang="ts">
-import type { TdTagProps } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -83,7 +99,7 @@ import { useRouter } from 'vue-router';
 import { getTaskList, pauseTask, resumeTask, terminateTask } from '@/api/enterprise/task';
 import type { Row } from '@/api/model/common';
 import type { Status_Counts, TaskItem, TaskQuery } from '@/api/model/enterprise/taskModel';
-import { TASK_STATUS_OPTIONS, TaskStatus } from '@/api/model/enterprise/taskModel';
+import { TASK_STATUS_OPTIONS, TASK_STATUS_TAG, TaskStatus } from '@/api/model/enterprise/taskModel';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { prefix } from '@/config/global';
@@ -115,14 +131,6 @@ const statusTabs: Array<{ label: string; value: keyof Status_Counts }> = [
   { label: '已终止', value: 'terminated' },
 ];
 
-const statusTag: Record<TaskStatus, { label: string; theme: TdTagProps['theme'] }> = {
-  [TaskStatus.ongoing]: { label: '进行中', theme: 'warning' },
-  [TaskStatus.paused]: { label: '已暂停', theme: 'primary' },
-  [TaskStatus.completed]: { label: '已完成', theme: 'success' },
-  [TaskStatus.terminated]: { label: '已终止', theme: 'danger' },
-  [TaskStatus.unpublished]: { label: '未发布', theme: 'primary' },
-};
-
 const defaultQuery: TaskQuery = {
   page: 1,
   limit: 10,
@@ -136,7 +144,7 @@ const formConfig: FormConfig<TaskRow, keyof TaskRow> = {
       name: 'job_id',
       type: 'treeSelect',
       placeholder: '请选择任务类型',
-      props: { data: dictStore.getJobOptions },
+      props: { data: dictStore.getJobOptions, filterable: true },
       span: 6,
     },
     {
@@ -215,9 +223,7 @@ const {
 } = tableHook;
 
 const handleTabChange = (value: keyof Status_Counts) => {
-  console.log('切换标签:', value);
   currentStatus.value = value;
-
   // 处理 'all' 特殊情况，因为它不在 TaskStatus 枚举中
   let statusValue: TaskStatus | undefined;
   if (value !== 'all') {

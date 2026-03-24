@@ -1,4 +1,4 @@
-import type { ApiResponse, Pagination, Query } from '../common';
+import type { ApiResponse, Pagination, Query, StatusTagMap } from '../common';
 import type { DeliveryMode } from './delivery';
 
 export interface TaskQuery extends Query {
@@ -26,24 +26,30 @@ export const TASK_STATUS_OPTIONS: Record<TaskStatus, string> = {
   [TaskStatus.unpublished]: '未发布',
 };
 
-export const TASK_STATUS_TAG: Record<
-  TaskStatus,
-  {
-    label: string;
-    theme?: 'primary' | 'warning' | 'success' | 'danger';
-    variant?: 'light' | 'light-outline';
-    color?: string;
-  }
-> = {
-  [TaskStatus.pending]: { label: '待开始', theme: 'warning', variant: 'light' },
-  [TaskStatus.ongoing]: { label: '进行中', theme: 'success', variant: 'light' },
-  [TaskStatus.paused]: { label: '已暂停', theme: 'primary', variant: 'light-outline' },
-  [TaskStatus.completed]: { label: '已完成', theme: 'primary', variant: 'light' },
-  [TaskStatus.terminated]: { label: '已终止', theme: 'danger', variant: 'light' },
+export const TASK_STATUS_TAG: StatusTagMap<TaskStatus> = {
+  [TaskStatus.pending]: {
+    label: '待开始',
+    theme: 'warning',
+  },
+  [TaskStatus.ongoing]: {
+    label: '进行中',
+    theme: 'success',
+  },
+  [TaskStatus.paused]: {
+    label: '已暂停',
+    color: '#86909C',
+  },
+  [TaskStatus.completed]: {
+    label: '已完成',
+    theme: 'primary',
+  },
+  [TaskStatus.terminated]: {
+    label: '已终止',
+    theme: 'danger',
+  },
   [TaskStatus.unpublished]: {
     label: '未发布',
-    theme: 'primary',
-    variant: 'light',
+    color: '#722ED1',
   },
 };
 
@@ -136,6 +142,7 @@ export interface TaskItem {
   delivery_mode: DeliveryMode; // 交付模式（1-小程序上传，2-系统批量上传，3-同时选择（无限制））
   job_id: number; // 岗位要求ID
   job_name: string; // 岗位要求名称
+  delivery_standard: string; // 交付物要求
 }
 
 export interface Status_Counts {
@@ -268,6 +275,7 @@ export interface TaskApplyListPayload {
   keyword_name?: string;
   keyword_mobile?: string;
   keyword_task?: string;
+  apply_status?: TaskApplyStatus;
 }
 
 export type TaskApplyQuery = TaskApplyListPayload & Query;
@@ -277,6 +285,21 @@ export enum TaskApplyStatus {
   passed = 1, // 已通过
   rejected = 2, // 已拒绝
 }
+
+export const TASK_APPLY_STATUS_TAG: StatusTagMap<TaskApplyStatus> = {
+  [TaskApplyStatus.pending]: {
+    label: '待审核',
+    theme: 'warning',
+  },
+  [TaskApplyStatus.passed]: {
+    label: '已通过',
+    theme: 'success',
+  },
+  [TaskApplyStatus.rejected]: {
+    label: '已拒绝',
+    theme: 'danger',
+  },
+};
 
 export interface TaskApplyUserInfo {
   id: number;
@@ -306,6 +329,7 @@ export interface TaskApplyItem {
   user_info: TaskApplyUserInfo;
   user_info_mobile: string;
   user_info_real_name: string;
+  customer_name: string;
 }
 
 export interface TaskApplyListResult extends Pagination<TaskApplyItem> {
@@ -387,3 +411,7 @@ export interface RemoveMemberPayload {
 }
 
 export type RemoveMemberResponse = ApiResponse<null>;
+
+export interface ExportApprovedMemberListPayload {
+  task_id: number; // 任务ID（必填）
+}

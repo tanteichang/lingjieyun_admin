@@ -100,6 +100,7 @@ export enum UserStatus {
   NotDo = 0, // 未选择加入或创建企业
   JoinPending = 1, // 加入企业审核中
   CreatePending = 2, // 创建企业审核中
+  CreateRejected = 5, // 创建企业审核未通过
   CreateSignPending = 3, // 创建企业通过，待签约
   Joined = 4, // 已加入企业
 }

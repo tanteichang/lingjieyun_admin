@@ -11,6 +11,30 @@ export const LAST_30_DAYS = [
   dayjs().subtract(1, 'day').format('YYYY-MM-DD'),
 ];
 
+export const parseDateRange = (value?: string | [string, string] | null) => {
+  if (Array.isArray(value)) {
+    const [start, end] = value;
+    return {
+      start: start || undefined,
+      end: end || undefined,
+    };
+  }
+
+  if (typeof value !== 'string' || !value.trim()) {
+    return {
+      start: undefined,
+      end: undefined,
+    };
+  }
+
+  const match = value.match(/^\s*(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})\s*$/);
+
+  return {
+    start: match?.[1] || undefined,
+    end: match?.[2] || undefined,
+  };
+};
+
 // utils/date.js
 /**
  * 将 Date/毫秒戳 转换为十位秒级时间戳

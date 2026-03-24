@@ -19,6 +19,7 @@ export interface EnterpriseProfileBasicInfo {
   address: EnterpriseProfileAddress;
   desc: string;
   employee_benefits: string;
+  name: string;
 }
 
 export interface EnterpriseIndustryRegistration {
@@ -49,7 +50,6 @@ export interface EnterpriseProfile {
 export type EnterpriseProfileResponse = ApiResponse<EnterpriseProfile>;
 
 export interface EnterpriseProfileSavePayload {
-  enterprise_id: number;
   logo?: string;
   credit_code?: string;
   legal_person_name?: string;
@@ -59,9 +59,9 @@ export interface EnterpriseProfileSavePayload {
   email?: string;
   industry_id?: string;
   industry?: string;
-  province?: string;
-  city?: string;
-  district?: string;
+  province_id?: string;
+  city_id?: string;
+  district_id?: string;
   address_detail?: string;
   desc?: string;
   employee_benefits?: string;
@@ -72,6 +72,8 @@ export interface EnterpriseProfileSavePayload {
   legal_person_phone?: string;
   legal_person_id_front?: string;
   legal_person_id_back?: string;
+  longitude?: number;
+  latitude?: number;
 }
 
 export type EnterpriseProfileSaveResponse = ApiResponse<[]>;

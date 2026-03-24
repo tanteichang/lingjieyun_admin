@@ -63,6 +63,7 @@ import { PaymentStatus } from '@/api/model/enterprise/bill';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { useCommonTable } from '@/hooks/useCommonTable';
+import { parseDateRange } from '@/utils/date';
 
 import ConfirmIssueDialog from './component/ConfirmIssueDialog.vue';
 
@@ -72,7 +73,7 @@ defineOptions({
 
 type BillTabValue = 'all' | 'pending' | 'paying' | 'success' | 'partial' | 'fail' | 'closed';
 interface PaymentPayQuery {
-  dateRange: string;
+  dateRange: [string, string];
   payment_status: '' | PaymentStatus;
   bill_no: string;
 }
@@ -82,7 +83,7 @@ type PaymentBillTableRow = BillListItem & {
 };
 
 const defaultQuery: PaymentPayQuery = {
-  dateRange: '',
+  dateRange: ['', ''],
   payment_status: '',
   bill_no: '',
 };
@@ -110,7 +111,19 @@ const tabCounts = ref<BillTabCounts>({
 
 const formConfig: FormConfig<PaymentPayQuery, keyof PaymentPayQuery> = {
   formItem: [
-    { label: '时间筛选', name: 'dateRange', type: 'date-range', span: 4 },
+    {
+      label: '日期范围',
+      name: 'dateRange',
+      type: 'date-range',
+      placeholder: '请选择日期范围',
+      span: 5,
+      props: {
+        clearable: true,
+        disableDate: (date: Date) => {
+          return date.getTime() > Date.now();
+        },
+      },
+    },
     {
       label: '账单状态',
       name: 'payment_status',
@@ -148,7 +161,7 @@ const tableConfig: TableConfig<PaymentBillTableRow, keyof PaymentBillTableRow> =
     { title: '已支付服务费', colKey: 'paid_service_fee', width: 110, align: 'right' },
     { title: '支付失败数量', colKey: 'payment_fail_count', width: 110, align: 'center' },
     { title: '支付失败金额', colKey: 'payment_fail_amount', width: 110, align: 'right' },
-    { title: '操作', colKey: 'op', width: 120, fixed: 'right' },
+    { title: '操作', colKey: 'op', width: 140, fixed: 'right' },
   ],
 };
 
@@ -181,15 +194,6 @@ const getTabPaymentStatus = (status: BillTabValue): PaymentStatus | undefined =>
   return undefined;
 };
 
-const parseDateRange = (range: string) => {
-  if (!range) return { start_date: undefined, end_date: undefined };
-  const [start, end] = range.split(' - ').map((item) => item.trim());
-  return {
-    start_date: start || undefined,
-    end_date: end || undefined,
-  };
-};
-
 const parsePaymentStatus = (value: unknown): PaymentStatus | '' => {
   if (value === '' || value == null) return '';
   const status = Number(value);
@@ -202,12 +206,12 @@ const parsePaymentStatus = (value: unknown): PaymentStatus | '' => {
 const tableHook = useCommonTable<PaymentPayQuery, PaymentBillTableRow>({
   fetcher: async (params) => {
     const queryParams: PaymentPayQuery = {
-      dateRange: (params.dateRange as string) || '',
+      dateRange: (params.dateRange as [string, string]) || ['', ''],
       payment_status: parsePaymentStatus(params.payment_status),
       bill_no: params.bill_no || '',
     };
     Object.assign(currentQuery, queryParams);
-    const { start_date, end_date } = parseDateRange(queryParams.dateRange);
+    const { start: start_date, end: end_date } = parseDateRange(queryParams.dateRange);
     const tabStatus = getTabPaymentStatus(activeStatus.value);
     const payment_status = tabStatus ?? (queryParams.payment_status === '' ? undefined : queryParams.payment_status);
     const { data } = await getBillList({

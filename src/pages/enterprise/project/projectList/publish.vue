@@ -150,6 +150,7 @@ const formGroups = computed(() => [
         span: 6,
         rules: [{ required: true, message: '请选择开票类型' }],
         props: {
+          filterable: true,
           clearable: true,
           data: invoiceTypeOptions.value,
         },
