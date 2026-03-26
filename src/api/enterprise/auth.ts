@@ -22,6 +22,8 @@ import type {
   VerifyCaptchaResponse,
   VerifyEmailCodePayload,
   VerifyEmailCodeResponse,
+  VerifyEmailSmsCodePayload,
+  VerifyEmailSmsCodeResponse,
 } from '@/api/model/enterprise/auth';
 import { getRequest, postRequest } from '@/utils/request';
 
@@ -39,6 +41,7 @@ const Api = {
   UnbindWeChat: '/admin/enterprise/unbindWeChat',
   SendEmailCode: '/admin/enterprise/sendEmailCode',
   VerifyEmailCode: '/admin/enterprise/verifyEmailCode',
+  VerifyEmailSmsCode: '/admin/enterprise/verifyEmailSmsCode',
 };
 
 export function login(params: LoginPayload) {
@@ -134,6 +137,14 @@ export function sendEmailCode(params: SendEmailCodePayload) {
 export function verifyEmailCode(params: VerifyEmailCodePayload) {
   return postRequest<VerifyEmailCodeResponse>({
     url: Api.VerifyEmailCode,
+    params,
+    showError: true,
+  });
+}
+
+export function verifyEmailSmsCode(params: VerifyEmailSmsCodePayload) {
+  return postRequest<VerifyEmailSmsCodeResponse>({
+    url: Api.VerifyEmailSmsCode,
     params,
     showError: true,
   });

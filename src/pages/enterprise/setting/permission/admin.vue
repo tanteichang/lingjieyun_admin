@@ -57,7 +57,7 @@
     >
       <t-form ref="formRef" :data="createForm" :rules="formRules" label-align="top">
         <t-form-item label="真实姓名" name="name">
-          <t-input v-model="createForm.name" :disabled="formEdit" placeholder="请输入真实姓名" clearable />
+          <t-input v-model="createForm.name" placeholder="请输入真实姓名" clearable />
         </t-form-item>
         <t-form-item label="手机号" name="mobile">
           <t-input v-model="createForm.mobile" :disabled="formEdit" placeholder="请输入手机号" clearable />
@@ -226,6 +226,7 @@ const handleConfirmCreate = async () => {
     createLoading.value = true;
     if (formEdit.value) {
       const res = await updateAdmin({
+        name: createForm.value.name.trim(),
         admin_id: createForm.value.admin_id as number,
         role_id: createForm.value.role_id as number,
       });

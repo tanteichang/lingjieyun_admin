@@ -4,7 +4,7 @@
       <div class="head-left">
         <div class="logo-panel">
           <div class="logo-wrap">
-            <div v-if="!showLogoUploader" class="company-logo">
+            <div class="company-logo">
               <company-badge
                 class="company-logo-badge"
                 :logo="logo"
@@ -13,22 +13,9 @@
                 text-size="30px"
               />
             </div>
-            <auto-upload
-              v-else
-              v-model="logoFiles"
-              class="logo-upload"
-              theme="image"
-              accept=".png,.jpeg,.jpg"
-              :max="1"
-              :auto-upload="true"
-            />
-            <button v-if="!showLogoUploader" class="logo-camera" type="button" @click="handleOpenUploader">
+            <button class="logo-camera" type="button" @click="handleOpenUploader">
               <t-icon name="camera" style="cursor: pointer" />
             </button>
-          </div>
-          <div v-if="showLogoUploader" class="logo-actions">
-            <t-button size="small" theme="primary" @click="handleSaveLogo">保存</t-button>
-            <t-button size="small" variant="outline" @click="handleCancelLogo">取消</t-button>
           </div>
         </div>
 
@@ -49,15 +36,37 @@
           </div>
         </div>
       </div>
-
-      <t-button variant="outline" theme="primary" class="agreement-btn">查看签约协议</t-button>
+      <t-button :loading="loading" variant="text" theme="primary" class="agreement-btn" @click="handleViewAgreement"
+        >查看签约协议</t-button
+      >
     </div>
   </t-card>
+
+  <t-dialog
+    v-model:visible="logoDialogVisible"
+    width="520px"
+    header="修改企业 LOGO"
+    confirm-btn="保存"
+    cancel-btn="取消"
+    @confirm="handleSaveLogo"
+    @cancel="handleCancelLogo"
+    @close="handleCancelLogo"
+  >
+    <div class="logo-dialog">
+      <div class="logo-dialog__upload">
+        <div class="logo-dialog__title">上传新 LOGO</div>
+        <auto-upload v-model="logoFiles" theme="image" accept=".png,.jpeg,.jpg" :max="1" :auto-upload="true" />
+        <div class="logo-dialog__tip">支持 PNG、JPG、JPEG，建议上传清晰的正方形图片。</div>
+      </div>
+    </div>
+  </t-dialog>
 </template>
 <script setup lang="ts">
 import type { UploadFile } from 'tdesign-vue-next';
+import { MessagePlugin } from 'tdesign-vue-next';
 import { ref } from 'vue';
 
+import { viewAgreement } from '@/api/enterprise/agreement';
 import type { EnterpriseLegalPersonInfo, EnterpriseProfileAddress } from '@/api/model/enterprise/profile';
 import AutoUpload from '@/components/auto-upload/index.vue';
 import CompanyBadge from '@/components/company-badge/index.vue';
@@ -77,23 +86,44 @@ const props = defineProps<{
 const emit = defineEmits<{
   'save-logo': [url: string];
 }>();
-const showLogoUploader = ref(false);
+
+const loading = ref(false);
+
+const logoDialogVisible = ref(false);
 const logoFiles = ref<UploadFile[]>([]);
 
 const handleOpenUploader = () => {
-  showLogoUploader.value = true;
+  logoDialogVisible.value = true;
 };
 
 const handleSaveLogo = () => {
   const selected = logoFiles.value[0] || null;
   if (!selected?.url) return;
   emit('save-logo', selected.url);
-  showLogoUploader.value = false;
+  logoFiles.value = [];
+  logoDialogVisible.value = false;
 };
 
 const handleCancelLogo = () => {
   logoFiles.value = [];
-  showLogoUploader.value = false;
+  logoDialogVisible.value = false;
+};
+
+const handleViewAgreement = () => {
+  loading.value = true;
+  viewAgreement()
+    .then((res) => {
+      if (res.code === 200) {
+        if (res.data.ess_file_url) {
+          window.open(res.data.ess_file_url);
+        } else {
+          MessagePlugin.error('签约协议不存在');
+        }
+      }
+    })
+    .finally(() => {
+      loading.value = false;
+    });
 };
 </script>
 <style lang="less" scoped>
@@ -106,8 +136,8 @@ const handleCancelLogo = () => {
 }
 
 .head-wrap {
+  position: relative;
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   gap: 20px;
 }
@@ -122,9 +152,6 @@ const handleCancelLogo = () => {
 
 .logo-panel {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
 }
 
 .logo-wrap {
@@ -157,37 +184,6 @@ const handleCancelLogo = () => {
   width: 112px;
   height: 112px;
   object-fit: cover;
-}
-
-.logo-upload {
-  width: 112px;
-  height: 112px;
-
-  :deep(.t-upload) {
-    width: 112px;
-    height: 112px;
-  }
-
-  :deep(.t-upload__flow-op) {
-    width: 112px;
-    height: 112px;
-  }
-
-  :deep(.t-upload__card) {
-    width: 112px;
-    height: 112px;
-    margin: 0;
-  }
-
-  :deep(.t-upload__single-display) {
-    width: 112px;
-    height: 112px;
-  }
-}
-
-.logo-actions {
-  display: flex;
-  gap: 8px;
 }
 
 .logo-line {
@@ -228,7 +224,7 @@ const handleCancelLogo = () => {
 }
 
 .company-name {
-  font-size: clamp(28px, 2.15vw, 34px);
+  font-size: 24px;
   line-height: 1.12;
   font-weight: 600;
   color: var(--td-text-color-primary);
@@ -284,9 +280,46 @@ const handleCancelLogo = () => {
 }
 
 .agreement-btn {
-  min-width: 130px;
-  flex: 0 0 auto;
-  align-self: flex-start;
+  position: absolute;
+  right: 0;
+  bottom: -10px;
+  min-width: 120px;
+}
+
+.logo-dialog {
+  display: grid;
+  gap: 22px;
+  padding-top: 8px;
+}
+
+.logo-dialog__title {
+  margin-bottom: 12px;
+  color: var(--td-text-color-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.logo-dialog__preview,
+.logo-dialog__upload {
+  padding: 18px;
+}
+
+.logo-dialog__badge {
+  width: 120px;
+  height: 120px;
+  border: 1px solid #dce5f4;
+  border-radius: 16px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-dialog__tip {
+  margin-top: 12px;
+  color: var(--td-text-color-secondary);
+  font-size: 12px;
+  line-height: 20px;
 }
 
 @media (max-width: 1680px) {
@@ -312,10 +345,6 @@ const handleCancelLogo = () => {
 }
 
 @media (max-width: 1460px) {
-  .head-wrap {
-    align-items: flex-start;
-  }
-
   .head-left {
     gap: 14px;
   }
@@ -329,17 +358,20 @@ const handleCancelLogo = () => {
   }
 
   .agreement-btn {
-    align-self: flex-start;
+    min-width: 120px;
   }
 }
 
 @media (max-width: 1280px) {
   .head-wrap {
     flex-direction: column;
+    align-items: flex-start;
   }
 
   .agreement-btn {
-    align-self: flex-start;
+    position: static;
+    margin-top: 20px;
+    align-self: flex-end;
   }
 }
 </style>

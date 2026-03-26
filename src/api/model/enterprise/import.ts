@@ -17,6 +17,14 @@ export interface ImportLogPayload extends Query {
 
 export type ImportLogQuery = ImportLogPayload;
 
+export interface ImportDetailItem {
+  action: string;
+  row_index: number;
+  status: 'success' | 'fail';
+  error?: string;
+  data?: Array<string | number>;
+}
+
 export interface ImportLogItem {
   id: number;
   batch_no: string;
@@ -27,7 +35,7 @@ export interface ImportLogItem {
   total_count: number;
   success_count: number;
   fail_count: number;
-  import_details: string;
+  import_details: ImportDetailItem[];
   start_time: number;
   end_time: number;
   duration: number;

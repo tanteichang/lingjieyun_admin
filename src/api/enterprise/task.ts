@@ -1,3 +1,5 @@
+import { get } from 'lodash';
+
 import type {
   BatchRecruitPayload,
   BatchRecruitResponse,
@@ -10,6 +12,8 @@ import type {
   TaskApplyListResponse,
   TaskApplyReviewPayload,
   TaskApplyReviewResponse,
+  TaskDetailPayload,
+  TaskDetailResponse,
   TaskListResponse,
   TaskMemberListPayload,
   TaskMemberListResponse,
@@ -27,6 +31,7 @@ import { getRequest, postRequest } from '@/utils/request';
 
 const API = {
   TaskList: '/admin/enterprise/task/list',
+  TaskDetail: '/admin/enterprise/task/detail',
   TaskPublish: '/admin/enterprise/task/publish',
   TaskPause: '/admin/enterprise/task/pause',
   TaskResume: '/admin/enterprise/task/resume',
@@ -50,6 +55,19 @@ export const getTaskList = (params: TaskQuery) => {
     showError: true,
   });
 };
+
+/**
+ * 获取任务详情
+ */
+
+export const getTaskDetail = (params: TaskDetailPayload) => {
+  return getRequest<TaskDetailResponse>({
+    url: API.TaskDetail,
+    params,
+    showError: true,
+  });
+};
+
 /**
  * 发布任务
  */

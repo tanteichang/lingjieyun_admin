@@ -2,7 +2,12 @@
   <div class="bank-card-page">
     <div class="section-head">
       <div class="section-title">银行卡信息</div>
-      <t-button theme="primary" class="add-bank-btn" :disabled="!canOperate" @click="openAddDialog"
+      <t-button
+        v-if="bankList.length"
+        theme="primary"
+        class="add-bank-btn"
+        :disabled="!canOperate"
+        @click="openAddDialog"
         >添加银行卡</t-button
       >
     </div>
@@ -34,7 +39,22 @@
           </div>
         </div>
       </div>
-      <t-empty v-else description="暂无银行卡信息" />
+      <div v-else class="bank-card-empty">
+        <div class="bank-card-empty__illustration">
+          <div class="bank-card-empty__card bank-card-empty__card--back"></div>
+          <div class="bank-card-empty__card bank-card-empty__card--front">
+            <span class="bank-card-empty__plus">+</span>
+          </div>
+        </div>
+        <div class="bank-card-empty__title">暂无对公银行账户</div>
+        <div class="bank-card-empty__desc">您尚未绑定任何对公银行账户，绑定后即可进行余额提现、资金结算等操作。</div>
+        <t-button theme="primary" class="bank-card-empty__action" :disabled="!canOperate" @click="openAddDialog">
+          <template #icon>
+            <t-icon name="add" />
+          </template>
+          立即添加银行卡
+        </t-button>
+      </div>
     </t-loading>
 
     <t-dialog
@@ -230,8 +250,10 @@ onMounted(() => {
 });
 </script>
 <style lang="less" scoped>
+@import './profile-shared.less';
+
 .bank-card-page {
-  padding: 34px 24px 24px;
+  padding: 32px 32px 24px;
 }
 
 .section-head {
@@ -243,23 +265,7 @@ onMounted(() => {
 }
 
 .section-title {
-  position: relative;
-  padding-left: 14px;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--td-text-color-primary);
-  line-height: 1.2;
-}
-
-.section-title::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 1px;
-  width: 4px;
-  height: 18px;
-  border-radius: 999px;
-  background: var(--td-brand-color);
+  .profile-section-title(18px; 14px; 0);
 }
 
 .add-bank-btn {
@@ -274,6 +280,141 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
+}
+
+.bank-card-empty {
+  min-height: 440px;
+  padding: 52px 20px 36px;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at top, rgb(49 104 255 / 4%), transparent 40%),
+    linear-gradient(180deg, #fff 0%, #fcfdff 100%);
+  border: 1px solid #edf1f7;
+  box-shadow: 0 8px 30px rgb(15 37 77 / 4%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.bank-card-empty__illustration {
+  position: relative;
+  width: 120px;
+  height: 92px;
+}
+
+.bank-card-empty__card {
+  position: absolute;
+  border-radius: 14px;
+}
+
+.bank-card-empty__card--back {
+  top: 4px;
+  left: 22px;
+  width: 72px;
+  height: 60px;
+  background: linear-gradient(180deg, #e7edf9 0%, #dbe3f4 100%);
+  transform: rotate(-8deg);
+}
+
+.bank-card-empty__card--front {
+  left: 38px;
+  top: 14px;
+  width: 96px;
+  height: 60px;
+  border: 2px dashed #cfd8e6;
+  background: linear-gradient(180deg, #fbfcff 0%, #f3f6fb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bank-card-empty__plus {
+  color: #c1cad8;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 300;
+}
+
+.bank-card-empty__badge {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #6fa0ff 0%, #4d7ef0 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  box-shadow: 0 10px 18px rgb(77 126 240 / 24%);
+}
+
+.bank-card-empty__title {
+  margin-top: 18px;
+  color: #0f254d;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 700;
+}
+
+.bank-card-empty__desc {
+  width: 100%;
+  max-width: 340px;
+  margin-top: 6px;
+  color: #98a3b7;
+  font-size: 13px;
+  line-height: 24px;
+}
+
+.bank-card-empty__action {
+  min-width: 196px;
+  height: 42px;
+  margin-top: 22px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #3e70ff 0%, #2454de 100%);
+  box-shadow: 0 12px 28px rgb(36 84 222 / 20%);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.bank-card-empty__safe {
+  margin-top: 22px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #f7f9fc;
+  color: #8f9aaf;
+  font-size: 12px;
+  line-height: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bank-card-empty__safe-icon {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #38d370 0%, #24b85d 100%);
+  flex: 0 0 auto;
+}
+
+.bank-card-empty__safe-icon::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 2px;
+  width: 4px;
+  height: 7px;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(40deg);
 }
 
 .bank-card-item {
@@ -492,6 +633,29 @@ onMounted(() => {
   .bank-card-grid {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .bank-card-empty {
+    min-height: 380px;
+    padding: 44px 16px 28px;
+  }
+
+  .bank-card-empty__desc {
+    max-width: 280px;
+    font-size: 13px;
+    line-height: 22px;
+  }
+
+  .bank-card-empty__action {
+    min-width: 184px;
+    height: 40px;
+    margin-top: 20px;
+  }
+
+  .bank-card-empty__safe {
+    margin-top: 20px;
+    padding: 6px 10px;
+    font-size: 12px;
   }
 
   .bank-card-item {

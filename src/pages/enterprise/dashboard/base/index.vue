@@ -105,7 +105,6 @@
         <div class="panel__header panel__header--align-start">
           <div>
             <h3 class="panel__title">结算账单</h3>
-            <p class="panel__subtext">账单数 / 结算人数 / 结算金额</p>
           </div>
           <div class="period-switch">
             <button
@@ -139,25 +138,18 @@
             </button>
           </div>
         </div>
-        <div class="recruit-chart">
-          <div
-            class="recruit-ring"
-            :style="{
-              '--recruit-angle': `${currentRecruitData.rate * 360}deg`,
-              '--recruit-primary': recruitLegend[0].color,
-              '--recruit-secondary': recruitLegend[1].color,
-            }"
-          >
-            <div class="recruit-ring__inner">
-              <strong>{{ formatPercent(currentRecruitData.rate) }}</strong>
-              <span>{{ currentRecruitData.primaryLabel }}</span>
-            </div>
-          </div>
-          <div class="recruit-legend">
-            <div v-for="item in recruitLegend" :key="item.label" class="recruit-legend__item">
+        <div class="recruit-chart" @click="handleRecruitAreaClick">
+          <div ref="recruitChartRef" class="chart chart--donut" />
+          <div class="recruit-legend" @click="clearRecruitHighlight">
+            <div
+              v-for="item in recruitLegend"
+              :key="item.label"
+              class="recruit-legend__item"
+              :class="{ 'recruit-legend__item--active': item.key === currentRecruitSummary.activeKey }"
+              @click.stop="handleRecruitHighlight(item.key)"
+            >
               <span class="recruit-legend__dot" :style="{ backgroundColor: item.color }" />
               <span>{{ item.label }}</span>
-              <strong>{{ item.value }}</strong>
             </div>
           </div>
         </div>
@@ -167,8 +159,8 @@
 </template>
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { LineChart } from 'echarts/charts';
-import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
+import { LineChart, PieChart } from 'echarts/charts';
+import { GraphicComponent, GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
 import type { ECharts, EChartsCoreOption } from 'echarts/core';
 import * as echarts from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
@@ -179,10 +171,11 @@ defineOptions({
   name: 'DashboardBase',
 });
 
-echarts.use([LineChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer]);
+echarts.use([LineChart, PieChart, GraphicComponent, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer]);
 
 type PeriodKey = '7d' | '30d' | 'month' | 'year';
 type TrendType = 'up' | 'down';
+type RecruitKey = 'free' | 'directed';
 
 interface MetricCard {
   title: string;
@@ -229,8 +222,13 @@ interface SettlementTrend {
 interface RecruitData {
   free: number;
   directed: number;
+}
+
+interface RecruitSummary {
+  activeKey: RecruitKey | null;
   primaryLabel: string;
   rate: number;
+  valueText: string;
 }
 
 const router = useRouter();
@@ -373,24 +371,42 @@ const settlementTrendMap: Record<PeriodKey, SettlementTrend> = {
 };
 
 const recruitMap: Record<PeriodKey, RecruitData> = {
-  '7d': { free: 25, directed: 7, primaryLabel: '自由招募', rate: 25 / 32 },
-  '30d': { free: 81, directed: 19, primaryLabel: '自由招募', rate: 81 / 100 },
-  month: { free: 103, directed: 29, primaryLabel: '自由招募', rate: 103 / 132 },
-  year: { free: 458, directed: 142, primaryLabel: '自由招募', rate: 458 / 600 },
+  '7d': { free: 25, directed: 7 },
+  '30d': { free: 81, directed: 19 },
+  month: { free: 103, directed: 29 },
+  year: { free: 458, directed: 142 },
 };
 
 const activeRankingPeriod = ref<PeriodKey>('7d');
 const activeSettlementPeriod = ref<PeriodKey>('7d');
 const activeRecruitPeriod = ref<PeriodKey>('7d');
+const selectedRecruitKey = ref<RecruitKey | null>(null);
 const settlementChartRef = ref<HTMLDivElement>();
+const recruitChartRef = ref<HTMLDivElement>();
 let settlementChart: ECharts | null = null;
+let recruitChart: ECharts | null = null;
+let preventRecruitClear = false;
 
 const currentRankingList = computed(() => rankingMap[activeRankingPeriod.value]);
 const currentRecruitData = computed(() => recruitMap[activeRecruitPeriod.value]);
 const recruitLegend = computed(() => [
-  { label: '自由招募', value: currentRecruitData.value.free, color: '#1E5BFF' },
-  { label: '定向招募', value: currentRecruitData.value.directed, color: '#F67ADF' },
+  { key: 'free' as const, label: '自由招募', color: '#1E5BFF' },
+  { key: 'directed' as const, label: '定向招募', color: '#F67ADF' },
 ]);
+const currentRecruitSummary = computed<RecruitSummary>(() => {
+  const { free, directed } = currentRecruitData.value;
+  const total = free + directed;
+  const autoKey: RecruitKey = free >= directed ? 'free' : 'directed';
+  const activeKey = selectedRecruitKey.value ?? autoKey;
+  const primaryValue = activeKey === 'free' ? free : directed;
+
+  return {
+    activeKey,
+    primaryLabel: activeKey === 'free' ? '自由招募' : '定向招募',
+    rate: total > 0 ? primaryValue / total : 0,
+    valueText: formatPercent(total > 0 ? primaryValue / total : 0),
+  };
+});
 
 function makeRecentDayLabels(count: number) {
   return Array.from({ length: count }, (_, index) => {
@@ -579,10 +595,122 @@ function getSettlementOption(): EChartsCoreOption {
   };
 }
 
+function getRecruitOption(): EChartsCoreOption {
+  const { free, directed } = currentRecruitData.value;
+
+  return {
+    color: ['#1E5BFF', '#F67ADF'],
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: 'rgba(31, 41, 55, 0.92)',
+      borderWidth: 0,
+      padding: [10, 12],
+      textStyle: {
+        color: '#FFFFFF',
+        fontSize: 12,
+      },
+      formatter(params: unknown) {
+        const item = params as { marker: string; name: string; value: number };
+        return `${item.marker}${item.name}: ${item.value}`;
+      },
+    },
+    graphic: [
+      {
+        type: 'text',
+        left: 'center',
+        top: '39%',
+        silent: true,
+        style: {
+          text: currentRecruitSummary.value.valueText,
+          fill: '#101828',
+          font: '700 24px TencentSansW7, PingFang SC, sans-serif',
+          textAlign: 'center',
+          textVerticalAlign: 'middle',
+        },
+      },
+      {
+        type: 'text',
+        left: 'center',
+        top: '51%',
+        silent: true,
+        style: {
+          text: currentRecruitSummary.value.primaryLabel,
+          fill: '#667085',
+          font: '13px PingFang SC, sans-serif',
+          textAlign: 'center',
+          textVerticalAlign: 'middle',
+        },
+      },
+    ],
+    series: [
+      {
+        type: 'pie',
+        radius: ['64%', '82%'],
+        center: ['50%', '44%'],
+        avoidLabelOverlap: true,
+        startAngle: 90,
+        label: {
+          show: false,
+        },
+        labelLine: {
+          show: false,
+        },
+        itemStyle: {
+          borderWidth: 0,
+        },
+        emphasis: {
+          scale: false,
+        },
+        data: [
+          {
+            value: free,
+            name: '自由招募',
+            itemStyle: {
+              opacity: currentRecruitSummary.value.activeKey === 'free' ? 1 : 0.45,
+            },
+          },
+          {
+            value: directed,
+            name: '定向招募',
+            itemStyle: {
+              opacity: currentRecruitSummary.value.activeKey === 'directed' ? 1 : 0.45,
+            },
+          },
+        ],
+      },
+    ],
+  };
+}
+
 function updateSettlementChart() {
   if (!settlementChart) return;
   settlementChart.setOption(getSettlementOption(), true);
   settlementChart.resize();
+}
+
+function updateRecruitChart() {
+  if (!recruitChart) return;
+  recruitChart.setOption(getRecruitOption(), true);
+  recruitChart.resize();
+}
+
+function handleRecruitHighlight(key: RecruitKey) {
+  selectedRecruitKey.value = key;
+  updateRecruitChart();
+}
+
+function clearRecruitHighlight() {
+  if (selectedRecruitKey.value === null) return;
+  selectedRecruitKey.value = null;
+  updateRecruitChart();
+}
+
+function handleRecruitAreaClick() {
+  if (preventRecruitClear) {
+    preventRecruitClear = false;
+    return;
+  }
+  clearRecruitHighlight();
 }
 
 function initSettlementChart() {
@@ -591,13 +719,34 @@ function initSettlementChart() {
   updateSettlementChart();
 }
 
+function initRecruitChart() {
+  if (!recruitChartRef.value) return;
+  recruitChart = echarts.init(recruitChartRef.value);
+  recruitChart.on('click', (params: { name?: string }) => {
+    if (params.name === '自由招募') {
+      preventRecruitClear = true;
+      handleRecruitHighlight('free');
+      return;
+    }
+    if (params.name === '定向招募') {
+      preventRecruitClear = true;
+      handleRecruitHighlight('directed');
+      return;
+    }
+    clearRecruitHighlight();
+  });
+  updateRecruitChart();
+}
+
 function handleResize() {
   settlementChart?.resize();
+  recruitChart?.resize();
 }
 
 onMounted(() => {
   nextTick(() => {
     initSettlementChart();
+    initRecruitChart();
   });
   window.addEventListener('resize', handleResize);
 });
@@ -606,10 +755,17 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
   settlementChart?.dispose();
   settlementChart = null;
+  recruitChart?.dispose();
+  recruitChart = null;
 });
 
 watch(activeSettlementPeriod, () => {
   updateSettlementChart();
+});
+
+watch(activeRecruitPeriod, () => {
+  selectedRecruitKey.value = null;
+  updateRecruitChart();
 });
 </script>
 <style lang="less" scoped>
@@ -931,76 +1087,47 @@ watch(activeSettlementPeriod, () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 34px;
+  gap: 12px;
   min-height: 360px;
+  padding: 8px 0 4px;
 }
 
-.recruit-ring {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 194px;
-  height: 194px;
-  border-radius: 50%;
-  background: conic-gradient(
-    from -90deg,
-    var(--recruit-primary) 0 var(--recruit-angle),
-    var(--recruit-secondary) var(--recruit-angle) 360deg
-  );
-}
-
-.recruit-ring::after {
-  content: '';
-  width: 138px;
-  height: 138px;
-  border-radius: 50%;
-  background: #fff;
-}
-
-.recruit-ring__inner {
-  position: absolute;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.recruit-ring__inner strong {
-  color: #101828;
-  font-family: 'TencentSansW7', 'PingFang SC', sans-serif;
-  font-size: 28px;
-}
-
-.recruit-ring__inner span {
-  color: var(--dashboard-subtext);
-  font-size: 16px;
+.chart--donut {
+  width: 100%;
+  max-width: 220px;
+  height: 220px;
 }
 
 .recruit-legend {
   display: flex;
-  gap: 28px;
+  gap: 36px;
   flex-wrap: wrap;
   justify-content: center;
+  margin-top: 2px;
 }
 
 .recruit-legend__item {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: var(--dashboard-subtext);
-  font-size: 14px;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.55;
+  transition:
+    opacity 0.2s ease,
+    color 0.2s ease;
 }
 
-.recruit-legend__item strong {
+.recruit-legend__item--active {
   color: #344054;
-  font-weight: 600;
+  opacity: 1;
 }
 
 .recruit-legend__dot {
-  width: 14px;
-  height: 4px;
+  width: 12px;
+  height: 3px;
   border-radius: 999px;
 }
 

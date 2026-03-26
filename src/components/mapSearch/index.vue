@@ -7,9 +7,9 @@
         type="text"
         placeholder="请输入搜索关键词（如：故宫、星巴克）"
         class="search-input"
-        @keyup.enter="handleSearch"
+        @keydown.enter.prevent="handleSearch"
       />
-      <button class="search-btn" @click="handleSearch">搜索</button>
+      <button type="button" class="search-btn" @click="handleSearch">搜索</button>
     </div>
 
     <!-- 地图容器 -->
@@ -31,7 +31,7 @@
           <p><strong>名称：</strong>{{ poi.name || '无' }}</p>
           <p><strong>地址：</strong>{{ poi.address || '无' }}</p>
           <!-- <p><strong>坐标：</strong>经度{{ poi.lonlat[0] }}，纬度{{ poi.lonlat[1] }}</p> -->
-          <t-button type="primary" size="small" @click.stop="locateToPoi(poi.lng, poi.lat, index, true)">
+          <t-button theme="primary" type="button" size="small" @click.stop="locateToPoi(poi.lng, poi.lat, index, true)">
             选择
           </t-button>
         </div>
@@ -146,7 +146,7 @@ const initMap = () => {
           address: poi.address,
           lng: poi.lonlat.split(',')[0],
           lat: poi.lonlat.split(',')[1],
-          lonlat: [gcjLng, gcjLat],
+          gcj02lonlat: [gcjLng.toString(), gcjLat.toString()],
           tel: poi.phone || '',
           type: poi.poiType || '',
         };

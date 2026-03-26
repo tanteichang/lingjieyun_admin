@@ -2,32 +2,20 @@
   <div class="verify-info">
     <div class="section-title">工商注册信息</div>
     <div class="verify-grid">
-      <!-- <div class="left-fields">
-        <div class="field-item">
-          <div class="field-label">成立日期</div>
-          <div class="field-value">2026-08-18</div>
-        </div>
-        <div class="field-item">
-          <div class="field-label">注册地址</div>
-          <div class="field-value">北京市海淀区中关村大街1号院</div>
-        </div>
-        <div class="field-item">
-          <div class="field-label">经营范围</div>
-          <div class="field-value field-value-area">
-            技术开发、技术推广、技术服务；销售自行开发的产品；软件开发；人工智能基础软件开发。
-          </div>
-        </div>
-      </div> -->
       <div class="doc-card">
         <div class="doc-title">营业执照</div>
-        <div class="license-image">
+        <div
+          class="license-image previewable-image"
+          :class="{ 'previewable-image--disabled': !props.industryRegistration.business_license }"
+          @click="openPreview([props.industryRegistration.business_license], 0)"
+        >
           <img :src="props.industryRegistration.business_license" mode="scaleToFill" />
         </div>
       </div>
     </div>
 
     <div class="section-title section-gap">法人信息</div>
-    <div class="verify-grid">
+    <div class="verify-grid verify-grid--stack">
       <div class="left-fields">
         <div class="field-item">
           <div class="field-label">姓名</div>
@@ -38,21 +26,32 @@
           <div class="field-value">{{ props.legalPersonInfo.phone }}</div>
         </div>
       </div>
-      <div class="doc-card">
+      <div class="doc-card doc-card--id">
         <div class="doc-title">身份证</div>
         <div class="id-images">
-          <div class="id-image">
+          <div
+            class="id-image previewable-image"
+            :class="{ 'previewable-image--disabled': !props.legalPersonInfo.id_card_front }"
+            @click="openPreview([props.legalPersonInfo.id_card_front, props.legalPersonInfo.id_card_back], 0)"
+          >
             <img :src="props.legalPersonInfo.id_card_front" mode="scaleToFill" />
           </div>
-          <div class="id-image">
+          <div
+            class="id-image previewable-image"
+            :class="{ 'previewable-image--disabled': !props.legalPersonInfo.id_card_back }"
+            @click="openPreview([props.legalPersonInfo.id_card_front, props.legalPersonInfo.id_card_back], 1)"
+          >
             <img :src="props.legalPersonInfo.id_card_back" mode="scaleToFill" />
           </div>
         </div>
       </div>
     </div>
+    <t-image-viewer v-model:visible="previewVisible" v-model:index="previewIndex" :images="previewImages" />
   </div>
 </template>
 <script setup lang="ts">
+import { ref } from 'vue';
+
 import type { EnterpriseIndustryRegistration, EnterpriseLegalPersonInfo } from '@/api/model/enterprise/profile';
 
 defineOptions({
@@ -69,9 +68,29 @@ const props = defineProps({
     default: () => ({}),
   },
 });
-console.log(props.legalPersonInfo);
+
+const previewVisible = ref(false);
+const previewIndex = ref(0);
+const previewImages = ref<string[]>([]);
+
+const openPreview = (images: Array<string | undefined>, index: number) => {
+  const current = images[index];
+  const normalized = images.filter((item): item is string => !!item);
+  if (!normalized.length || !current) {
+    return;
+  }
+
+  previewImages.value = normalized;
+  previewIndex.value = Math.max(
+    0,
+    normalized.findIndex((item) => item === current),
+  );
+  previewVisible.value = true;
+};
 </script>
 <style lang="less" scoped>
+@import './profile-shared.less';
+
 .verify-info {
   padding: 32px;
   background: #fff;
@@ -79,24 +98,7 @@ console.log(props.legalPersonInfo);
 }
 
 .section-title {
-  font-size: 30px;
-  color: var(--td-text-color-primary);
-  font-weight: 600;
-  line-height: 1;
-  position: relative;
-  padding-left: 12px;
-  margin-bottom: 22px;
-}
-
-.section-title::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 4px;
-  height: 100%;
-  border-radius: 2px;
-  background: var(--td-brand-color);
+  .profile-section-title();
 }
 
 .section-gap {
@@ -110,25 +112,31 @@ console.log(props.legalPersonInfo);
   align-items: start;
 }
 
+.verify-grid--stack {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .left-fields {
   display: grid;
-  gap: 16px;
+  width: 320px;
+  max-width: 100%;
+  gap: 14px;
 }
 
 .field-label {
-  margin-bottom: 8px;
-  font-size: 12px;
+  margin-bottom: 6px;
+  font-size: 11px;
   color: var(--td-text-color-placeholder);
 }
 
 .field-value {
-  min-height: 46px;
+  min-height: 42px;
   border: 1px solid #dfe5ef;
   background: #f7f9fc;
   border-radius: 4px;
   color: #5f6470;
-  font-size: 14px;
-  padding: 12px 10px;
+  font-size: 13px;
+  padding: 10px;
   line-height: 1.5;
 }
 
@@ -142,9 +150,13 @@ console.log(props.legalPersonInfo);
   padding: 20px 22px;
   min-height: 320px;
 }
+.doc-card--id {
+  width: 50%;
+  max-width: 100%;
+}
 
 .doc-title {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--td-text-color-primary);
   font-weight: 600;
 }
@@ -157,7 +169,7 @@ console.log(props.legalPersonInfo);
   border: 1px solid #d4dbea;
   background: linear-gradient(135deg, #f9f7ef 0%, #fefdf8 100%);
   color: #8f95a4;
-  font-size: 14px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -168,21 +180,53 @@ console.log(props.legalPersonInfo);
   height: 100%;
 }
 
+.previewable-image {
+  position: relative;
+  cursor: zoom-in;
+  overflow: hidden;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.previewable-image:hover {
+  border-color: #b8c8eb;
+  box-shadow: 0 10px 24px rgb(54 94 182 / 10%);
+  transform: translateY(-1px);
+}
+
+.previewable-image--disabled {
+  cursor: default;
+}
+
+.previewable-image--disabled:hover {
+  box-shadow: none;
+  transform: none;
+}
+
 .id-images {
   margin-top: 64px;
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 44px;
 }
 
 .id-image {
-  width: 190px;
-  height: 114px;
+  width: 220px;
+  max-width: 100%;
+  aspect-ratio: 441 / 358;
   border-radius: 6px;
   border: 1px solid #cfd8eb;
-  font-size: 13px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.id-image img {
+  width: 100%;
+  height: 100%;
 }
 </style>

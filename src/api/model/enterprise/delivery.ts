@@ -24,7 +24,7 @@ export interface DeliveryListPayload extends Query {
 
 export interface DeliveryUploadListPayload extends Query {
   project_name?: string; // 所属项目名称
-  enterprise_name?: string; // 企业名称
+  customer_id?: number; // 企业名称
   delivery_status?: DeliveryStatus;
 }
 
@@ -117,7 +117,7 @@ export interface DeliveryUploadItem {
   created_at: string;
   task_title: string; // 任务标题
   project_name: string; // 所属项目名称
-  enterprise_name: string;
+  customer_name: string; // 企业名称
   task_type_text: string;
   delivery_mode_text: string;
   publish_time: string;

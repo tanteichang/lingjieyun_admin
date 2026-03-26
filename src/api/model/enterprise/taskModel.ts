@@ -143,6 +143,7 @@ export interface TaskItem {
   job_id: number; // 岗位要求ID
   job_name: string; // 岗位要求名称
   delivery_standard: string; // 交付物要求
+  settlement_type: SettlementType; // 佣金结算方式（1-按日，2-按次，3-按周，4-按月）
 }
 
 export interface Status_Counts {
@@ -415,3 +416,50 @@ export type RemoveMemberResponse = ApiResponse<null>;
 export interface ExportApprovedMemberListPayload {
   task_id: number; // 任务ID（必填）
 }
+
+export interface TaskDetailPayload {
+  task_id: number; // 任务ID（必填）
+}
+
+export interface TaskRecruitmentCount {
+  required_personnel: number; // 需求人数
+  free_recruitment_count: number; // 自由招募人数
+  direct_recruitment_count: number; // 定向招募人数
+  total_recruitment_count: number; // 总招募人数
+}
+
+export interface TaskDetailResult {
+  id: number; // 详情ID
+  task_id: number; // 任务ID
+  task_no: string; // 任务编号
+  task_name: string; // 任务名称
+  name: string; // 任务名称（兼容字段）
+  task_status: TaskStatus; // 任务状态
+  task_status_text: string; // 任务状态文本
+  task_time: string; // 任务时间
+  start_time: string; // 开始时间
+  end_time: string; // 结束时间
+  task_type_id: number; // 任务类型ID
+  task_type_name: string; // 任务类型名称
+  project_id: number; // 项目ID
+  project_name: string; // 项目名称
+  recruitment_type: RecruitmentType; // 招募类型
+  recruitment_type_text: string; // 招募类型文本
+  settlement_type: SettlementType; // 结算方式
+  commission_settlement_type: CommissionSettlementType; // 佣金结算方式
+  commission_settlement_type_text: string; // 佣金结算方式文本
+  commission: number; // 佣金
+  commission_min: number; // 佣金最小值
+  commission_max: number; // 佣金最大值
+  commission_text: string; // 佣金展示文案
+  required_personnel: number; // 需求人数
+  recruitment_count: TaskRecruitmentCount; // 招募统计
+  free_recruitment_count: number; // 自由招募人数
+  direct_recruitment_count: number; // 定向招募人数
+  desc: string; // 任务描述
+  accept: string; // 验收标准
+  delivery_standard: string; // 交付标准
+  job_name: string; // 岗位名称
+}
+
+export type TaskDetailResponse = ApiResponse<TaskDetailResult>;

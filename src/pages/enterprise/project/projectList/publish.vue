@@ -94,6 +94,7 @@ const onSubmit = (ctx: SubmitContext) => {
 
 const onReset = () => {
   formData.value = createInitialFormData();
+  handleBackToList();
 };
 
 const handleCreateAnother = () => {
@@ -103,6 +104,8 @@ const handleCreateAnother = () => {
 };
 
 const handleBackToList = () => {
+  publishSuccess.value = false;
+  formData.value = createInitialFormData();
   router.push({ name: 'ProjectList' });
 };
 
@@ -163,6 +166,7 @@ const formGroups = computed(() => [
         rules: [{ required: true, message: '请选择项目时间范围' }],
         props: {
           format: 'YYYY-MM-DD',
+          disableDate: (date: Date) => date < new Date(),
         },
       },
       {

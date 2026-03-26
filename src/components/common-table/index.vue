@@ -79,7 +79,7 @@
         :selected-row-keys="innerSelectedRowKeys"
         :expanded-row-keys="innerExpandedRowKeys"
         :expand-on-row-click="expandOnRowClick"
-        table-layout="fixed"
+        :table-layout="tableLayout"
         @select-change="handleSelectChange"
         @expand-change="handleExpandChange"
         @page-change="(pageInfo) => $emit('page-change', pageInfo)"
@@ -157,6 +157,7 @@ const props = withDefaults(
     /** 行 className */
     rowClassName?: string | ((params: { row: RowType; rowIndex: number }) => string);
     selectionDisabled?: (param: { row: RowType; rowIndex: number }) => boolean;
+    tableLayout?: 'fixed' | 'auto';
   }>(),
   {
     data: () => [],
@@ -178,6 +179,7 @@ const props = withDefaults(
     selectedRowKeys: () => [],
     expandedRowKeys: () => [],
     expandOnRowClick: false,
+    tableLayout: 'fixed',
   },
 );
 
@@ -251,6 +253,7 @@ const columnSlots = computed(() => {
 const rowKey = computed(() => props.rowKey ?? 'id');
 const expandOnRowClick = computed(() => props.expandOnRowClick ?? false);
 const rowClassName = computed(() => props.rowClassName);
+const tableLayout = computed(() => props.tableLayout ?? 'fixed');
 
 const getFormItemProps = (item: FormItemConfig) => {
   if (item.type !== 'select') return item.props;
@@ -406,6 +409,8 @@ const columnsWithIndex = computed(() => {
   if (props.autoAddIndex && !hasIndex) {
     prefixColumns.push(indexColumn);
   }
+  console.log(prefixColumns);
+  console.log(baseColumns);
   return [...prefixColumns, ...baseColumns];
 });
 

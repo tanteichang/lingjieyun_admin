@@ -20,10 +20,10 @@
         </t-tag>
       </template>
       <template #projectTime="{ record }">
-        <div class="project-time">
-          <div><t-tag variant="light" theme="primary">始</t-tag>{{ (record as ProjectItem).start_time || '-' }}</div>
-          <div><t-tag variant="light" theme="warning">止</t-tag>{{ (record as ProjectItem).end_time || '-' }}</div>
-        </div>
+        <date-range-display
+          :start-time="(record as ProjectItem).start_time"
+          :end-time="(record as ProjectItem).end_time"
+        />
       </template>
       <template #customer_name="{ record }">
         {{ (record as ProjectItem).customer_name || (record as ProjectItem).enterprise_name }}
@@ -87,6 +87,7 @@ import type { ProjectItem, ProjectQuery } from '@/api/model/enterprise/projectMo
 import { PROJECT_STATUS_TAG, ProjectStatus } from '@/api/model/enterprise/projectModel';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
+import DateRangeDisplay from '@/components/date-range-display/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
 import { useSettingStore } from '@/store';
@@ -297,11 +298,6 @@ const handleDialogConfirm = (type: string) => {
   :deep(.t-card__body) {
     padding: 0;
   }
-}
-
-.project-time {
-  display: flex;
-  flex-direction: column;
 }
 
 .text-warning {

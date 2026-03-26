@@ -15,3 +15,11 @@ export interface getSignResult {
 }
 
 export type getSignResponse = ApiResponse<getSignResult>;
+
+export interface ViewAgreementResult {
+  id: number;
+  agreement_no: string;
+  ess_file_url: string;
+}
+
+export type ViewAgreementResponse = ApiResponse<ViewAgreementResult>;

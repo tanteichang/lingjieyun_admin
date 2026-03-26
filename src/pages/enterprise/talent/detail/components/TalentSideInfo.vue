@@ -15,9 +15,9 @@
               </t-tag>
             </div>
           </div>
-          <!-- <button class="profile-edit" type="button">
-            <edit1-icon size="20" />
-          </button> -->
+          <button class="profile-edit" type="button" @click="openEditDialog">
+            <t-icon name="edit-2" size="20" />
+          </button>
         </div>
         <div class="profile-metrics">
           <div class="metric-item">
@@ -25,7 +25,7 @@
             <div class="metric-label">报名次数</div>
           </div>
           <div class="metric-item">
-            <div class="metric-value">{{ basicInfo.education || '-' }}</div>
+            <div class="metric-value">{{ dictStore.getEducationLabel(basicInfo.education) }}</div>
             <div class="metric-label">学历</div>
           </div>
           <div class="metric-item">
@@ -58,15 +58,15 @@
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">持卡人</div>
-            <div class="info-value">{{ bankInfo.holder_name || '-' }}</div>
+            <div class="info-value">{{ displayBankInfo.holder_name || '-' }}</div>
           </div>
           <div class="info-item">
             <div class="info-label">开户行名</div>
-            <div class="info-value">{{ bankInfo.bank_name || '-' }}</div>
+            <div class="info-value">{{ displayBankInfo.bank_name || '-' }}</div>
           </div>
           <div class="info-item">
             <div class="info-label">银行卡号</div>
-            <div class="info-value">{{ bankInfo.bank_card_masked || '-' }}</div>
+            <div class="info-value">{{ displayBankInfo.bank_card_masked || '-' }}</div>
           </div>
         </div>
       </div>
@@ -76,14 +76,24 @@
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">身份证人像面</div>
-            <t-link v-if="identityInfo.card_front" theme="primary" hover="color" @click="openIdentityImage('front')">
+            <t-link
+              v-if="displayIdentityInfo.card_front"
+              theme="primary"
+              hover="color"
+              @click="openIdentityImage('front')"
+            >
               查看图片
             </t-link>
             <div v-else class="info-value">-</div>
           </div>
           <div class="info-item">
             <div class="info-label">身份证国徽面</div>
-            <t-link v-if="identityInfo.card_back" theme="primary" hover="color" @click="openIdentityImage('back')">
+            <t-link
+              v-if="displayIdentityInfo.card_back"
+              theme="primary"
+              hover="color"
+              @click="openIdentityImage('back')"
+            >
               查看图片
             </t-link>
             <div v-else class="info-value">-</div>
@@ -92,12 +102,71 @@
       </div>
     </t-card>
     <t-image-viewer v-model:visible="previewVisible" v-model:index="previewIndex" :images="previewImages" />
+    <t-dialog
+      v-model:visible="editDialogVisible"
+      header="编辑信息"
+      width="760px"
+      :close-on-overlay-click="false"
+      :confirm-btn="{ content: '保存', loading: submitLoading }"
+      @confirm="handleSave"
+      @cancel="handleCloseDialog"
+      @close="handleCloseDialog"
+    >
+      <t-form ref="formRef" :data="formData" :rules="effectiveRules" label-align="top">
+        <t-row :gutter="[16, 12]">
+          <template v-if="!hasExistingBankCard">
+            <t-col :span="6">
+              <t-form-item label="持卡人" name="holder_name">
+                <t-input v-model="formData.holder_name" placeholder="请输入持卡人姓名" clearable />
+              </t-form-item>
+            </t-col>
+            <t-col :span="6">
+              <t-form-item label="开户行名" name="bank_name">
+                <t-input v-model="formData.bank_name" placeholder="请输入开户行名称" clearable />
+              </t-form-item>
+            </t-col>
+            <t-col :span="12">
+              <t-form-item label="银行卡号" name="bank_card">
+                <t-input v-model="formData.bank_card" placeholder="请输入银行卡号" clearable />
+              </t-form-item>
+            </t-col>
+          </template>
+          <t-col :span="6">
+            <t-form-item label="身份证人像面" name="_card_front_files">
+              <auto-upload
+                v-model="formData._card_front_files"
+                theme="image"
+                accept=".png,.jpeg,.jpg"
+                :max="1"
+                :auto-upload="true"
+                :size-limit="{ size: 5, unit: 'MB' }"
+              />
+            </t-form-item>
+          </t-col>
+          <t-col :span="6">
+            <t-form-item label="身份证国徽面" name="_card_back_files">
+              <auto-upload
+                v-model="formData._card_back_files"
+                theme="image"
+                accept=".png,.jpeg,.jpg"
+                :max="1"
+                :auto-upload="true"
+                :size-limit="{ size: 5, unit: 'MB' }"
+              />
+            </t-form-item>
+          </t-col>
+        </t-row>
+      </t-form>
+    </t-dialog>
   </div>
 </template>
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { computed, ref, toRefs } from 'vue';
+import type { FormInstanceFunctions, FormRules, UploadFile } from 'tdesign-vue-next';
+import { MessagePlugin } from 'tdesign-vue-next';
+import { computed, reactive, ref, toRefs, watch } from 'vue';
 
+import { addBank, updateIdCardImages } from '@/api/enterprise/talentpool';
 import type {
   TalentPoolBankInfo,
   TalentPoolBasicInfo,
@@ -105,6 +174,8 @@ import type {
   TalentPoolIdentityInfo,
   TalentPoolSignInfo,
 } from '@/api/model/enterprise/talentpool';
+import AutoUpload from '@/components/auto-upload/index.vue';
+import { useDictStore } from '@/store/modules/enterprise/dict';
 
 defineOptions({
   name: 'TalentSideInfo',
@@ -118,18 +189,202 @@ const props = defineProps<{
   signInfo: TalentPoolSignInfo;
 }>();
 
+const emit = defineEmits<{
+  (e: 'updated'): void;
+}>();
+
+const dictStore = useDictStore();
 const { basicInfo, contactInfo, bankInfo, identityInfo, signInfo } = toRefs(props);
 
 const previewVisible = ref(false);
 const previewIndex = ref(0);
-const previewImages = computed(() => [identityInfo.value.card_front, identityInfo.value.card_back].filter(Boolean) as string[]);
+const editDialogVisible = ref(false);
+const submitLoading = ref(false);
+const formRef = ref<FormInstanceFunctions>();
+const previewImages = computed(
+  () => [displayIdentityInfo.value.card_front, displayIdentityInfo.value.card_back].filter(Boolean) as string[],
+);
+const displayBankInfo = ref<TalentPoolBankInfo>({ ...bankInfo.value });
+const displayIdentityInfo = ref<TalentPoolIdentityInfo>({ ...identityInfo.value });
+const hasExistingBankCard = computed(() => hasValue(displayBankInfo.value.bank_card));
+
+interface EditFormData {
+  holder_name: string;
+  bank_name: string;
+  bank_card: string;
+  card_front: string;
+  card_back: string;
+  _card_front_files: UploadFile[];
+  _card_back_files: UploadFile[];
+}
+
+const createUploadFiles = (url: string) => {
+  if (!url) return [];
+  const filename = decodeURIComponent(url.split('/').pop() || 'image');
+  return [{ url, name: filename, status: 'success', percent: 100 }] as UploadFile[];
+};
+
+const createInitialForm = (): EditFormData => ({
+  holder_name: displayBankInfo.value.holder_name || '',
+  bank_name: displayBankInfo.value.bank_name || '',
+  bank_card: displayBankInfo.value.bank_card || '',
+  card_front: displayIdentityInfo.value.card_front || '',
+  card_back: displayIdentityInfo.value.card_back || '',
+  _card_front_files: createUploadFiles(displayIdentityInfo.value.card_front || ''),
+  _card_back_files: createUploadFiles(displayIdentityInfo.value.card_back || ''),
+});
+
+const formData = reactive<EditFormData>(createInitialForm());
+
+const rules: FormRules = {
+  holder_name: [{ required: false, message: '请输入持卡人姓名', type: 'error' }],
+  bank_name: [{ required: false, message: '请输入开户行名称', type: 'error' }],
+  bank_card: [{ required: false, message: '请输入银行卡号', type: 'error' }],
+  _card_front_files: [
+    {
+      validator: (value: UploadFile[]) => Array.isArray(value) && value.length > 0,
+      message: '请上传身份证人像面',
+      type: 'error',
+    },
+  ],
+  _card_back_files: [
+    {
+      validator: (value: UploadFile[]) => Array.isArray(value) && value.length > 0,
+      message: '请上传身份证国徽面',
+      type: 'error',
+    },
+  ],
+};
+const effectiveRules = computed<FormRules>(() => {
+  if (hasExistingBankCard.value) {
+    return {
+      _card_front_files: rules._card_front_files,
+      _card_back_files: rules._card_back_files,
+    };
+  }
+
+  return rules;
+});
+
+const resetForm = () => {
+  Object.assign(formData, createInitialForm());
+};
+
+watch(
+  bankInfo,
+  (value) => {
+    displayBankInfo.value = { ...value };
+  },
+  { deep: true, immediate: true },
+);
+
+watch(
+  identityInfo,
+  (value) => {
+    displayIdentityInfo.value = { ...value };
+  },
+  { deep: true, immediate: true },
+);
+
+watch(
+  () => formData._card_front_files,
+  (files) => {
+    formData.card_front = files?.[0]?.url || '';
+  },
+  { deep: true },
+);
+
+watch(
+  () => formData._card_back_files,
+  (files) => {
+    formData.card_back = files?.[0]?.url || '';
+  },
+  { deep: true },
+);
 
 const openIdentityImage = (side: 'front' | 'back') => {
-  const currentUrl = side === 'front' ? identityInfo.value.card_front : identityInfo.value.card_back;
+  const currentUrl = side === 'front' ? displayIdentityInfo.value.card_front : displayIdentityInfo.value.card_back;
   if (!currentUrl) return;
   const index = previewImages.value.findIndex((url) => url === currentUrl);
   previewIndex.value = index >= 0 ? index : 0;
   previewVisible.value = true;
+};
+
+const openEditDialog = () => {
+  resetForm();
+  formRef.value?.clearValidate?.();
+  editDialogVisible.value = true;
+};
+
+const handleCloseDialog = () => {
+  editDialogVisible.value = false;
+  resetForm();
+  formRef.value?.clearValidate?.();
+};
+
+const handleSave = async () => {
+  const validateResult = await formRef.value?.validate?.();
+  if (validateResult !== true) return;
+
+  if (!basicInfo.value.id) {
+    MessagePlugin.warning('人才ID无效');
+    return;
+  }
+
+  const hadBankCardBeforeSave = hasExistingBankCard.value;
+
+  submitLoading.value = true;
+  try {
+    if (!hadBankCardBeforeSave) {
+      const bankRes = await addBank({
+        talent_pool_id: basicInfo.value.id,
+        talent_name: formData.holder_name.trim(),
+        bank_name: formData.bank_name.trim(),
+        card_no: formData.bank_card.replace(/\s/g, ''),
+      });
+
+      if (bankRes.code !== 200) return;
+
+      displayBankInfo.value = {
+        ...displayBankInfo.value,
+        holder_name: formData.holder_name.trim(),
+        bank_name: formData.bank_name.trim(),
+        bank_card: formData.bank_card.replace(/\s/g, ''),
+        bank_card_masked: maskBankCard(formData.bank_card),
+      };
+    }
+
+    const idCardRes = await updateIdCardImages({
+      talent_pool_id: basicInfo.value.id,
+      card_front: formData.card_front,
+      card_back: formData.card_back,
+    });
+
+    if (idCardRes.code !== 200) return;
+
+    displayIdentityInfo.value = {
+      ...displayIdentityInfo.value,
+      card_front: formData.card_front,
+      card_back: formData.card_back,
+    };
+
+    MessagePlugin.success(hadBankCardBeforeSave ? '身份证照片更新成功' : '银行卡和身份证照片更新成功');
+    handleCloseDialog();
+    emit('updated');
+  } finally {
+    submitLoading.value = false;
+  }
+};
+
+const maskBankCard = (value: string) => {
+  const normalized = String(value || '').replace(/\s/g, '');
+  if (!normalized) return '';
+  if (normalized.length <= 8) return normalized;
+  return `${normalized.slice(0, 4)} **** **** ${normalized.slice(-4)}`;
+};
+
+const hasValue = (value: string) => {
+  return !!String(value || '').trim();
 };
 
 const formatDateTime = (value: string | number | null) => {
@@ -197,6 +452,10 @@ const formatDateTime = (value: string | number | null) => {
   justify-content: center;
   width: 40px;
   height: 40px;
+}
+
+.profile-edit:hover {
+  color: var(--td-brand-color);
 }
 
 .profile-metrics {

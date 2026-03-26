@@ -46,7 +46,7 @@ export interface Enterprise {
 // 列表项核心结构
 export interface ProjectItem {
   id: string; // 唯一标识
-  task_no: string; // 项目编号
+  task_no?: string; // 历史兼容字段，项目编号以 pro_no 为准
   name: string; // 项目名称
   desc: string; // 项目描述
   invoice_type_name: string; // 发票类型
@@ -61,6 +61,7 @@ export interface ProjectItem {
   free_recruitment_count: number; // 自由招募人数
   customer_name: string; // 客户名称
   pro_no: string; // 项目编号
+  project_type_name: string; // 项目类型
 }
 
 // 分页返回结构

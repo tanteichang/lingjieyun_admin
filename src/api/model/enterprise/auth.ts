@@ -61,10 +61,19 @@ export interface LoginResult {
 
 export type LoginResponse = ApiResponse<LoginResult>;
 
-export interface SendSmsCodePayload {
-  mobile: string;
-  type: 'forget_password' | 'register' | 'login' | 'admin_add';
-}
+export type SendSmsCodePayload =
+  | {
+      mobile: string;
+      // 登录：login；忘记密码：forget_password；企业注册：register；
+      // 新增企业管理员：admin_add；账单发放确认：bill_disburse
+      type: 'login' | 'forget_password' | 'register' | 'admin_add' | 'bill_disburse';
+    }
+  | {
+      mobile?: string;
+      // 邮箱验证：email_verify；修改支付密码：pay_password_change
+      // 这两个场景后端不要求传手机号
+      type: 'email_verify' | 'pay_password_change';
+    };
 
 export type SendSmsCodeResponse = ApiResponse<[]>;
 
@@ -131,6 +140,7 @@ export interface BindListResult {
   list: BindItem[];
   platforms: {
     wechat: BindItem;
+    email: BindItem;
   };
 }
 
@@ -154,6 +164,17 @@ export interface VerifyEmailCodePayload {
 export type VerifyEmailCodeResponse = ApiResponse<{
   valid: boolean;
   email: string;
+  scene: string;
+  consume: boolean;
+}>;
+
+export interface VerifyEmailSmsCodePayload {
+  code: string;
+}
+export type VerifyEmailSmsCodeResponse = ApiResponse<{
+  valid: boolean;
+  mobile: string;
+  mobile_masked: string;
   scene: string;
   consume: boolean;
 }>;

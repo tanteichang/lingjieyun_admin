@@ -18,7 +18,7 @@
         >
         <template v-else>
           <t-button theme="primary" class="save-btn" type="submit">保存</t-button>
-          <t-button theme="default" variant="base" type="reset">取消</t-button>
+          <t-button theme="default" variant="base" @click="handleCancel">取消</t-button>
         </template>
       </template>
     </generic-form>
@@ -26,7 +26,6 @@
 </template>
 <script setup lang="ts">
 import type { SubmitContext } from 'tdesign-vue-next';
-import { MessagePlugin } from 'tdesign-vue-next';
 import { computed, ref, watch } from 'vue';
 
 import type { EnterpriseProfileSavePayload } from '@/api/model/enterprise/profile';
@@ -55,13 +54,19 @@ const isEditing = ref(false);
 
 const data = ref({});
 
+const createFormData = (formData: EnterpriseProfileSavePayload = {} as EnterpriseProfileSavePayload) => ({
+  ...formData,
+  address_detail: formData.address?.address_detail || '',
+  _lngLat: {
+    lng: formData.address?.longitude || 0,
+    lat: formData.address?.latitude || 0,
+  },
+});
+
 watch(
   () => props.formData,
   (formData) => {
-    data.value = {
-      ...formData,
-      address_detail: formData.address?.address_detail || '',
-    };
+    data.value = createFormData(formData);
     console.log(data.value);
   },
   { immediate: true, deep: true },
@@ -72,6 +77,7 @@ const handleEdit = () => {
 };
 
 const handleCancel = () => {
+  data.value = createFormData(props.formData);
   isEditing.value = false;
 };
 
@@ -80,14 +86,13 @@ const handleSubmit = (ctx: SubmitContext) => {
   if (ctx.validateResult !== true) return;
   emit('save', {
     ...data.value,
-    province_id: data.value.address.province_id || '',
-    city_id: data.value.address.city_id || '',
-    district_id: data.value.address.district_id || '',
+    province_id: data.value.address.provinceId || '',
+    city_id: data.value.address.cityId || '',
+    district_id: data.value.address.districtId || '',
     longitude: data.value._lngLat.lng || 0,
     latitude: data.value._lngLat.lat || 0,
   });
   isEditing.value = false;
-  MessagePlugin.success('保存成功');
 };
 
 const formGroups = computed(() => [
@@ -213,6 +218,8 @@ const formGroups = computed(() => [
 ]);
 </script>
 <style lang="less" scoped>
+@import './profile-shared.less';
+
 :deep(.form-container) {
   justify-content: flex-start;
 }
@@ -229,24 +236,7 @@ const formGroups = computed(() => [
 }
 
 .section-title {
-  font-size: 30px;
-  color: var(--td-text-color-primary);
-  font-weight: 600;
-  line-height: 1;
-  position: relative;
-  padding-left: 12px;
-  margin-bottom: 22px;
-}
-
-.section-title::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 4px;
-  height: 100%;
-  border-radius: 2px;
-  background: var(--td-brand-color);
+  .profile-section-title(30px);
 }
 
 .save-btn {

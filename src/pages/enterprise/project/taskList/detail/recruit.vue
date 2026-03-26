@@ -1,61 +1,6 @@
 <template>
   <div class="recruit-page">
-    <t-card :bordered="false">
-      <h3 class="section-title">基本信息</h3>
-      <div v-if="taskInfo" class="info-grid">
-        <div class="info-item">
-          <span class="label">任务编号</span>
-          <span class="value">{{ taskInfo.task_no }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">任务名称</span>
-          <span class="value">{{ taskInfo.name }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">任务状态</span>
-          <span class="value">
-            <t-tag :theme="TASK_STATUS_TAG[taskInfo.task_status]?.theme || 'primary'" variant="light">
-              {{ TASK_STATUS_TAG[taskInfo.task_status]?.label || '-' }}
-            </t-tag>
-          </span>
-        </div>
-        <div class="info-item">
-          <span class="label">任务时间</span>
-          <span class="value">{{ taskInfo.start_time }}-{{ taskInfo.end_time }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">任务类型</span>
-          <span class="value">服务类</span>
-        </div>
-        <div class="info-item">
-          <span class="label">所属项目</span>
-          <span class="value">{{ taskInfo.project.name }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">招募方式</span>
-          <span class="value">{{ taskInfo.recruitment_type_text }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">佣金结算方式</span>
-          <span class="value">{{ taskInfo.commission_settlement_type_text }}/ {{ taskInfo.commission }}元</span>
-        </div>
-        <div class="info-item">
-          <span class="label">验收时间要求</span>
-          <span class="value">{{
-            taskInfo.acceptance_period_type === 1 ? '按日' : taskInfo.acceptance_type_text
-          }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">自由招募人数</span>
-          <span class="value">{{ freeRecruitCount }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">定向招募人数</span>
-          <span class="value">{{ directRecruitCount }}</span>
-        </div>
-      </div>
-      <t-empty v-else description="未找到任务信息" />
-    </t-card>
+    <task-basic-info-card :task-info="taskInfo" />
 
     <t-card :bordered="false" class="action-card">
       <t-space :size="20">
@@ -165,7 +110,7 @@
       @download-template="downloadTemplate"
       @confirm="handleConfirmBatchRecruit"
     />
-    <id-card-upload-drawer v-model:visible="idCardUploadDialogVisible" />
+    <id-card-upload-drawer v-model:visible="idCardUploadDialogVisible" :submit="handleBatchUploadIdCard" />
     <t-dialog v-model:visible="successDialogVisible" header="成功记录" width="900px" :footer="false" destroy-on-close>
       <t-table row-key="row_index" :data="successDetailList" :columns="successDetailColumns" :pagination="null" />
     </t-dialog>
@@ -177,16 +122,16 @@
 <script setup lang="ts">
 import type { PrimaryTableCol, TableRowData } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { getImportLogList } from '@/api/enterprise/import';
-import { batchRecruit, downloadRecruitTemplate } from '@/api/enterprise/task';
+import { batchRealname } from '@/api/enterprise/talentpool';
+import { batchRecruit, downloadRecruitTemplate, getTaskDetail } from '@/api/enterprise/task';
 import type { Row } from '@/api/model/common';
-import type { ImportLogItem, ImportLogQuery } from '@/api/model/enterprise/import';
+import type { ImportDetailItem, ImportLogItem, ImportLogQuery } from '@/api/model/enterprise/import';
 import { ImportDataType } from '@/api/model/enterprise/import';
-import type { BatchRecruitResult, TaskItem } from '@/api/model/enterprise/taskModel';
-import { RecruitmentType, TASK_STATUS_TAG } from '@/api/model/enterprise/taskModel';
+import type { BatchRecruitResult, TaskDetailResult } from '@/api/model/enterprise/taskModel';
 import type { BatchImportConfirmPayload } from '@/components/batch-import-dialog/index.vue';
 import BatchImportDialog from '@/components/batch-import-dialog/index.vue';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
@@ -195,27 +140,19 @@ import { useCommonTable } from '@/hooks/useCommonTable';
 import { useTaskStore } from '@/store/modules/enterprise/task';
 
 import IdCardUploadDrawer from './components/IdCardUploadDrawer.vue';
+import TaskBasicInfoCard from './components/TaskBasicInfoCard.vue';
 
 defineOptions({
   name: 'Recruit',
 });
 
 type RecruitRecordRow = ImportLogItem & Row;
-type ImportDetailStatus = 'success' | 'fail';
-
-interface ImportDetailItem {
-  row_index: number;
-  status: ImportDetailStatus;
-  error?: string;
-  action?: string;
-  data?: Array<string | number>;
-}
 
 const route = useRoute();
 const taskStore = useTaskStore();
 
 const activeTab = ref<'batch' | 'upload'>('batch');
-const taskInfo = ref<TaskItem>(null);
+const taskInfo = ref<TaskDetailResult | null>(null);
 const batchRecruitDialogVisible = ref(false);
 const idCardUploadDialogVisible = ref(false);
 const batchRecruitResult = ref<BatchRecruitResult>(null);
@@ -302,18 +239,9 @@ const failDetailColumns: PrimaryTableCol<TableRowData>[] = [
     title: '失败原因',
     colKey: 'error',
     minWidth: 240,
-    cell: (_, { row }) => (row as ImportDetailItem).error || '-',
+    cell: (_, { row }) => ((row as ImportDetailItem).status === 'fail' ? (row as ImportDetailItem).error || '-' : '-'),
   },
 ];
-
-const parseImportDetails = (importDetails: string) => {
-  try {
-    const parsed = JSON.parse(importDetails);
-    return Array.isArray(parsed) ? (parsed as ImportDetailItem[]) : [];
-  } catch {
-    return null;
-  }
-};
 
 const formatDateTime = (date: Date) => {
   const pad = (value: number) => String(value).padStart(2, '0');
@@ -322,39 +250,29 @@ const formatDateTime = (date: Date) => {
   )}:${pad(date.getSeconds())}`;
 };
 
-const freeRecruitCount = computed(() => {
-  if (!taskInfo.value) return 0;
-  if (
-    taskInfo.value.recruitment_type === RecruitmentType.FREE ||
-    taskInfo.value.recruitment_type === RecruitmentType.BOTH
-  ) {
-    return taskInfo.value.required_personnel;
+const fetchTaskDetail = () => {
+  const taskId = Number(route.query.id);
+  if (!taskId) {
+    return;
   }
-  return 0;
-});
-
-const directRecruitCount = computed(() => {
-  if (!taskInfo.value) return 0;
-  if (
-    taskInfo.value.recruitment_type === RecruitmentType.DIRECTED ||
-    taskInfo.value.recruitment_type === RecruitmentType.BOTH
-  ) {
-    return taskInfo.value.required_personnel;
-  }
-  return 0;
-});
+  getTaskDetail({ task_id: taskId }).then((res) => {
+    if (res.code === 200) {
+      taskInfo.value = res.data;
+    }
+  });
+};
 
 onMounted(() => {
-  const taskID = route.query.id as string;
-  const task = taskStore.getTask(taskID);
-  if (task) {
-    taskInfo.value = task;
-  }
+  fetchTaskDetail();
 });
 
 const handleSwitchUploadTab = () => {
   activeTab.value = 'upload';
   idCardUploadDialogVisible.value = true;
+};
+
+const handleBatchUploadIdCard = (images: Array<{ url: string; filename: string }>) => {
+  return batchRealname({ images });
 };
 
 const openBatchRecruitDialog = () => {
@@ -381,6 +299,10 @@ const handleConfirmBatchRecruit = (payload: BatchImportConfirmPayload) => {
     source_url: payload.file.url,
   })
     .then((res) => {
+      if (res.code === 200) {
+        taskStore.markTaskDetailShouldRefresh(String(route.query.id || ''));
+        fetchTaskDetail();
+      }
       batchRecruitResult.value = res.data;
       batchRecruitEndTime.value = formatDateTime(new Date());
       MessagePlugin.success(res.msg);
@@ -418,11 +340,7 @@ const viewSuccessRecord = (row: RecruitRecordRow) => {
     return;
   }
 
-  const details = parseImportDetails(row.import_details);
-  if (!details) {
-    MessagePlugin.error('记录解析失败');
-    return;
-  }
+  const details = row.import_details as ImportDetailItem[];
 
   const successRows = details.filter((item) => item.status === 'success');
   if (!successRows.length) {
@@ -440,7 +358,7 @@ const viewFailRecord = (row: RecruitRecordRow) => {
     return;
   }
 
-  const details = parseImportDetails(row.import_details);
+  const details = row.import_details as ImportDetailItem[];
   if (!details) {
     MessagePlugin.error('记录解析失败');
     return;
@@ -470,28 +388,6 @@ const viewFailRecord = (row: RecruitRecordRow) => {
   color: var(--td-text-color-primary);
 }
 
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(200px, 1fr));
-  gap: 12px 20px;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 30px;
-
-  .label {
-    min-width: 90px;
-    color: var(--td-text-color-placeholder);
-  }
-
-  .value {
-    color: var(--td-text-color-primary);
-  }
-}
-
 .progress-head {
   margin-bottom: 14px;
   font-size: 20px;
@@ -511,10 +407,6 @@ const viewFailRecord = (row: RecruitRecordRow) => {
   :deep(.t-progress) {
     flex: 1;
   }
-}
-
-.percent-text {
-  font-size: 28px;
 }
 
 .metrics {
@@ -545,10 +437,6 @@ const viewFailRecord = (row: RecruitRecordRow) => {
 }
 
 @media (max-width: 1200px) {
-  .info-grid {
-    grid-template-columns: repeat(2, minmax(240px, 1fr));
-  }
-
   .metrics {
     grid-template-columns: repeat(2, minmax(180px, 1fr));
   }

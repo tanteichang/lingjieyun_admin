@@ -32,6 +32,7 @@
 import { computed } from 'vue';
 
 import type { SettlementTaskInfo } from '@/api/model/enterprise/settlement';
+import { formatAmountDisplay } from '@/utils/amount';
 
 const props = defineProps<{
   taskInfo: SettlementTaskInfo | null;
@@ -39,10 +40,18 @@ const props = defineProps<{
 
 const commissionText = computed(() => {
   if (!props.taskInfo) return '-';
-  if (props.taskInfo.commission_settlement_type_text) return props.taskInfo.commission_settlement_type_text;
-  if (props.taskInfo.commission) return String(props.taskInfo.commission);
-  if (props.taskInfo.commission_min || props.taskInfo.commission_max) {
-    return `${props.taskInfo.commission_min}-${props.taskInfo.commission_max}`;
+  const settlementTypeText = props.taskInfo.commission_settlement_type_text || '';
+  const commission = formatAmountDisplay(props.taskInfo.commission);
+  const min = formatAmountDisplay(props.taskInfo.commission_min);
+  const max = formatAmountDisplay(props.taskInfo.commission_max);
+
+  if (settlementTypeText && commission) {
+    return `${settlementTypeText} / ${commission}`;
+  }
+  if (settlementTypeText) return settlementTypeText;
+  if (commission) return commission;
+  if (min || max) {
+    return [min, max].filter(Boolean).join('-');
   }
   return '-';
 });

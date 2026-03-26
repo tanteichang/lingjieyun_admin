@@ -7,6 +7,7 @@ import { usePermissionStore } from '@/store';
 export interface UserInfo {
   name?: string; // 用户名，用于展示在页面右上角头像处
   phone?: string; // 手机号
+  email?: string; // 绑定邮箱
   enterprise_id?: number; // 企业ID
   enterprise_name?: string; // 企业名称
   admin_id?: number; // 管理员ID

@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="page-content">
     <settlement-task-info-card :task-info="taskInfo" :plan-date="route.query.date" />
     <t-tabs v-model="activeTab" class="settlement-tabs">
@@ -108,6 +108,7 @@ import AutoUpload from '@/components/auto-upload/index.vue';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
 import { useCommonTable } from '@/hooks/useCommonTable';
+import { downloadBlobFile, getBlobErrorMessage, sanitizeDownloadName } from '@/utils/download';
 
 import SettlementTaskInfoCard from './components/SettlementTaskInfoCard.vue';
 
@@ -296,19 +297,28 @@ const handleConfirmImport = async () => {
   }
 };
 
-const handleDownloadTemplate = () => {
-  downloadSettlementTemplate({
-    type: 'with_members',
-    product_id: formConfig.formData.product_id,
-    plan_date: formConfig.formData.plan_date,
-  }).then((res) => {
-    const url = window.URL.createObjectURL(new Blob([res]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${taskInfo.value?.task_title || ''}${formConfig.formData.plan_date}结算单.xlsx`);
-    document.body.appendChild(link);
-    link.click();
-  });
+const handleDownloadTemplate = async () => {
+  try {
+    if (!formConfig.formData.plan_date) {
+      throw new Error('缺少结算日期，无法下载模板');
+    }
+
+    const blob = await downloadSettlementTemplate({
+      type: 'with_members',
+      product_id: formConfig.formData.product_id,
+      plan_date: formConfig.formData.plan_date,
+    });
+
+    const errorMessage = await getBlobErrorMessage(blob);
+    if (errorMessage) {
+      throw new Error(errorMessage);
+    }
+
+    const taskTitle = sanitizeDownloadName(taskInfo.value?.task_title || '结算单') || '结算单';
+    downloadBlobFile(blob, `${taskTitle}-${formConfig.formData.plan_date}-结算单.xlsx`);
+  } catch (error) {
+    MessagePlugin.error(error instanceof Error ? error.message : '模板下载失败');
+  }
 };
 </script>
 <style scoped lang="less">
@@ -324,4 +334,4 @@ const handleDownloadTemplate = () => {
     padding: 10px;
   }
 }
-</style>
+</style> -->

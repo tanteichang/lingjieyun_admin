@@ -12,13 +12,13 @@
         @clear="handleClear"
       />
 
-      <t-input-adornment prepend="经度" v-if="selfInput">
-        <t-input :disabled="disabled" class="input" v-model="longitude"></t-input>
+      <t-input-adornment v-if="selfInput" prepend="经度">
+        <t-input v-model="longitude" :disabled="disabled" class="input"></t-input>
       </t-input-adornment>
-      <t-input-adornment prepend="纬度" v-if="selfInput">
-        <t-input :disabled="disabled" class="input" v-model="latitude"></t-input>
+      <t-input-adornment v-if="selfInput" prepend="纬度">
+        <t-input v-model="latitude" :disabled="disabled" class="input"></t-input>
       </t-input-adornment>
-      <t-button :disabled="disabled" theme="default" @click="selfInput = !selfInput">{{
+      <t-button :disabled="disabled" theme="default" type="button" @click="selfInput = !selfInput">{{
         selfInput ? '选择经纬度' : '手动填写'
       }}</t-button>
     </t-space>
@@ -92,10 +92,16 @@ const handleClear = () => {
   emit('change', null);
 };
 
-const handleSelect = (poi: { lng: string; lat: string; name?: string; address?: string }) => {
+const handleSelect = (poi: {
+  lng: string;
+  lat: string;
+  name?: string;
+  address?: string;
+  gcj02lonlat?: [string, string];
+}) => {
   const nextValue: LngLatValue = {
-    lng: poi.lng,
-    lat: poi.lat,
+    lng: poi.gcj02lonlat?.[0] || poi.lng,
+    lat: poi.gcj02lonlat?.[1] || poi.lat,
     name: poi.name,
     address: poi.address,
   };

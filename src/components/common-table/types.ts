@@ -19,7 +19,7 @@ export interface FormConfig<T, K extends keyof T = keyof T> {
     /** 表单项类型 */
     type: 'input' | 'select' | 'treeSelect' | 'date' | 'date-range';
     /** 表单项占位符 */
-    placeholder?: string;
+    placeholder?: string | string[];
     /** 传递给渲染组件的额外属性 */
     props?: Record<string, any>;
     /** select 选项自定义渲染 */

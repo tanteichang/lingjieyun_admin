@@ -39,16 +39,23 @@ export const useChart = (domId: string): ShallowRef<echarts.ECharts> => {
  */
 export const useCounter = (
   duration = 60,
-): [Ref<number>, (callback?: () => void, validate?: () => boolean) => boolean] => {
-  let intervalTimer: ReturnType<typeof setInterval>;
-  onUnmounted(() => {
+): [Ref<number>, (callback?: () => void, validate?: () => boolean, nextDuration?: number) => boolean] => {
+  let intervalTimer: ReturnType<typeof setInterval> | null = null;
+
+  const clearCounter = () => {
+    if (!intervalTimer) return;
     clearInterval(intervalTimer);
+    intervalTimer = null;
+  };
+
+  onUnmounted(() => {
+    clearCounter();
   });
   const countDown = ref(0);
 
   return [
     countDown,
-    (callback?: () => void, validate?: () => boolean) => {
+    (callback?: () => void, validate?: () => boolean, nextDuration?: number) => {
       // 执行校验
       if (validate && !validate()) {
         return false;
@@ -60,12 +67,13 @@ export const useCounter = (
       }
 
       // 启动倒计时
-      countDown.value = duration;
+      clearCounter();
+      countDown.value = nextDuration ?? duration;
       intervalTimer = setInterval(() => {
         if (countDown.value > 0) {
           countDown.value -= 1;
         } else {
-          clearInterval(intervalTimer);
+          clearCounter();
           countDown.value = 0;
         }
       }, 1000);

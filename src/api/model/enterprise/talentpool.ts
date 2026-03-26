@@ -1,4 +1,10 @@
 import type { ApiResponse, Pagination, Query, StatusTagMap } from '../common';
+import type {
+  UserResumeBaseInfo,
+  UserResumeEducationItem,
+  UserResumeProjectHistoryItem,
+  UserResumeWorkExperienceItem,
+} from './member';
 
 export interface TalentPoolListQuery extends Query {
   keyword?: string;
@@ -69,7 +75,7 @@ export interface TalentPoolBasicInfo {
   is_auth: boolean;
   is_signed: boolean;
   apply_count: number;
-  education: string;
+  education: number;
   score: number;
 }
 
@@ -147,6 +153,14 @@ export interface TalentPoolExtendData {
   [key: string]: unknown;
 }
 
+export interface TalentPoolJianli {
+  certificate: string[];
+  education: UserResumeEducationItem[];
+  jianli: UserResumeBaseInfo | null;
+  project_history: UserResumeProjectHistoryItem[];
+  work_experience: UserResumeWorkExperienceItem[];
+}
+
 export interface TalentPoolDetail {
   id: number;
   user_id: number;
@@ -157,11 +171,34 @@ export interface TalentPoolDetail {
   bank_info: TalentPoolBankInfo;
   identity_info: TalentPoolIdentityInfo;
   sign_info: TalentPoolSignInfo;
-  resume: TalentPoolResume | null;
+  jianli: TalentPoolJianli | null;
   has_resume: boolean;
-  extend_data: TalentPoolExtendData;
+  extend_data: TalentPoolExtendData | TalentPoolExtendData[];
 }
 export type TalentPoolDetailResponse = ApiResponse<TalentPoolDetail>;
+
+export interface TalentPoolAddBankPayload {
+  talent_pool_id: number;
+  talent_name: string;
+  bank_name: string;
+  card_no: string;
+}
+
+export type TalentPoolAddBankResponse = ApiResponse<{
+  bank_id: number;
+}>;
+
+export interface TalentPoolUpdateIdCardImagesPayload {
+  talent_pool_id: number;
+  card_front: string;
+  card_back: string;
+}
+
+export type TalentPoolUpdateIdCardImagesResponse = ApiResponse<{
+  identity_id: number;
+  user_id: number;
+  created: boolean;
+}>;
 
 export interface BatchRealnamePayload {
   images: {
@@ -182,3 +219,133 @@ export interface BatchRealnameResult {
 }
 
 export type BatchRealnameResponse = ApiResponse<BatchRealnameResult>;
+
+export interface PaymentListPayload extends Query {
+  talent_pool_id: number;
+  project_name?: string;
+  start_time?: string;
+  end_time?: string;
+}
+
+export interface PaymentListItem {
+  id: number;
+  settlement_id: number;
+  product_id: number;
+  member_id: number;
+  user_id: number;
+  enterprise_id: number;
+  order_no: string;
+  payment_amount: string;
+  payment_method: number;
+  payment_status: number;
+  payment_time: string | null;
+  payment_channel: string | null;
+  payment_account: string | null;
+  receive_account: string | null;
+  status: number;
+  created_at: string;
+  updated_at: string;
+  receive_confirm_status: number;
+  receive_confirm_time: string | null;
+  receive_dispute_remark: string | null;
+  settlement_name: string;
+  statement_no: string;
+  task_id: number;
+  task_name: string;
+  product_name: string;
+  project_id: number;
+  project_name: string;
+  amount_text: string;
+  payment_time_formatted: string;
+}
+
+export type PaymentListResponse = ApiResponse<Pagination<PaymentListItem>>;
+
+export interface ConfirmationListPayload extends Query {
+  talent_pool_id: number;
+}
+
+export interface ConfirmationListItem {
+  id: number;
+  product_id: number;
+  confirmation_no: string;
+  confirmation_file: string;
+  signed_at: string;
+  created_at: string;
+  task_id: number;
+  task_name: string;
+  task_no: string;
+  task_status: number;
+  task_status_text: string;
+  product_name: string;
+  pdf_url: string;
+  confirmation_url: string;
+  signed_at_formatted: string;
+}
+
+export type ConfirmationListResponse = ApiResponse<Pagination<ConfirmationListItem>>;
+
+export interface TaskListPayload extends Query {
+  talent_pool_id: number;
+}
+
+export interface TalentTaskInfo {
+  id: number;
+  name: string;
+  task_no: string;
+  commission: string;
+  start_time: string;
+  end_time: string;
+  task_status: number;
+  task_status_text: string;
+  project_id: number;
+  project_name: string;
+}
+
+export interface TaskListItem {
+  task_id: number;
+  product_id: number;
+  member_id: number;
+  member_ids: number[];
+  talent_pool_id: number;
+  user_id: number;
+  project_id: number;
+  project_name: string;
+  task_name: string;
+  task_no: string;
+  task_status: number;
+  task_status_text: string;
+  member_status: number;
+  member_status_text: string;
+  apply_time: string;
+  join_time: string;
+  settlement_count: number;
+  settlement_amount_total: string;
+  task_info: TalentTaskInfo;
+  job_name: string;
+}
+
+export type TaskListResponse = ApiResponse<Pagination<TaskListItem>>;
+
+export interface BatchImportPayload {
+  source_url: string;
+  remark?: string;
+}
+
+export type BatchImportResponse = ApiResponse<[]>;
+
+export interface BatchUploadIdCardPayload {
+  images: {
+    url: string;
+    filename: string;
+  }[];
+}
+export type BatchUploadIdCardResponse = ApiResponse<{
+  success_count: number;
+  fail_count: number;
+  errors: {
+    id_card: string;
+    message: string;
+  }[];
+  log_id: number;
+}>;

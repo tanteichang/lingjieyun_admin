@@ -140,7 +140,7 @@ const formConfig: FormConfig<PaymentPayQuery, keyof PaymentPayQuery> = {
 const tableConfig: TableConfig<PaymentBillTableRow, keyof PaymentBillTableRow> = {
   tableItem: [
     { title: '账单编号', colKey: 'bill_no', width: 170 },
-    { title: '创建时间', colKey: 'created_at', width: 160 },
+    { title: '创建时间', colKey: 'created_at', width: 260 },
     { title: '结算单名称', colKey: 'settlement_name', width: 180, ellipsis: true },
     { title: '账单状态', colKey: 'billStatus', width: 100 },
     { title: '所属企业', colKey: 'enterprise_name', width: 140, ellipsis: true },

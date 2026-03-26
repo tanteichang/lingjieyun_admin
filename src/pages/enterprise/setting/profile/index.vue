@@ -31,6 +31,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import { MessagePlugin } from 'tdesign-vue-next';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -77,9 +78,17 @@ onMounted(() => {
 });
 
 const handelSaveInfo = (payload: EnterpriseProfileSavePayload) => {
+  delete payload._lngLat;
+  delete payload.address;
+  delete payload.legal_person_name;
+  console.log(payload);
   saveProfile({
     ...payload,
-  }).then(() => {});
+  }).then((res) => {
+    if (res.code === 200) {
+      MessagePlugin.success('保存成功');
+    }
+  });
 };
 const handelSaveLogo = (logoUrl: string) => {
   saveProfile({

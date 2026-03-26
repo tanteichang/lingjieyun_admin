@@ -8,7 +8,6 @@
         :upload-all-files-in-one-request="true"
         upload-type="Enterprise"
         :multiple="true"
-        :draggable="true"
         accept=".png,.jpeg,.jpg"
         :max="200"
         :auto-upload="false"
@@ -44,13 +43,29 @@ import type { UploadFile } from 'tdesign-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { h, onBeforeUnmount, ref, resolveComponent, watch } from 'vue';
 
-import { batchRealname } from '@/api/enterprise/talentpool';
 import idExample3 from '@/assets/project/id_example_3.png';
 import idExample4 from '@/assets/project/id_example_4.png';
 import AutoUpload from '@/components/auto-upload/index.vue';
 
-defineProps<{
+interface UploadedIdCardImage {
+  url: string;
+  filename: string;
+}
+
+interface IdCardUploadSubmitResponse {
+  code: number;
+  msg: string;
+  data?: {
+    errors?: Array<{
+      id_card: string;
+      message: string;
+    }>;
+  };
+}
+
+const props = defineProps<{
   visible: boolean;
+  submit: (images: UploadedIdCardImage[]) => Promise<IdCardUploadSubmitResponse>;
 }>();
 
 const emit = defineEmits<{
@@ -63,6 +78,7 @@ const previewVisible = ref(false);
 const previewImages = ref<string[]>([]);
 const previewIndex = ref(0);
 const tempObjectUrls = ref<string[]>([]);
+const submitting = ref(false);
 
 const fileListDisplay = (_h: typeof h, { files }: { files: UploadFile[] }) => {
   return h(
@@ -136,30 +152,34 @@ const handleVisibleChange = (value: boolean) => {
   emit('update:visible', value);
 };
 
-const handleUploadSuccess = () => {
-  batchRealname({
-    images: idCardList.value.map((item) => ({
-      url: item.url || '',
-      filename: item.name || '',
-    })),
-  })
-    .then((res) => {
-      if (res?.code === 200) {
-        MessagePlugin.success(res.msg);
-        if (res.data.errors?.length) {
-          for (const error of res.data.errors) {
-            MessagePlugin.error({
-              content: `${error.id_card} : ${error.message}`,
-              duration: 0,
-              closeBtn: true,
-            });
-          }
+const handleUploadSuccess = async () => {
+  if (submitting.value) return;
+
+  submitting.value = true;
+  try {
+    const res = await props.submit(
+      idCardList.value.map((item) => ({
+        url: item.url || '',
+        filename: item.name || '',
+      })),
+    );
+
+    if (res?.code === 200) {
+      MessagePlugin.success(res.msg);
+      if (res.data?.errors?.length) {
+        for (const error of res.data.errors) {
+          MessagePlugin.error({
+            content: `${error.id_card} : ${error.message}`,
+            duration: 0,
+            closeBtn: true,
+          });
         }
       }
-    })
-    .finally(() => {
-      idCardList.value = [];
-    });
+    }
+  } finally {
+    submitting.value = false;
+    idCardList.value = [];
+  }
 };
 
 const beforeUploadIdCard = (file: UploadFile) => {
@@ -262,6 +282,8 @@ onBeforeUnmount(() => {
 :deep(.upload-file-list) {
   margin-top: 12px;
   background: transparent;
+  min-height: 500px;
+  overflow: auto;
 }
 
 :deep(.upload-file-item) {

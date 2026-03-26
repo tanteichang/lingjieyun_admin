@@ -1,141 +1,113 @@
 <template>
   <div class="panel">
-    <t-empty v-if="!contractList.length" description="暂无签约合同" />
-    <div v-else class="contract-grid">
-      <div v-for="item in contractList" :key="item.id" class="contract-card">
-        <div class="card-status" :class="`status-${item.status}`">{{ item.statusText }}</div>
-        <div class="card-main">
-          <div class="contract-logo">
-            <span class="logo-line line-1" />
-            <span class="logo-line line-2" />
-            <span class="logo-line line-3" />
+    <t-empty v-if="!loading && !contractList.length" description="暂无签约合同" />
+    <template v-else>
+      <div class="contract-grid">
+        <div v-for="item in contractList" :key="item.id" class="contract-card">
+          <div class="card-status" :class="getStatusClass(item)">{{ getStatusText(item) }}</div>
+          <div class="card-main">
+            <!-- <div class="contract-logo">
+              <span class="logo-line line-1" />
+              <span class="logo-line line-2" />
+              <span class="logo-line line-3" />
+            </div> -->
+            <div class="contract-info">
+              <div class="contract-name">{{ item.task_name || item.product_name }}</div>
+              <div class="contract-no">NO.{{ item.confirmation_no }}</div>
+              <t-button variant="outline" theme="default" size="small" disabled>电子签署</t-button>
+            </div>
           </div>
-          <div class="contract-info">
-            <div class="contract-name">{{ item.name }}</div>
-            <div class="contract-no">NO.{{ item.contractNo }}</div>
-            <t-button variant="outline" theme="default" size="small" disabled>电子签署</t-button>
+          <div class="card-foot">
+            <div class="sign-time">签约时间: {{ item.signed_at_formatted || item.signed_at }}</div>
+            <t-button theme="primary" @click="handleViewPdf(item)">查看PDF</t-button>
           </div>
-        </div>
-        <div class="card-foot">
-          <div class="sign-time">签约时间: {{ item.signTime }}</div>
-          <t-button theme="primary">查看PDF</t-button>
         </div>
       </div>
-    </div>
+
+      <t-pagination
+        v-if="total > 0"
+        v-model:current="currentPage"
+        v-model:page-size="pageSize"
+        :total="total"
+        :page-size-options="pageSizeOptions"
+        show-page-size
+        :show-jumper="false"
+        class="contract-pagination"
+        @page-size-change="handlePageSizeChange"
+      />
+    </template>
   </div>
 </template>
 <script setup lang="ts">
+import { ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
+
+import { getConfirmationList } from '@/api/enterprise/talentpool';
+import type { ConfirmationListItem } from '@/api/model/enterprise/talentpool';
+
 defineOptions({
   name: 'TalentContractInfo',
 });
 
-interface ContractItem {
-  id: string;
-  name: string;
-  contractNo: string;
-  signTime: string;
-  status: 'active' | 'ended';
-  statusText: string;
-}
+const route = useRoute();
+const loading = ref(false);
+const total = ref(0);
+const contractList = ref<ConfirmationListItem[]>([]);
 
-const contractList: ContractItem[] = [
-  {
-    id: '1',
-    name: '安卓开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'active',
-    statusText: '履约中',
+const pageSizeOptions = [6, 12, 18];
+const pageSize = ref(6);
+const currentPage = ref(1);
+
+const fetchConfirmationList = async () => {
+  const rawId = Array.isArray(route.query.id) ? route.query.id[0] : route.query.id;
+  const talentPoolId = Number(rawId);
+  if (!talentPoolId) {
+    contractList.value = [];
+    total.value = 0;
+    return;
+  }
+
+  loading.value = true;
+  try {
+    const res = await getConfirmationList({
+      talent_pool_id: talentPoolId,
+      page: currentPage.value,
+      limit: pageSize.value,
+    });
+    if (res.code === 200) {
+      contractList.value = res.data?.list || [];
+      total.value = res.data?.total || 0;
+    }
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handlePageSizeChange = () => {
+  currentPage.value = 1;
+};
+
+const getStatusClass = (item: ConfirmationListItem) => {
+  return item.task_status === 2 ? 'status-active' : 'status-ended';
+};
+
+const getStatusText = (item: ConfirmationListItem) => {
+  return item.task_status === 2 ? '履约中' : '已结束';
+};
+
+const handleViewPdf = (item: ConfirmationListItem) => {
+  const url = item.pdf_url || item.confirmation_url || item.confirmation_file;
+  if (!url) return;
+  window.open(url, '_blank');
+};
+
+watch(
+  [currentPage, pageSize],
+  () => {
+    fetchConfirmationList();
   },
-  {
-    id: '2',
-    name: '小程序开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'ended',
-    statusText: '已结束',
-  },
-  {
-    id: '1',
-    name: '安卓开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'active',
-    statusText: '履约中',
-  },
-  {
-    id: '2',
-    name: '小程序开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'ended',
-    statusText: '已结束',
-  },
-  {
-    id: '1',
-    name: '安卓开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'active',
-    statusText: '履约中',
-  },
-  {
-    id: '2',
-    name: '小程序开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'ended',
-    statusText: '已结束',
-  },
-  {
-    id: '1',
-    name: '安卓开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'active',
-    statusText: '履约中',
-  },
-  {
-    id: '2',
-    name: '小程序开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'ended',
-    statusText: '已结束',
-  },
-  {
-    id: '1',
-    name: '安卓开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'active',
-    statusText: '履约中',
-  },
-  {
-    id: '2',
-    name: '小程序开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'ended',
-    statusText: '已结束',
-  },
-  {
-    id: '1',
-    name: '安卓开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'active',
-    statusText: '履约中',
-  },
-  {
-    id: '2',
-    name: '小程序开发项目确认函',
-    contractNo: '54545151474',
-    signTime: '2025-12-26 09:15',
-    status: 'ended',
-    statusText: '已结束',
-  },
-];
+  { immediate: true },
+);
 </script>
 <style lang="less" scoped>
 .panel {
@@ -252,6 +224,12 @@ const contractList: ContractItem[] = [
 .sign-time {
   color: var(--td-text-color-secondary);
   font-size: 14px;
+}
+
+.contract-pagination {
+  display: flex;
+  margin-top: 24px;
+  justify-content: flex-end;
 }
 
 @media (max-width: 1400px) {

@@ -8,25 +8,25 @@
           :bank-info="detail?.bank_info || defaultBankInfo"
           :identity-info="detail?.identity_info || defaultIdentityInfo"
           :sign-info="detail?.sign_info || defaultSignInfo"
+          @updated="fetchDetail"
         />
 
         <div class="right-panel">
           <t-card class="detail-card" :bordered="false">
             <t-tabs v-model="activeTab" class="detail-tabs">
-              <t-tab-panel value="profile" label="简历信息" />
-              <t-tab-panel value="task" label="任务信息" />
-              <t-tab-panel value="publish" label="发放记录" />
-              <t-tab-panel value="contract" label="签约合同" />
+              <t-tab-panel value="profile" label="简历信息">
+                <resume-info :resume="detail?.jianli || defaultResume" :has-resume="detail?.has_resume" />
+              </t-tab-panel>
+              <t-tab-panel value="task" label="任务信息">
+                <task-info />
+              </t-tab-panel>
+              <t-tab-panel value="publish" label="发放记录">
+                <payment-records />
+              </t-tab-panel>
+              <t-tab-panel value="contract" label="签约合同">
+                <contract-info />
+              </t-tab-panel>
             </t-tabs>
-            <resume-info
-              v-if="activeTab === 'profile'"
-              :basic-info="detail?.basic_info || defaultBasicInfo"
-              :contact-info="detail?.contact_info || defaultContactInfo"
-              :resume="detail?.resume || defaultResume"
-            />
-            <task-info v-else-if="activeTab === 'task'" />
-            <payment-records v-else-if="activeTab === 'publish'" />
-            <contract-info v-else />
           </t-card>
         </div>
       </div>
@@ -45,7 +45,7 @@ import type {
   TalentPoolContactInfo,
   TalentPoolDetail,
   TalentPoolIdentityInfo,
-  TalentPoolResume,
+  TalentPoolJianli,
   TalentPoolSignInfo,
 } from '@/api/model/enterprise/talentpool';
 
@@ -72,7 +72,7 @@ const defaultBasicInfo: TalentPoolBasicInfo = {
   is_auth: false,
   is_signed: false,
   apply_count: 0,
-  education: '',
+  education: 0,
   score: 0,
 };
 
@@ -100,12 +100,12 @@ const defaultSignInfo: TalentPoolSignInfo = {
   agreement_no: '',
 };
 
-const defaultResume: TalentPoolResume = {
-  personal_advantage: '',
-  education_list: [],
-  job_intention: {},
-  work_experience_list: [],
-  certificate_list: [],
+const defaultResume: TalentPoolJianli = {
+  certificate: [],
+  education: [],
+  jianli: null,
+  project_history: [],
+  work_experience: [],
 };
 
 const fetchDetail = async () => {

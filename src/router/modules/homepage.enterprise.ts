@@ -323,22 +323,8 @@ export default [
         component: () => import('@/pages/enterprise/payment/upload/date.vue'),
         meta: {
           title: {
-            zh_CN: '结算单日期',
-            en_US: 'Payment Upload Date',
-          },
-          icon: 'upload-1',
-          hidden: true,
-          keepAlive: false,
-        },
-      },
-      {
-        path: 'detail',
-        name: 'PaymentDetail',
-        component: () => import('@/pages/enterprise/payment/upload/detail.vue'),
-        meta: {
-          title: {
-            zh_CN: '结算单详情',
-            en_US: 'Payment Upload Detail',
+            zh_CN: '结算详情',
+            en_US: 'Payment Detail',
           },
           icon: 'upload-1',
           hidden: true,
@@ -390,7 +376,7 @@ export default [
   {
     path: '/setting',
     component: Layout,
-    redirect: '/setting/account',
+    redirect: '/setting/license',
     name: 'setting',
     meta: {
       title: {
@@ -401,6 +387,19 @@ export default [
       orderNo: 5,
     },
     children: [
+      {
+        path: 'profile',
+        name: 'SettingProfile',
+        component: () => import('@/pages/enterprise/setting/profile/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '个人信息',
+            en_US: 'Profile',
+          },
+          icon: 'user-circle',
+          keepAlive: false,
+        },
+      },
       {
         path: 'permission',
         name: 'SettingPermission',
@@ -428,19 +427,47 @@ export default [
           keepAlive: false,
         },
       },
+
       {
-        path: 'profile',
-        name: 'SettingProfile',
-        component: () => import('@/pages/enterprise/setting/profile/index.vue'),
+        path: 'security/bind-email',
+        name: 'SettingSecurityBindEmail',
+        component: () => import('@/pages/enterprise/setting/security/bind-email.vue'),
         meta: {
           title: {
-            zh_CN: '个人信息',
-            en_US: 'Profile',
+            zh_CN: '绑定邮箱',
+            en_US: 'Bind Email',
           },
-          icon: 'user-circle',
+          hidden: true,
           keepAlive: false,
         },
       },
+      {
+        path: 'license',
+        name: 'SettingLicense',
+        component: () => import('@/pages/enterprise/setting/license/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '商业授权',
+            en_US: 'Commercial License',
+          },
+          icon: 'user-vip',
+          keepAlive: false,
+        },
+      },
+      {
+        path: 'legal',
+        name: 'SettingLegal',
+        component: () => import('@/pages/enterprise/setting/legal/index.vue'),
+        meta: {
+          title: {
+            zh_CN: '法律信息',
+            en_US: 'Legal Information',
+          },
+          icon: 'file-1',
+          keepAlive: false,
+        },
+      },
+
       {
         path: 'profile/recharge',
         name: 'SettingProfileRecharge',

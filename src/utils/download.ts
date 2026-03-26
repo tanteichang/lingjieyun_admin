@@ -38,6 +38,36 @@ export const getNameFromUrl = (url: string) => {
   }
 };
 
+export const getBlobErrorMessage = async (blob: Blob) => {
+  const contentType = blob.type.toLowerCase();
+  if (!contentType.includes('application/json') && !contentType.startsWith('text/')) {
+    return '';
+  }
+
+  const text = await blob.text();
+  if (!text) {
+    return '';
+  }
+
+  try {
+    const parsed = JSON.parse(text);
+    if (typeof parsed?.msg === 'string' && parsed.msg) {
+      return parsed.msg;
+    }
+    if (typeof parsed?.message === 'string' && parsed.message) {
+      return parsed.message;
+    }
+  } catch {
+    return text;
+  }
+
+  return text;
+};
+
+export const downloadBlobFile = (blob: Blob, fileName: string) => {
+  saveAs(blob, fileName);
+};
+
 export const withDuplicateSuffix = (fileName: string, index: number) => {
   if (index <= 1) {
     return fileName;

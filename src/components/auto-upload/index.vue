@@ -1,7 +1,6 @@
 <template>
   <t-upload v-model="modelValue" v-bind="uploadProps">
     <slot v-if="$slots.default" />
-    <t-button v-else-if="shouldRenderDefaultTrigger" variant="outline">选择文件</t-button>
   </t-upload>
 </template>
 <script setup lang="ts">
@@ -38,19 +37,6 @@ const uploadType = computed<UploadType | undefined>(() => {
   }
   return undefined;
 });
-
-const uploadTheme = computed(() => attrs.theme);
-const isDraggable = computed(() => {
-  const value = attrs.draggable;
-  return value === '' || value === true || value === 'true';
-});
-const shouldRenderDefaultTrigger = computed(
-  () =>
-    !attrs.trigger &&
-    !attrs.dragContent &&
-    isDraggable.value &&
-    ['image-flow', 'file-flow'].includes(String(uploadTheme.value)),
-);
 
 const uploadProps = computed(() => {
   return {

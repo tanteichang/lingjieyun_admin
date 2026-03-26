@@ -111,8 +111,8 @@ export type SettlementDetailResponse = ApiResponse<SettlementDetail>;
 
 export interface TemplateDownloadPayload {
   type: 'empty' | 'with_members';
-  product_id: number;
-  plan_date: string;
+  product_id?: number;
+  plan_date?: string;
 }
 
 export interface ImportSettlementPayload {

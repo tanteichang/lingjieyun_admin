@@ -1,0 +1,28 @@
+.profile-section-title(
+  @font-size: 18px;
+  @padding-left: 14px;
+  @margin-bottom: 22px;
+  @line-height: 1.2;
+  @bar-height: 18px;
+  @bar-radius: 999px
+) {
+  position: relative;
+  padding-left: @padding-left;
+  margin-bottom: @margin-bottom;
+  font-size: @font-size;
+  font-weight: 600;
+  color: var(--td-text-color-primary);
+  line-height: @line-height;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 4px;
+    height: @bar-height;
+    border-radius: @bar-radius;
+    background: var(--td-brand-color);
+    transform: translateY(-50%);
+  }
+}

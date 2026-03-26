@@ -53,167 +53,42 @@
       :on-cancel="handleConfirmCancel"
       @confirm="handleConfirmSubmit"
     />
-    <t-dialog
-      v-model:visible="resumeVisible"
-      :header="resumeDialogTitle"
-      width="960px"
-      :footer="false"
-      destroy-on-close
-    >
+    <t-drawer v-model:visible="resumeVisible" size="80%" confirm-btn="关闭" :cancel-btn="null">
       <template #body>
-        <t-loading :loading="resumeLoading">
-          <div v-if="resumeDetail?.has_resume && resumeDetail.jianli" class="resume-dialog">
-            <div class="resume-section">
-              <div class="resume-section__title">个人信息</div>
-              <div class="resume-grid">
-                <div class="resume-item">
-                  <div class="resume-item__label">姓名</div>
-                  <div class="resume-item__value">{{ resumeDetail.jianli.realname || '-' }}</div>
-                </div>
-                <div class="resume-item">
-                  <div class="resume-item__label">年龄</div>
-                  <div class="resume-item__value">{{ resumeDetail.jianli.age || '-' }}</div>
-                </div>
-                <div class="resume-item">
-                  <div class="resume-item__label">手机号</div>
-                  <div class="resume-item__value">
-                    {{ resumeDetail.jianli.mobile_masked || resumeDetail.jianli.mobile || '-' }}
-                  </div>
-                </div>
-                <div class="resume-item">
-                  <div class="resume-item__label">性别</div>
-                  <div class="resume-item__value">{{ resumeDetail.jianli.gender_text || '-' }}</div>
-                </div>
-                <div class="resume-item">
-                  <div class="resume-item__label">期望城市</div>
-                  <div class="resume-item__value">{{ resumeDetail.jianli.city_name || '-' }}</div>
-                </div>
-                <div class="resume-item">
-                  <div class="resume-item__label">意向岗位</div>
-                  <div class="resume-item__value">{{ resumeDetail.jianli.job_name || '-' }}</div>
-                </div>
-                <div class="resume-item">
-                  <div class="resume-item__label">期望报酬</div>
-                  <div class="resume-item__value">
-                    {{ resumeDetail.jianli.min_value }}-{{ resumeDetail.jianli.max_value }} 元/月
-                  </div>
-                </div>
-                <div class="resume-item resume-item--full">
-                  <div class="resume-item__label">个人优势</div>
-                  <div class="resume-item__value">{{ resumeDetail.jianli.advantage || '-' }}</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="resume-section">
-              <div class="resume-section__title">教育背景</div>
-              <t-timeline v-if="resumeDetail.education.length">
-                <t-timeline-item v-for="item in resumeDetail.education" :key="item.id">
-                  <div class="resume-timeline">
-                    <div class="resume-timeline__header">
-                      <div class="resume-timeline__title">{{ item.name || '-' }}</div>
-                      <div class="resume-timeline__time">
-                        {{ formatResumeRange(item.start_time, item.end_time) }}
-                      </div>
-                    </div>
-                    <div class="resume-timeline__meta">学历：{{ dictStore.getEducationLabel(item.education_id) }}</div>
-                    <div class="resume-timeline__desc">在校经历：{{ item.desc || '-' }}</div>
-                  </div>
-                </t-timeline-item>
-              </t-timeline>
-              <t-empty v-else description="暂无教育背景" />
-            </div>
-
-            <div class="resume-section">
-              <div class="resume-section__title">工作经历</div>
-              <t-timeline v-if="resumeDetail.work_experience.length">
-                <t-timeline-item v-for="item in resumeDetail.work_experience" :key="item.id">
-                  <div class="resume-timeline">
-                    <div class="resume-timeline__header">
-                      <div class="resume-timeline__title">{{ item.name || '-' }}</div>
-                      <div class="resume-timeline__time">
-                        {{ formatResumeRange(item.start_time, item.end_time, item.is_line === 1) }}
-                      </div>
-                    </div>
-                    <div class="resume-timeline__meta">
-                      所属部门： {{ [item.department, item.job].filter(Boolean).join(' / ') || '-' }}
-                    </div>
-                    <div class="resume-timeline__desc">工作内容：{{ item.job_content || '-' }}</div>
-                    <div v-if="item.performance" class="resume-timeline__desc">业绩：{{ item.performance }}</div>
-                  </div>
-                </t-timeline-item>
-              </t-timeline>
-              <t-empty v-else description="暂无工作经历" />
-            </div>
-
-            <div class="resume-section">
-              <div class="resume-section__title">项目经历</div>
-              <t-timeline v-if="resumeDetail.project_history.length">
-                <t-timeline-item v-for="item in resumeDetail.project_history" :key="item.id">
-                  <div class="resume-timeline">
-                    <div class="resume-timeline__header">
-                      <div class="resume-timeline__title">{{ item.name || '-' }}</div>
-                      <div class="resume-timeline__time">
-                        {{ formatResumeRange(item.start_time, item.end_time) }}
-                      </div>
-                    </div>
-                    <div class="resume-timeline__desc">{{ item.desc || '-' }}</div>
-                    <div v-if="item.other" class="resume-timeline__desc">{{ item.other }}</div>
-                  </div>
-                </t-timeline-item>
-              </t-timeline>
-              <t-empty v-else description="暂无项目经历" />
-            </div>
-
-            <div class="resume-section">
-              <div class="resume-section__title">证书信息</div>
-              <div v-if="resumeDetail.certificate.length" class="resume-cert-list">
-                <button
-                  v-for="(item, index) in resumeDetail.certificate"
-                  :key="`${item}-${index}`"
-                  type="button"
-                  class="resume-cert-item"
-                  @click="openResumeCertPreview(index)"
-                >
-                  <img :src="item" alt="证书图片" class="resume-cert-item__image" />
-                </button>
-              </div>
-              <t-empty v-else description="暂无证书信息" />
-            </div>
+        <t-loading :loading="detailLoading">
+          <div class="detail-drawer-body">
+            <task-basic-info-card :task-info="taskDetail" :loading="taskLoading" />
+            <t-card :bordered="false" class="resume-detail-card">
+              <h3 class="resume-detail-card__title">简历信息</h3>
+              <shared-resume-detail :user-resume="resumeDetail" />
+            </t-card>
           </div>
-          <t-empty v-else description="暂无简历信息" />
         </t-loading>
       </template>
-    </t-dialog>
-    <t-image-viewer
-      v-model:visible="resumeCertPreviewVisible"
-      v-model:index="resumeCertPreviewIndex"
-      :images="resumeDetail?.certificate || []"
-    />
+    </t-drawer>
   </t-card>
 </template>
 <script lang="ts" setup>
-import dayjs from 'dayjs';
 import { computed, reactive, ref } from 'vue';
 
 import { userResume } from '@/api/enterprise/member';
-import { getTaskApplyList, reviewTaskApply } from '@/api/enterprise/task';
+import { getTaskApplyList, getTaskDetail, reviewTaskApply } from '@/api/enterprise/task';
 import type { Row } from '@/api/model/common';
 import type { UserResumeResult } from '@/api/model/enterprise/member';
-import type { TaskApplyItem, TaskApplyQuery } from '@/api/model/enterprise/taskModel';
+import type { TaskApplyItem, TaskApplyQuery, TaskDetailResult } from '@/api/model/enterprise/taskModel';
 import { TASK_APPLY_STATUS_TAG, TaskApplyStatus } from '@/api/model/enterprise/taskModel';
 import type { FormConfig, TableConfig } from '@/components/common-table/index.vue';
 import CommonTable from '@/components/common-table/index.vue';
+import SharedResumeDetail from '@/components/resume-detail/index.vue';
 import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
 import { useSettingStore } from '@/store';
-import { useDictStore } from '@/store/modules/enterprise/dict';
+
+import TaskBasicInfoCard from '../taskList/detail/components/TaskBasicInfoCard.vue';
 
 defineOptions({
   name: 'RegistrationApproval',
 });
-
-const dictStore = useDictStore();
 
 type RegistrationRow = TaskApplyItem & Row;
 
@@ -350,38 +225,29 @@ const handleTabChange = (value: keyof ApplyStatusCounts) => {
 
 const resumeVisible = ref(false);
 const resumeLoading = ref(false);
+const taskLoading = ref(false);
 const resumeRecord = ref<RegistrationRow | null>(null);
 const resumeDetail = ref<UserResumeResult | null>(null);
-const resumeCertPreviewVisible = ref(false);
-const resumeCertPreviewIndex = ref(0);
+const taskDetail = ref<TaskDetailResult | null>(null);
+const detailLoading = computed(() => resumeLoading.value || taskLoading.value);
 
-const resumeDialogTitle = computed(() => {
-  const name = resumeRecord.value?.user_info_real_name || resumeRecord.value?.user_info?.real_name || '用户';
-  return `${name}的简历信息`;
-});
-
-const formatResumeTime = (value?: string | number | null) => {
-  if (value === undefined || value === null || value === '') return '';
-  if (typeof value === 'number') {
-    if (value > 999 && value < 10000) {
-      return String(value);
-    }
-    const timestamp = value > 1_000_000_000_000 ? value : value * 1000;
-    return dayjs(timestamp).format('YYYY-MM-DD');
+const fetchTaskDetailInfo = async (taskId?: number) => {
+  if (!taskId) {
+    taskDetail.value = null;
+    return;
   }
-  return value;
-};
 
-const formatResumeRange = (start?: string | number | null, end?: string | number | null, current?: boolean) => {
-  const startText = formatResumeTime(start);
-  const endText = current ? '至今' : formatResumeTime(end);
-  if (startText && endText) return `${startText} - ${endText}`;
-  return startText || endText || '-';
-};
+  taskLoading.value = true;
+  taskDetail.value = null;
 
-const openResumeCertPreview = (index: number) => {
-  resumeCertPreviewIndex.value = index;
-  resumeCertPreviewVisible.value = true;
+  try {
+    const taskRes = await getTaskDetail({ task_id: taskId });
+    if (taskRes.code === 200) {
+      taskDetail.value = taskRes.data;
+    }
+  } finally {
+    taskLoading.value = false;
+  }
 };
 
 const handleViewResume = async (record: RegistrationRow) => {
@@ -389,6 +255,7 @@ const handleViewResume = async (record: RegistrationRow) => {
   resumeVisible.value = true;
   resumeLoading.value = true;
   resumeDetail.value = null;
+  void fetchTaskDetailInfo(record.product_id);
 
   try {
     const res = await userResume({
@@ -444,110 +311,23 @@ const handleConfirmSubmit = () => {
   height: 100%;
 }
 
-.resume-dialog {
-  max-height: 70vh;
+.detail-drawer-body {
+  display: grid;
+  gap: 16px;
+  max-height: calc(100vh - 140px);
   overflow-y: auto;
   padding-right: 8px;
 }
 
-.resume-section {
-  padding: 8px 0 16px;
+.resume-detail-card {
+  margin-bottom: 0;
 }
 
-.resume-section__title {
-  margin-bottom: 12px;
-  padding-left: 8px;
-  border-left: 3px solid var(--td-brand-color);
-  font-size: 14px;
+.resume-detail-card__title {
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--td-text-color-primary);
-}
-
-.resume-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.resume-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.resume-item--full {
-  grid-column: 1 / -1;
-}
-
-.resume-item__label {
-  font-size: 12px;
-  color: var(--td-text-color-secondary);
-}
-
-.resume-item__value {
-  font-size: 13px;
-  color: var(--td-text-color-primary);
-  word-break: break-word;
-}
-
-.resume-timeline {
-  display: grid;
-  gap: 6px;
-}
-
-.resume-timeline__header {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.resume-timeline__title {
-  font-weight: 600;
-  color: var(--td-text-color-primary);
-}
-
-.resume-timeline__time,
-.resume-timeline__meta,
-.resume-timeline__desc {
-  font-size: 12px;
-  color: var(--td-text-color-secondary);
-  word-break: break-word;
-}
-
-.resume-cert-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-}
-
-.resume-cert-item {
-  border: 1px solid var(--td-component-stroke);
-  border-radius: 8px;
-  background: #fff;
-  padding: 8px;
-  cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.resume-cert-item:hover {
-  border-color: var(--td-brand-color);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 8%);
-}
-
-.resume-cert-item__image {
-  display: block;
-  width: 100%;
-  height: 140px;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-@media (max-width: 900px) {
-  .resume-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  color: #181818;
 }
 </style>

@@ -11,12 +11,11 @@
         </t-tag>
       </div>
     </t-space>
-    <template #action>
+    <!-- <template #action>
       <t-link theme="primary" variant="outline" @click="emit('record-click', item)"> 记录 </t-link>
-    </template>
+    </template> -->
   </t-list-item>
 </template>
-
 <script setup lang="ts">
 import { computed } from 'vue';
 
@@ -33,7 +32,6 @@ const emit = defineEmits<{
 
 const statusTag = computed(() => DELIVERY_STATUS_TAG[props.item.delivery_status]);
 </script>
-
 <style scoped lang="less">
 .detail-item {
   display: flex;

@@ -66,7 +66,7 @@ export interface UserResumeProjectHistoryItem {
   name: string;
   start_time: string | number | null;
   end_time: string | number | null;
-  job_id: number;
+  role: number;
   desc: string;
   other: string;
   status: number;

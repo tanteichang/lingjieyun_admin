@@ -73,6 +73,7 @@ import { prefix } from '@/config/global';
 import { useCommonTable } from '@/hooks/useCommonTable';
 import { useSettingStore } from '@/store';
 import { useDeliveryStore } from '@/store/modules/enterprise/delivery';
+import { useDictStore } from '@/store/modules/enterprise/dict';
 import { enumToOptions } from '@/utils/type';
 
 defineOptions({
@@ -80,6 +81,7 @@ defineOptions({
 });
 
 const router = useRouter();
+const dictStore = useDictStore();
 const deliveryStore = useDeliveryStore();
 
 type DeliveryUploadListQuery = DeliveryUploadListPayload;
@@ -88,7 +90,17 @@ type DeliveryUploadRow = DeliveryUploadItem & Row;
 
 const formConfig: FormConfig<DeliveryUploadListQuery, keyof DeliveryUploadListQuery> = {
   formItem: [
-    { label: '企业名称', name: 'enterprise_name', type: 'input', placeholder: '请输入企业名称', span: 6 },
+    {
+      label: '企业名称',
+      name: 'customer_id',
+      type: 'select',
+      placeholder: '请选择企业名称',
+      span: 6,
+      props: {
+        filterable: true,
+        options: dictStore.getCustomerTypeOptions || [],
+      },
+    },
     { label: '项目名称', name: 'project_name', type: 'input', placeholder: '请输入所属项目名称', span: 6 },
     {
       label: '交付状态',
@@ -115,7 +127,7 @@ const tableConfig: TableConfig<DeliveryUploadRow, keyof DeliveryUploadRow> = {
     { title: '发布时间', colKey: 'created_at', width: 200 },
     { title: '任务名称', colKey: 'name', minWidth: 200, ellipsis: true },
     { title: '所属项目', colKey: 'project_name', minWidth: 200, ellipsis: true },
-    { title: '所属企业', colKey: 'enterprise_name', width: 140 },
+    { title: '所属企业', colKey: 'customer_name', width: 140 },
     { title: '交付模式', colKey: 'delivery_mode_text', width: 140 },
     { title: '交付物上传更新时间', colKey: 'delivery_upload_time', width: 180 },
     { title: '状态', colKey: 'delivery_status', width: 140 },

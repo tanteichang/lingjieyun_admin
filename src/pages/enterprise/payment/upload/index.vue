@@ -30,8 +30,8 @@
       </template>
       <template #op="{ record }">
         <t-space>
-          <t-link>结算记录</t-link>
-          <t-link theme="primary" @click="handlePay(record)">结算</t-link>
+          <t-link @click="handlePay(record, 'records')">结算记录</t-link>
+          <t-link theme="primary" @click="handlePay(record, 'task')">结算</t-link>
         </t-space>
       </template>
     </common-table>
@@ -49,6 +49,8 @@ import CommonTable from '@/components/common-table/index.vue';
 import { useCommonTable } from '@/hooks/useCommonTable';
 import { useDictStore } from '@/store/modules/enterprise/dict';
 import { parseDateRange } from '@/utils/date';
+
+import type { Tab } from './date.vue';
 
 defineOptions({
   name: 'SettlementListPage',
@@ -164,11 +166,12 @@ const handleSearch = (payload?: Partial<SettlementListQuery>) => {
 const handleReset = () => {
   reset();
 };
-const handlePay = (record: SettlementRow) => {
+const handlePay = (record: SettlementRow, tab: Tab) => {
   router.push({
     name: 'PaymentDate',
     query: {
       id: record.id || '',
+      tab,
     },
   });
 };

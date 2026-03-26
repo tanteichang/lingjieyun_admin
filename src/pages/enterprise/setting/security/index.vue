@@ -30,11 +30,8 @@
       <div class="actions-grid">
         <login-password-section />
         <pay-password-section />
-        <bind-email-section />
-        <bind-wechat-section
-          :is-bound="bindListResult?.platforms?.wechat?.is_bound"
-          @bind-result="handleBindWechatResult"
-        />
+        <bind-email-section :is-bound="bindListResult?.platforms?.email?.is_bound" />
+        <bind-wechat-section :is-bound="bindListResult?.platforms?.wechat?.is_bound" @bind-result="handleBindResult" />
       </div>
     </t-card>
   </div>
@@ -84,12 +81,13 @@ const securityScore = computed(() => Math.round((securityLevel.value / 8) * 100)
 const loadBindList = () => {
   return bindList().then((res) => {
     if (res.code === 200) {
+      console.log(res.data);
       bindListResult.value = res.data;
     }
   });
 };
 
-const handleBindWechatResult = (payload: { success: boolean }) => {
+const handleBindResult = (payload: { success: boolean }) => {
   if (!payload.success) return;
   void loadBindList();
 };
@@ -210,13 +208,13 @@ onBeforeMount(() => {
   gap: 14px;
 }
 
-@media (max-width: 1320px) {
+@media (width <= 1320px) {
   .actions-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 1200px) {
+@media (width <= 1200px) {
   .overview-wrap,
   .actions-grid {
     grid-template-columns: 1fr;

@@ -63,6 +63,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:total', total: number): void;
+  (e: 'refresh-task-detail'): void;
 }>();
 
 const route = useRoute();
@@ -211,6 +212,7 @@ const handleRecruitSubmit = (payload: RecruitFormSubmitPayload) => {
     if (res.code === 200) {
       MessagePlugin.success(res.msg);
       handleSearch();
+      emit('refresh-task-detail');
     }
     handleCloseRecruitDrawer();
   });

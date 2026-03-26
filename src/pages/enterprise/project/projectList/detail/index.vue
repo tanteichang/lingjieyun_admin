@@ -32,11 +32,7 @@
           </div>
           <div class="info-item">
             <span class="info-label">项目类型：</span>
-            <span class="info-value">{{ projectInfo.invoice_type_name }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">完成所需人数：</span>
-            <span class="info-value">{{ projectInfo.required_personnel }}</span>
+            <span class="info-value">{{ projectInfo.project_type_name }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">发票类型：</span>
@@ -46,6 +42,16 @@
             <span class="info-label">所属公司：</span>
             <span class="info-value">{{ projectInfo.customer_name }}</span>
           </div>
+          <div class="info-item">
+            <span class="info-label">招募人数：</span>
+            <span class="info-value">
+              <span>需要人数：{{ projectInfo.required_personnel }}</span>
+              <span
+                >已招募 自由：{{ projectInfo.free_recruitment_count }} 定向：{{ projectInfo.direct_recruitment_count }}
+              </span>
+            </span>
+          </div>
+
           <div class="info-item">
             <span class="info-label">自由报名人数：</span>
             <span class="info-value">{{ projectInfo.free_recruitment_count }}</span>

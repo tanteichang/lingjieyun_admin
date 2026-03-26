@@ -63,6 +63,7 @@ export type AddAdminResponse = ApiResponse<{
 export interface UpdateAdminPayload {
   admin_id: number; // 管理员ID
   role_id: number; // 角色ID
+  name?: string; // 姓名
 }
 
 export type UpdateAdminResponse = ApiResponse<[]>;
